@@ -6,16 +6,13 @@ Compares two or more fitted Many-Facet models by log-likelihood, \code{AIC}, \co
 }
 \usage{
 compare_mfrm(
-  ..., labels = NULL, warn_constraints = TRUE, nested = FALSE,
-  response_diagnostics = NULL, person_scores = NULL)
+  ..., labels = NULL, warn_constraints = TRUE, nested = FALSE)
 }
 \arguments{
   \item{...}{Two or more fitted model objects from \code{\link{fit_mfrm}}.}
   \item{labels}{Optional character vector of model labels.}
   \item{warn_constraints}{Logical; whether to warn when compared models differ in estimation method, sample size, or non-nested parameter subspaces.}
   \item{nested}{Logical; if \code{TRUE}, verifies affine subspace containment via SVD and computes sequential chi-square likelihood-ratio tests for nested \code{MML} or \code{CML} models.}
-  \item{response_diagnostics}{Optional precomputed diagnostic list for legacy comparisons.}
-  \item{person_scores}{Optional person-score comparison specification on legacy fits.}
 }
 \value{
 An S3 object of class \code{"mfrm_comparison"} containing \code{table} (\code{Model}, \code{Family}, \code{Method}, \code{N}, \code{FreeParams}, \code{LogLik}, \code{AIC}, \code{BIC}, \code{DeltaAIC}, \code{DeltaBIC}), \code{lrt} (sequential LRT table when \code{nested = TRUE} and models are verified nested), and \code{comparison_basis}.

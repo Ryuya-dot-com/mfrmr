@@ -11,6 +11,9 @@ development:
 
 home:
   sidebar: false
+  description: >-
+    Estimate many-facet measurement models, diagnose ratings, plan G-Studies
+    and D-Studies, and report results with mfrmr.
 
 articles:
   - title: "Analysis guides"
@@ -64,7 +67,8 @@ redirects:
   - [reference/plot.mfrm_extended_comparison.html, reference/compare_mfrm.html]
   - [reference/plot.mfrm_fair_intervals.html, reference/fair_average_table.html]
   - [reference/plot.mfrm_information.html, reference/compute_information.html]
-  - [reference/plot.mfrm_posterior_summary.html, reference/read_mfrm_posterior.html]
+  - [reference/plot.mfrm_posterior_summary.html, news/index.html]
+  - [reference/read_mfrm_posterior.html, news/index.html]
   - [reference/summary.mfrm_bias.html, reference/estimate_bias.html]
   - [reference/summary.mfrm_data_description.html, reference/describe_mfrm_data.html]
   - [reference/summary.mfrm_person_fit_indices.html, reference/compute_person_fit_indices.html]
@@ -86,7 +90,8 @@ redirects:
   - [reference/summary.mfrm_diagnostics.html, reference/diagnose_mfrm.html]
   - [reference/summary.mfrm_drift.html, reference/fit_mfrm_drift.html]
   - [reference/summary.mfrm_multivariate_d_study.html, reference/confint.mfrm_multivariate_d_study.html]
-  - [reference/vcov.mfrm_multivariate_gstudy.html, reference/confint.mfrm_multivariate_gstudy.html]
+  - [reference/vcov.mfrm_multivariate_gstudy.html, reference/mfrm_g_study.html]
+  - [reference/confint.mfrm_multivariate_gstudy.html, reference/mfrm_g_study.html]
 
 reference:
   - title: "Start an assessment and report results"
@@ -111,7 +116,6 @@ reference:
       - mfrm_batch_fit
       - compare_mfrm
       - apply_empirical_bayes_shrinkage
-      - read_mfrm_posterior
       - mfrmr-s3-methods
 
   - title: "Rating design and linking"

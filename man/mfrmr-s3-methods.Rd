@@ -1,165 +1,94 @@
 \name{mfrmr-s3-methods}
+\alias{print.mfrm_fair_average}
 \alias{mfrmr-s3-methods}
-\alias{[.mfrm_d_study}
-\alias{AIC.mfrm_cml_fit}
-\alias{AIC.mfrm_fast_fit}
 \alias{AIC.mfrm_fit}
-\alias{anova.mfrm_fast_fit}
 \alias{anova.mfrm_fit}
 \alias{as.data.frame.mfrm_drift}
-\alias{as.data.frame.mfrm_fast_fit}
 \alias{as.data.frame.mfrm_fit}
-\alias{as.data.frame.mfrm_posterior_summary}
-\alias{BIC.mfrm_cml_fit}
-\alias{BIC.mfrm_fast_fit}
 \alias{BIC.mfrm_fit}
-\alias{coef.mfrm_cml_fit}
-\alias{coef.mfrm_comparison_fit}
 \alias{coef.mfrm_drift}
-\alias{coef.mfrm_fast_fit}
 \alias{coef.mfrm_fit}
-\alias{coef.mfrm_jeffreys_fit}
-\alias{confint.mfrm_cml_fit}
-\alias{confint.mfrm_comparison_fit}
 \alias{confint.mfrm_drift}
-\alias{confint.mfrm_facet_intervals}
 \alias{confint.mfrm_fair_average}
-\alias{confint.mfrm_fast_fit}
-\alias{confint.mfrm_fast_gtheory}
 \alias{confint.mfrm_fit}
-\alias{confint.mfrm_jeffreys_fit}
+\alias{confint.mfrm_gtheory}
 \alias{confint.mfrm_multivariate_d_study}
-\alias{confint.mfrm_multivariate_gstudy}
-\alias{confint.mfrm_posterior_summary}
-\alias{fitted.mfrm_cml_fit}
-\alias{fitted.mfrm_comparison_fit}
-\alias{fitted.mfrm_fast_fit}
 \alias{fitted.mfrm_fit}
-\alias{fitted.mfrm_jeffreys_fit}
-\alias{logLik.mfrm_cml_fit}
-\alias{logLik.mfrm_comparison_fit}
-\alias{logLik.mfrm_fast_fit}
 \alias{logLik.mfrm_fit}
-\alias{logLik.mfrm_jeffreys_fit}
 \alias{mfrm_d_study.default}
-\alias{mfrm_d_study.mfrm_fast_fit}
-\alias{mfrm_d_study.mfrm_fast_gtheory}
 \alias{mfrm_d_study.mfrm_fit}
-\alias{mfrm_d_study.mfrm_generalizability}
-\alias{mfrm_d_study.mfrm_multivariate_gstudy}
-\alias{nobs.mfrm_cml_fit}
-\alias{nobs.mfrm_comparison_fit}
-\alias{nobs.mfrm_fast_fit}
+\alias{mfrm_d_study.mfrm_gtheory}
 \alias{nobs.mfrm_fit}
-\alias{predict.mfrm_cml_fit}
-\alias{predict.mfrm_comparison_fit}
 \alias{predict.mfrm_drift}
-\alias{predict.mfrm_fast_fit}
 \alias{predict.mfrm_fit}
-\alias{predict.mfrm_posterior_summary}
 \alias{print.mfrm_agreement}
 \alias{print.mfrm_anchor_drift}
 \alias{print.mfrm_anchor_review}
 \alias{print.mfrm_anchored_fit}
 \alias{print.mfrm_bias}
 \alias{print.mfrm_bundle}
-\alias{print.mfrm_cml_fit}
 \alias{print.mfrm_comparison}
-\alias{print.mfrm_comparison_fit}
-\alias{print.mfrm_d_study}
 \alias{print.mfrm_data_description}
 \alias{print.mfrm_dff}
 \alias{print.mfrm_diagnostics}
-\alias{print.mfrm_dif}
 \alias{print.mfrm_drift}
-\alias{print.mfrm_facet_intervals}
-\alias{print.mfrm_fast_diagnostics}
-\alias{print.mfrm_fast_fit}
-\alias{print.mfrm_fast_gtheory}
 \alias{print.mfrm_fit}
-\alias{print.mfrm_generalizability}
-\alias{print.mfrm_jeffreys_fit}
+\alias{print.mfrm_gtheory}
 \alias{print.mfrm_multivariate_d_comparison}
 \alias{print.mfrm_multivariate_d_study}
-\alias{print.mfrm_multivariate_gstudy}
 \alias{print.mfrm_person_fit_indices}
-\alias{print.mfrm_population_intervals}
-\alias{print.mfrm_posterior_summary}
 \alias{print.summary.mfrm_bias}
 \alias{print.summary.mfrm_data_description}
 \alias{print.summary.mfrm_dff}
 \alias{print.summary.mfrm_diagnostics}
-\alias{print.summary.mfrm_dif}
 \alias{print.summary.mfrm_drift}
-\alias{print.summary.mfrm_fast_diagnostics}
-\alias{print.summary.mfrm_fit}
 \alias{print.summary.mfrm_multivariate_d_study}
 \alias{print.summary.mfrm_person_fit_indices}
-\alias{residuals.mfrm_cml_fit}
-\alias{residuals.mfrm_comparison_fit}
-\alias{residuals.mfrm_fast_fit}
 \alias{residuals.mfrm_fit}
 \alias{summary.mfrm_anchor_drift}
 \alias{summary.mfrm_anchor_review}
 \alias{summary.mfrm_anchored_fit}
 \alias{summary.mfrm_bias}
 \alias{summary.mfrm_bundle}
-\alias{summary.mfrm_cml_fit}
 \alias{summary.mfrm_comparison}
-\alias{summary.mfrm_comparison_fit}
-\alias{summary.mfrm_d_study}
 \alias{summary.mfrm_data_description}
 \alias{summary.mfrm_dff}
 \alias{summary.mfrm_diagnostics}
-\alias{summary.mfrm_dif}
 \alias{summary.mfrm_drift}
-\alias{summary.mfrm_facet_intervals}
-\alias{summary.mfrm_fast_diagnostics}
-\alias{summary.mfrm_fast_fit}
-\alias{summary.mfrm_fast_gtheory}
 \alias{summary.mfrm_fit}
-\alias{summary.mfrm_jeffreys_fit}
+\alias{summary.mfrm_gtheory}
 \alias{summary.mfrm_multivariate_d_comparison}
 \alias{summary.mfrm_multivariate_d_study}
-\alias{summary.mfrm_multivariate_gstudy}
 \alias{summary.mfrm_person_fit_indices}
-\alias{summary.mfrm_posterior_summary}
-\alias{vcov.mfrm_cml_fit}
-\alias{vcov.mfrm_comparison_fit}
 \alias{vcov.mfrm_drift}
-\alias{vcov.mfrm_facet_intervals}
-\alias{vcov.mfrm_fast_fit}
-\alias{vcov.mfrm_fast_gtheory}
 \alias{vcov.mfrm_fit}
-\alias{vcov.mfrm_jeffreys_fit}
-\alias{vcov.mfrm_multivariate_gstudy}
-\alias{vcov.mfrm_population_intervals}
+\alias{vcov.mfrm_gtheory}
 \title{Standard S3 Extractor, Prediction, Inference, and Comparison Methods for mfrmr Objects}
 \description{
 Standard R S3 methods (\code{predict}, \code{coef}, \code{vcov}, \code{confint}, \code{anova}, \code{fitted}, \code{residuals}, \code{logLik}, \code{AIC}, \code{BIC}, \code{nobs}, \code{summary}, \code{print}, and \code{as.data.frame}) for objects returned by \pkg{mfrmr}. In particular, \code{predict()} evaluates expected scores, category probability matrices, linear predictors, \code{Fair(M)}, or new-examinee \code{WLE} scores under arbitrary user-supplied \code{newdata} conditions.
 }
 \usage{
-\method{predict}{mfrm_fast_fit}(object, newdata = NULL,
+\method{predict}{mfrm_fit}(object, newdata = NULL,
   type = c("response", "probs", "prob", "link", "fair", "wle", "eap"),
   person_data = NULL, facet_data = NULL, se.fit = FALSE, ...)
-\method{coef}{mfrm_fast_fit}(object,
+\method{coef}{mfrm_fit}(object,
   type = c("all", "facets", "locations", "steps", "slopes", "person", "persons",
     "explanatory", "interactions", "population", "free"), ...)
-\method{vcov}{mfrm_fast_fit}(object,
+\method{vcov}{mfrm_fit}(object,
   component = c("design", "facets", "steps", "slopes", "explanatory", "population"),
   se_type = c("model", "sandwich"), facet = NULL, ...)
-\method{confint}{mfrm_fast_fit}(object, parm = NULL, level = 0.95,
+\method{confint}{mfrm_fit}(object, parm = NULL, level = 0.95,
   component = c("facets", "steps", "slopes", "person", "explanatory",
     "interactions", "population", "free"),
   se_type = c("model", "real", "sandwich", "profile"), ...)
-\method{anova}{mfrm_fast_fit}(object, ...)
-\method{confint}{mfrm_fast_gtheory}(object, parm = NULL, level = 0.95,
-  component = c("all", "variance_components", "coefficients"), ...)
+\method{anova}{mfrm_fit}(object, ..., nested = TRUE)
+\method{confint}{mfrm_gtheory}(object, parm = NULL, level = 0.95, ...)
 }
 \arguments{
+\item{nested}{Logical; request nested-model likelihood-ratio inference after eligibility checks.}
   \item{object}{A fitted measurement model or G-Study object.}
   \item{newdata}{Rating conditions containing the fitted base facet columns.
-    An explicit numeric \code{theta} column sets ability; otherwise known person
+    An explicit numeric \code{theta} column sets ability (\code{Theta} is an alias when it is not a model facet; conflicting columns are rejected); otherwise known person
     IDs use the primary fitted score. Unknown persons use the fitted population
     mean if available, or zero. \code{NULL} uses retained rating rows.}
   \item{type}{For prediction: \code{"response"} returns expected rubric scores,

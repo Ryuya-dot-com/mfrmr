@@ -11,7 +11,7 @@
 }
 
 .tidymfrm_fmt_df_md <- function(df, digits = 3L) {
-  if (is.null(df) || nrow(df) == 0L) return("_No rows to display._")
+  if (is.null(df) || nrow(df) == 0L) return("No rows to display.")
   d <- as.data.frame(df, stringsAsFactors = FALSE)
   fmt_col <- function(v) {
     if (is.logical(v)) return(ifelse(is.na(v), "NA", ifelse(v, "Yes", "No")))
@@ -24,8 +24,13 @@
     }
     as.character(ifelse(is.na(v), "NA", v))
   }
-  cols <- lapply(d, fmt_col)
-  hdr <- paste0("| ", paste(names(d), collapse = " | "), " |")
+  escape_cell <- function(x) vapply(x, function(value) {
+    value <- gsub("[\r\n]+", " ", value)
+    chars <- strsplit(value, "", fixed = TRUE)[[1L]]
+    paste(ifelse(chars %in% c("\\", "|"), paste0("\\", chars), chars), collapse = "")
+  }, character(1), USE.NAMES = FALSE)
+  cols <- lapply(d, function(x) escape_cell(fmt_col(x)))
+  hdr <- paste0("| ", paste(escape_cell(names(d)), collapse = " | "), " |")
   sep <- paste0("| ", paste(rep("---", ncol(d)), collapse = " | "), " |")
   rows <- vapply(seq_len(nrow(d)), function(i) {
     paste0("| ", paste(vapply(cols, `[`, character(1), i), collapse = " | "), " |")
@@ -38,6 +43,13 @@
   x <- gsub("<", "&lt;", x, fixed = TRUE)
   x <- gsub(">", "&gt;", x, fixed = TRUE)
   gsub("\"", "&quot;", x, fixed = TRUE)
+}
+
+.tidymfrm_md_table_cells <- function(line) {
+  # An even run of backslashes leaves the following pipe as a delimiter.
+  inside <- substr(line, 2L, nchar(line) - 1L)
+  cells <- strsplit(inside, '(?<!\\\\)(?:\\\\\\\\)*\\K\\|', perl = TRUE)[[1L]]
+  trimws(gsub('\\\\([\\\\|])', '\\1', cells, perl = TRUE))
 }
 
 .tidymfrm_md_to_html <- function(md_text, title) {
@@ -72,13 +84,13 @@
     ln <- lines[i]
     if (grepl("^\\|", ln)) {
       flush_list()
-      cells <- trimws(strsplit(sub("^\\|", "", sub("\\|$", "", ln)), "|", fixed = TRUE)[[1L]])
+      cells <- .tidymfrm_md_table_cells(ln)
       if (!in_table) {
-        out <- c(out, "<table><thead><tr>", paste0("<th>", vapply(cells, inline_fmt, character(1)), "</th>", collapse = ""), "</tr></thead><tbody>")
+        out <- c(out, "<table><thead><tr>", paste0("<th>", vapply(cells, .tidymfrm_escape_html, character(1)), "</th>", collapse = ""), "</tr></thead><tbody>")
         in_table <- TRUE
         if (i + 1L <= n && grepl("^\\|\\s*---", lines[i + 1L])) i <- i + 1L
       } else {
-        out <- c(out, "<tr>", paste0("<td>", vapply(cells, inline_fmt, character(1)), "</td>", collapse = ""), "</tr>")
+        out <- c(out, "<tr>", paste0("<td>", vapply(cells, .tidymfrm_escape_html, character(1)), "</td>", collapse = ""), "</tr>")
       }
     } else {
       flush_table()
@@ -148,7 +160,9 @@
 #' @return A Markdown string, `kableExtra` object, or `flextable` object.
 #' @examples
 #' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+#'   step_mfrm_measure() |>
+#'   step_mfrm_diagnose()
 #' cat(format_mfrm_table(wf, component = "raters", engine = "markdown"))
 #' @export
 format_mfrm_table <- function(x,
@@ -243,19 +257,24 @@ format_mfrm_table <- function(x,
 #'   to list (default `10L`).
 #' @param digits Rounding digits for formatted numeric tables (default `3L`).
 #' @param rater Optional ID for a focused rater feedback report.
-#' @param criterion_facet Optional non-rater facet for the matched criterion residual screen.
+#' @param criterion_facet Optional non-rater facet for within-criterion central
+#'   tendency correlations and matched residual associations. Neither is a
+#'   calibrated test for compression or halo; their reference depends on the
+#'   fitted model, person scoring and rating design.
 #' @param reference_plan Optional common rating plan for original-scale person scores.
 #' @param fair_level Level of the conditional normal approximation for common-plan scores.
 #' @return Character string containing the formatted Markdown/HTML report, or
 #'   the output `.docx` file path (invisibly when `file` is supplied).
 #' @examples
 #' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_analysis(
+#' wf <- mfrm_workflow(
 #'   mfrmr_example_core,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score"
-#' )
+#' ) |>
+#'   step_mfrm_measure() |>
+#'   step_mfrm_diagnose()
 #' md <- render_mfrm_report(wf, format = "markdown")
 #' tmp_html <- tempfile(tmpdir = tempdir(), fileext = ".html")
 #' render_mfrm_report(wf, format = "html", file = tmp_html)
@@ -399,7 +418,7 @@ render_mfrm_report <- function(x,
       doc <- add_table(doc, "Conditional Parametric Bootstrap Facet Uncertainty", x$bootstrap)
     }
     if (!is.null(x$gtheory)) {
-      doc <- add_table(doc, "G-Study Variance Components", x$gtheory$variance_components)
+      doc <- add_table(doc, "G-Study Variance Components", tidy(x$gtheory))
       doc <- add_table(doc, "D-Study Projections", x$gtheory$d_study)
     }
     if (!is.null(x$diagnostics)) {
@@ -492,7 +511,7 @@ render_mfrm_report <- function(x,
       "",
       "### Variance Components",
       "",
-      .tidymfrm_fmt_df_md(gt$variance_components, digits = digits + 1L),
+      .tidymfrm_fmt_df_md(tidy(gt), digits = digits + 1L),
       "",
       "### D-Study Candidate Designs",
       "",

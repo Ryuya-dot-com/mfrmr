@@ -3,32 +3,30 @@ Type: Package
 Title: Fast Estimation, Diagnostics, and Generalizability for Many-Facet Models
 Version: 0.3.2
 Date: 2026-11-26
-Config/mfrmr/release-status: candidate
-Config/mfrmr/public-version: 0.2.4
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
            comment = c(ORCID = "0000-0001-9205-0926"))
 Description: Estimates many-facet ordered-response measurement models (Rating
-    Scale, Partial Credit, and Generalized Many-Facet Rasch Models) including step
-    constraints, declarative category support, explanatory facet covariates, and
-    joint interactions via high-speed C++ Joint Maximum Likelihood,
-    Jeffreys-penalized Joint Maximum Likelihood with Block-Schur standard errors,
-    Gauss-Hermite and Laplace-adaptive Marginal Maximum Likelihood (with EAP,
-    Warm's WLE, latent regression, and sandwich covariances), Conditional Maximum
-    Likelihood, and Laplace-EB Markov rater drift models. Provides multi-threaded
-    C++ batch estimation, pre-estimation connectivity audits, fit diagnostics,
-    Fair(M), Real SE, RajuSA-Welch pairwise bias and parallel split-element
-    differential facet functioning (DFF), color-vision-safe 'ggplot2' graphics,
-    and Generalizability (G-Study) and Decision (D-Study) planning including fast
-    Henderson Method 1 (urGENOVA) estimation. Connects calibration, diagnostics,
-    visualizations, and Markdown, HTML, or Word report generation in one
-    analysis workflow. See 'Andrich' (1978)
-    <doi:10.1007/BF02293814>, 'Masters' (1982) <doi:10.1007/BF02296272>,
-    'Warm' (1989) <doi:10.1007/BF02294627>, 'Raju' (1990)
-    <doi:10.1007/BF02294433>, 'Uto and Ueno' (2020)
-    <doi:10.1007/s41237-020-00115-7>, and 'Brennan' (2001)
-    <doi:10.1007/978-1-4757-3456-0>.
+    Scale, Partial Credit, and Generalized Many-Facet Rasch Models) including
+    step constraints, declarative category support, explanatory facet
+    covariates, and joint interactions via high-speed C++ Joint Maximum
+    Likelihood, Jeffreys-penalized Joint Maximum Likelihood with Block-Schur
+    standard errors, Gauss-Hermite and Laplace-adaptive Marginal Maximum
+    Likelihood (with expected a posteriori scoring, Warm's weighted likelihood
+    estimation, latent regression, and sandwich covariances), Conditional
+    Maximum Likelihood, and Laplace empirical Bayes Markov rater drift models.
+    Provides multi-threaded C++ batch estimation, connectivity audits prior to
+    estimation, fit diagnostics, Fair(M), Real SE, RajuSA-Welch pairwise bias
+    and parallel split-element differential facet functioning,
+    color-vision-safe 'ggplot2' graphics, and Generalizability (G-Study) and
+    Decision (D-Study) planning including fast Henderson Method 1 (urGENOVA)
+    estimation. Connects calibration, diagnostics, visualizations, and
+    Markdown, HTML, or Word report generation in one analysis workflow. See
+    Andrich (1978) <doi:10.1007/BF02293814>, Masters (1982)
+    <doi:10.1007/BF02296272>, Warm (1989) <doi:10.1007/BF02294627>, Raju
+    (1990) <doi:10.1177/014662169001400208>, Uto and Ueno (2020)
+    <doi:10.1007/s41237-020-00115-7>, and Brennan (2001, ISBN:9780387952826).
 URL: https://github.com/Ryuya-dot-com/mfrmr
 BugReports: https://github.com/Ryuya-dot-com/mfrmr/issues
 License: MIT + file LICENSE
@@ -39,16 +37,15 @@ Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1)
 Imports:
-    cli,
     dplyr,
+    generics,
     ggplot2 (>= 3.5.0),
     grDevices,
     graphics,
     grid,
+    lpSolve,
     Matrix,
     methods,
-    psych,
-    purrr,
     rlang,
     stats,
     tibble,
@@ -58,29 +55,20 @@ Imports:
 LinkingTo:
     cpp11 (>= 0.5.4)
 Suggests:
-    brms,
     callr,
-    cmdstanr,
     flextable,
     jsonlite,
     kableExtra,
     knitr,
     lme4,
-    lpSolve,
     minqa,
-    nleqslv,
     nloptr,
-    numDeriv,
     officer,
-    ordinal,
     pkgload,
-    posterior,
     rmarkdown,
     RSpectra,
     testthat (>= 3.0.0),
     withr
-Additional_repositories: https://stan-dev.r-universe.dev
-SystemRequirements: CmdStan (optional, for running exported Stan models)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.1

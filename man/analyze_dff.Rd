@@ -6,29 +6,29 @@ Screens Differential Facet Functioning (DFF) of raters, tasks, or criteria acros
 }
 \usage{
 analyze_dff(
-  fit, diagnostics = NULL, facet, group, data = NULL, focal = NULL,
-  method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic", "residual", "refit"),
+  fit, facet, group, data = NULL, focal = NULL,
+  method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic"),
   df_method = c("facets", "classical"), min_obs = 10, p_adjust = "holm",
-  threads = 1L, comparison_review = NULL)
+  threads = 1L)
 }
 \arguments{
   \item{fit}{A fitted model object returned by \code{\link{fit_mfrm}}.}
-  \item{diagnostics}{Optional \code{\link{diagnose_mfrm}} object (used only by legacy \code{"refit"} mode).}
   \item{facet}{Character string naming the model facet to screen for differential functioning (e.g., \code{"Rater"} or \code{"Criterion"}).}
   \item{group}{Character string naming the grouping variable in \code{data} (e.g., examinee cohort or demographic group).}
   \item{data}{Optional \code{data.frame} containing \code{group} alongside the rating columns; defaults to the retained calibration data.}
   \item{focal}{Optional character string specifying the focal group level in \code{group}. Positive \code{Contrast} indicates higher severity/difficulty against the focal group.}
-  \item{method}{DFF test family: \code{"mml_lrt"} (default C++ split-element MML likelihood-ratio test), \code{"cml_lrt"} (C++ split-element CML LRT), \code{"raju_welch"} (fixed-calibration pairwise contrast), \code{"mh"} (stratified mean-score Mantel-Haenszel), \code{"logistic"} (cumulative-logit uniform/non-uniform LRT), or legacy \code{"residual"} / \code{"refit"}.}
+  \item{method}{DFF test family: \code{"mml_lrt"} (default C++ split-element MML likelihood-ratio test), \code{"cml_lrt"} (C++ split-element CML LRT), \code{"raju_welch"} (fixed-calibration pairwise contrast), \code{"mh"} (stratified mean-score Mantel-Haenszel), \code{"logistic"} (cumulative-logit uniform/non-uniform LRT).}
   \item{df_method}{Degrees-of-freedom convention when \code{method = "raju_welch"} (\code{"facets"} or \code{"classical"}).}
   \item{min_obs}{Minimum required ratings per group for an element to be tested (default \code{10}).}
   \item{p_adjust}{Multiple-testing adjustment method passed to \code{\link[stats]{p.adjust}} (default \code{"holm"}).}
   \item{threads}{Integer number of C++ worker threads for parallel split-element refits (default \code{1L}).}
-  \item{comparison_review}{Optional comparison-design audit object for legacy \code{"refit"} mode.}
 }
 \value{
 An S3 object of class \code{"mfrm_dff"} containing \code{table} (\code{Facet}, \code{Level}, \code{ReferenceGroup}, \code{FocalGroup}, \code{ObsRef}, \code{ObsFocal}, \code{Contrast}, \code{SE}, \code{Statistic}, \code{df}, \code{pValue}, \code{pAdj}, \code{Flagged}), \code{method}, \code{reference}, and \code{focal}. Supports \code{summary()} and \code{plot()}.
 }
 \details{
+When \env{_R_CHECK_LIMIT_CORES_} requests a core limit, native worker counts are capped at two. The default remains one worker.
+
 Split-likelihood tests support unified, unpenalized RSM/PCM calibrations without
 anchors, custom facet/step constraints, interactions or restricted category
 support. Unsupported specifications are rejected rather than dropped.

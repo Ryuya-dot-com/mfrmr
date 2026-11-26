@@ -1,21 +1,21 @@
-vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, assumption, ...) {
+.mfrm_gstudy_vcov_moments <- function(object, score = NULL, weights = NULL, assumption, ...) {
     rlang::check_dots_empty()
-    if (missing(assumption) || !identical(assumption, "normal")) 
+    if (missing(assumption) || !identical(assumption, "normal"))
         stop("Sampling covariance requires `assumption = 'normal'`; the assumption is not tested.", call. = FALSE)
     g <- object
     scores <- g$design$scores
     sources <- names(g$components)
-    if (!inherits(g, "mfrm_multivariate_gstudy") || !is.character(scores) || !length(scores) || anyNA(scores) || 
-        anyDuplicated(scores) || !.mfrm_mvgt_valid_facets(names(g$design$facets)) || !identical(sources, 
-        .mfrm_mvgt_sources(c("Person", names(g$design$facets)), g$design$nesting)) || !all(vapply(g$components, 
-        function(m) is.matrix(m) && is.numeric(m) && !is.complex(m) && identical(dimnames(m), list(scores, 
-            scores)) && all(is.finite(m)) && identical(m, t(m)), logical(1)))) 
-        stop("The G-study components or identities are incomplete or altered; recreate the result.", 
+    if (!inherits(g, "mfrm_gtheory") || !is.character(scores) || !length(scores) || anyNA(scores) ||
+        anyDuplicated(scores) || !.mfrm_mvgt_valid_facets(names(g$design$facets)) || !identical(sources,
+        .mfrm_mvgt_sources(c("Person", names(g$design$facets)), g$design$nesting)) || !all(vapply(g$components,
+        function(m) is.matrix(m) && is.numeric(m) && !is.complex(m) && identical(dimnames(m), list(scores,
+            scores)) && all(is.finite(m)) && identical(m, t(m)), logical(1))))
+        stop("The G-study components or identities are incomplete or altered; recreate the result.",
             call. = FALSE)
     pair <- is.character(score) && length(score) == 2L
     if (pair) {
-        if (!is.null(weights) || anyNA(score) || anyDuplicated(score) || !all(score %in% scores)) 
-            stop("Select two distinct original scores, without weights, for covariance-component SEs.", 
+        if (!is.null(weights) || anyNA(score) || anyDuplicated(score) || !all(score %in% scores))
+            stop("Select two distinct original scores, without weights, for covariance-component SEs.",
                 call. = FALSE)
     }
     else {
@@ -28,19 +28,19 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
         design <- .mfrm_mvgt_anova_summary(g)
         for (m in g$mean_products) {
             unit <- max(abs(m))
-            if (unit > 0 && min(eigen(m/unit, symmetric = TRUE, only.values = TRUE)$values) < -64 * .Machine$double.eps * 
-                nrow(m)) 
-                stop("Stored ANOVA mean products must be positive semidefinite; recreate the G-study.", 
+            if (unit > 0 && min(eigen(m/unit, symmetric = TRUE, only.values = TRUE)$values) < -64 * .Machine$double.eps *
+                nrow(m))
+                stop("Stored ANOVA mean products must be positive semidefinite; recreate the G-study.",
                   call. = FALSE)
         }
         mapped <- design$A %*% do.call(rbind, lapply(g$mean_products, as.vector))
         original <- do.call(rbind, lapply(g$components, as.vector))
-        if (!isTRUE(all.equal(unname(mapped), unname(original), tolerance = 1e-10))) 
+        if (!isTRUE(all.equal(unname(mapped), unname(original), tolerance = 1e-10)))
             stop("Stored components disagree with their mean products; recreate the G-study.", call. = FALSE)
     }
     else if (identical(g$design$method, "Multivariate MINQUE(0)")) {
         groups <- .mfrm_mvgt_moment_groups(g)
-        design <- if (isTRUE(g$design$balanced) && isTRUE(g$design$complete)) 
+        design <- if (isTRUE(g$design$balanced) && isTRUE(g$design$complete))
             .mfrm_mvgt_anova_interval_design(g$design)
         else NULL
     }
@@ -60,9 +60,9 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
         estimate <- vapply(g$components, function(m) m[score[1L], score[2L]], numeric(1))
         unit1 <- max(abs(v1))
         unit2 <- max(abs(v2))
-        if (unit1 == 0) 
+        if (unit1 == 0)
             unit1 <- 1
-        if (unit2 == 0) 
+        if (unit2 == 0)
             unit2 <- 1
         unit <- sqrt(unit1) * sqrt(unit2)
         result <- .mfrm_mvgt_moment_correct(map, estimate/unit, v1/unit1, v2/unit2)
@@ -72,16 +72,16 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
         w <- weights/ws
         active <- which(w != 0)
         ms <- max(abs(unlist(lapply(g$components, function(m) m[active, active, drop = FALSE]))))
-        if (ms == 0) 
+        if (ms == 0)
             ms <- 1
-        theta <- vapply(g$components, function(m) drop(crossprod(w[active], (m[active, active, drop = FALSE]/ms) %*% 
+        theta <- vapply(g$components, function(m) drop(crossprod(w[active], (m[active, active, drop = FALSE]/ms) %*%
             w[active])), numeric(1))
         unit <- ms * ws * ws
         estimate <- theta * unit
         result <- .mfrm_mvgt_moment_correct(map, theta)
         if (!is.null(design)) {
-            means <- if (identical(g$design$method, "Balanced multivariate ANOVA")) 
-                vapply(g$mean_products, function(m) drop(crossprod(w[active], (m[active, active, drop = FALSE]/ms) %*% 
+            means <- if (identical(g$design$method, "Balanced multivariate ANOVA"))
+                vapply(g$mean_products, function(m) drop(crossprod(w[active], (m[active, active, drop = FALSE]/ms) %*%
                   w[active])), numeric(1))
             else drop(L %*% theta)
             result$covariance <- tcrossprod(sweep(A, 2L, means * sqrt(2/(design$df + 2)), "*"))
@@ -89,34 +89,34 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
             result$estimable[] <- TRUE
         }
     }
-    if (!is.finite(unit) || unit <= 0 || any(!is.finite(estimate))) 
+    if (!is.finite(unit) || unit <= 0 || any(!is.finite(estimate)))
         stop("Sampling-covariance units exceed numeric range; rescale scores or weights.", call. = FALSE)
     out <- (result$covariance * unit) * unit
-    if (any(is.infinite(out)) || any(!is.na(out) & result$covariance != 0 & out == 0)) 
+    if (any(is.infinite(out)) || any(!is.na(out) & result$covariance != 0 & out == 0))
         stop("Sampling covariance exceeds numeric range; rescale scores or weights.", call. = FALSE)
     dimnames(out) <- list(sources, sources)
     variance <- diag(out)
     se <- result$se * unit
-    status <- ifelse(!diag(result$estimable), "Sampling variance not identifiable", ifelse(variance < 
-        0, "Negative sampling-variance estimate", ifelse(variance == 0, "Zero sampling-variance estimate", 
+    status <- ifelse(!diag(result$estimable), "Sampling variance not identifiable", ifelse(variance <
+        0, "Negative sampling-variance estimate", ifelse(variance == 0, "Zero sampling-variance estimate",
         "Available")))
-    attr(out, "summary") <- data.frame(Source = sources, Estimate = unname(estimate), SamplingVariance = unname(variance), 
+    attr(out, "summary") <- data.frame(Source = sources, Estimate = unname(estimate), SamplingVariance = unname(variance),
         SE = unname(se), SEStatus = unname(status))
-    eigenvalues <- if (all(is.finite(result$covariance))) 
+    eigenvalues <- if (all(is.finite(result$covariance)))
         eigen(result$covariance, symmetric = TRUE, only.values = TRUE)$values
     else NA_real_
-    attr(out, "diagnostics") <- list(moment_rank = map$rank, moment_dimension = map$dimension, singular_values = map$singular_values, 
-        estimable = result$estimable, reconstruction_error = map$error, positive_semidefinite = if (all(is.finite(eigenvalues))) min(eigenvalues) >= 
-            -sqrt(.Machine$double.eps) * max(abs(eigenvalues)) else NA, normalized_covariance = result$covariance, 
+    attr(out, "diagnostics") <- list(moment_rank = map$rank, moment_dimension = map$dimension, singular_values = map$singular_values,
+        estimable = result$estimable, reconstruction_error = map$error, positive_semidefinite = if (all(is.finite(eigenvalues))) min(eigenvalues) >=
+            -sqrt(.Machine$double.eps) * max(abs(eigenvalues)) else NA, normalized_covariance = result$covariance,
         component_scale = unit)
     attr(out, "score") <- score
     attr(out, "weights") <- weights
     attr(out, "assumption") <- "normal"
     attr(out, "source_design") <- g$design
     attr(out, "source_rows") <- g$data_usage$counts
-    attr(out, "notes") <- c("Sampling covariance of original ANOVA/MINQUE component estimates, conditional on the declared assignment under independent normal random effects. This is not measurement SEM, covariance between individual ratings or the SE of a separate REML estimator.", 
-        "Gaussian product-moment correction gives unbiased identifiable sampling-covariance entries under the model. Taking square roots is not an unbiasedness guarantee for SEs and does not justify normal-reference confidence intervals.", 
-        "Negative sampling variances are retained, with unavailable SEs. Unidentified entries are NA. An indefinite matrix is not repaired; inspect summary and diagnostics before propagating it to another target.", 
+    attr(out, "notes") <- c("Sampling covariance of original ANOVA/MINQUE component estimates, conditional on the declared assignment under independent normal random effects. This is not measurement SEM, covariance between individual ratings or the SE of a separate REML estimator.",
+        "Gaussian product-moment correction gives unbiased identifiable sampling-covariance entries under the model. Taking square roots is not an unbiasedness guarantee for SEs and does not justify normal-reference confidence intervals.",
+        "Negative sampling variances are retained, with unavailable SEs. Unidentified entries are NA. An indefinite matrix is not repaired; inspect summary and diagnostics before propagating it to another target.",
         "Scores and composite weights are prespecified; omission must preserve the model conditional on assignment. No robustness, informative-missingness correction or general confidence-interval coverage is claimed. Save the complete result with saveRDS().")
     out
 }
@@ -124,13 +124,13 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
 .mfrm_mvgt_moment_groups <- function(g) {
     ids <- c(g$design$person, unname(g$design$facets))
     data <- g$data
-    if (anyDuplicated(ids) || !is.data.frame(data) || !all(ids %in% names(data)) || anyNA(data[ids]) || 
-        nrow(data) != g$design$rows || anyDuplicated(data[ids])) 
-        stop("MINQUE sampling covariance needs the retained observed assignments; recreate the G-study.", 
+    if (anyDuplicated(ids) || !is.data.frame(data) || !all(ids %in% names(data)) || anyNA(data[ids]) ||
+        nrow(data) != g$design$rows || anyDuplicated(data[ids]))
+        stop("MINQUE sampling covariance needs the retained observed assignments; recreate the G-study.",
             call. = FALSE)
     factors <- lapply(data[ids], factor)
     actual_counts <- vapply(factors, nlevels, integer(1))
-    subsets <- if (length(ids) == 2L) 
+    subsets <- if (length(ids) == 2L)
         list(1L, 2L, 1:2)
     else list(1L, 2L, 3L, c(1L, 2L), c(1L, 3L), c(2L, 3L), 1:3)
     if (!is.null(g$design$nesting)) {
@@ -138,18 +138,18 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
         child <- match(names(g$design$nesting), labels)
         parent <- match(unname(g$design$nesting), labels)
         subsets <- list(1L, parent, c(child, parent), c(1L, parent), 1:3)
-        children <- vapply(split(factors[[child]], factors[[parent]]), function(x) length(unique(x)), 
+        children <- vapply(split(factors[[child]], factors[[parent]]), function(x) length(unique(x)),
             integer(1))
         actual_counts[child] <- sum(children)
     }
-    potential <- if (is.null(g$design$nesting)) 
+    potential <- if (is.null(g$design$nesting))
         prod(as.double(actual_counts))
     else actual_counts[1L] * actual_counts[child]
     complete <- unname(nrow(data) == potential)
     balanced <- complete && (is.null(g$design$nesting) || length(unique(children)) == 1L)
-    if (!identical(as.numeric(g$design$counts), as.numeric(actual_counts)) || !identical(isTRUE(g$design$complete), 
-        complete) || !identical(isTRUE(g$design$balanced), balanced) || (!is.null(g$design$nesting) && 
-        !identical(as.numeric(g$design$child_counts), as.numeric(children)))) 
+    if (!identical(as.numeric(g$design$counts), as.numeric(actual_counts)) || !identical(isTRUE(g$design$complete),
+        complete) || !identical(isTRUE(g$design$balanced), balanced) || (!is.null(g$design$nesting) &&
+        !identical(as.numeric(g$design$child_counts), as.numeric(children))))
         stop("Stored design counts or completeness do not match the observed assignments.", call. = FALSE)
     groups <- lapply(subsets, function(s) .mfrm_mvgt_group(factors[s]))
     k <- length(groups)
@@ -159,18 +159,18 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
     S <- matrix(0, k, k)
     for (i in seq_len(k)) for (j in seq_len(i)) {
         counts <- tabulate(.mfrm_mvgt_group(list(groups[[i]], groups[[j]])))
-        S[i, j] <- S[j, i] <- sum(as.double(counts)^2) - 2 * sum(size[[i]] * size[[j]])/N + total[i] * 
+        S[i, j] <- S[j, i] <- sum(as.double(counts)^2) - 2 * sum(size[[i]] * size[[j]])/N + total[i] *
             total[j]/N^2
     }
     gram <- g$estimation$kernel_gram
     products <- g$estimation$quadratic_products
-    if (!is.matrix(gram) || !identical(dim(gram), c(k, k)) || any(!is.finite(gram)) || !isTRUE(all.equal(unname(gram), 
-        S, tolerance = 1e-10)) || !is.list(products) || length(products) != k) 
+    if (!is.matrix(gram) || !identical(dim(gram), c(k, k)) || any(!is.finite(gram)) || !isTRUE(all.equal(unname(gram),
+        S, tolerance = 1e-10)) || !is.list(products) || length(products) != k)
         stop("Stored MINQUE equations do not match the observed assignment; recreate the G-study.", call. = FALSE)
     rhs <- do.call(rbind, lapply(products, as.vector))
     theta <- do.call(rbind, lapply(g$components, as.vector))
-    if (!isTRUE(all.equal(unname(gram %*% theta), unname(rhs), tolerance = 1e-10))) 
-        stop("Stored MINQUE components disagree with their quadratic products; recreate the G-study.", 
+    if (!isTRUE(all.equal(unname(gram %*% theta), unname(rhs), tolerance = 1e-10)))
+        stop("Stored MINQUE components disagree with their quadratic products; recreate the G-study.",
             call. = FALSE)
     groups
 }
@@ -217,7 +217,7 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
         x[ij[j, 1], ij[j, 2]] <- x[ij[j, 2], ij[j, 1]] <- 1
         E[, j] <- as.vector(x)
     }
-    list(k = k, index = index, expand = E, L = P[index, , drop = FALSE] %*% E, diagonal = which(ij[, 
+    list(k = k, index = index, expand = E, L = P[index, , drop = FALSE] %*% E, diagonal = which(ij[,
         1] == ij[, 2]))
 }
 
@@ -225,19 +225,19 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
     s <- .mfrm_mvgt_moment_symmetric(P)
     L <- s$L
     I <- diag(nrow(L))
-    M <- if (pair) 
+    M <- if (pair)
         rbind(cbind(I, L), cbind(L/2, I + L/2))
     else I + L
-    target <- if (pair) 
+    target <- if (pair)
         cbind(L/2, L/2)
     else L
     singular <- svd(M)
     keep <- singular$d > sqrt(.Machine$double.eps) * max(singular$d)
-    inverse <- sweep(singular$v[, keep, drop = FALSE], 2, singular$d[keep], "/") %*% t(singular$u[, keep, 
+    inverse <- sweep(singular$v[, keep, drop = FALSE], 2, singular$d[keep], "/") %*% t(singular$u[, keep,
         drop = FALSE])
     weights <- target %*% inverse
     error <- sqrt(rowSums((weights %*% M - target)^2))/pmax(sqrt(rowSums(target^2)), .Machine$double.eps)
-    list(symmetric = s, weights = weights, estimable = error < 1e-08, error = error, rank = sum(keep), 
+    list(symmetric = s, weights = weights, estimable = error < 1e-08, error = error, rank = sum(keep),
         dimension = nrow(M), singular_values = singular$d, moment = M, target = target, pair = pair)
 }
 
@@ -253,6 +253,6 @@ vcov.mfrm_multivariate_gstudy <- function(object, score = NULL, weights = NULL, 
     available <- matrix(s$expand %*% as.numeric(map$estimable), s$k) > 0
     value <- raw
     value[!available] <- NA_real_
-    list(covariance = value, raw_covariance = raw, estimable = available, se = ifelse(is.finite(diag(value)) & 
+    list(covariance = value, raw_covariance = raw, estimable = available, se = ifelse(is.finite(diag(value)) &
         diag(value) >= 0, sqrt(pmax(diag(value), 0)), NA_real_))
 }

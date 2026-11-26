@@ -6,6 +6,11 @@ test_that("GPCM local bias uses fitted slopes, weights and independent cell like
       step_facet = "Criterion", slope_facet = c("Rater", "Criterion"), weight = "Weight",
       spec = list(gpcm_mml_identification = "fixed_standard_normal", slope_type = formula))
     b <- estimate_bias(f, interaction_facets = c("Rater", "Criterion"))
+    st <- .mfrm_fit_state(f)
+    native <- mfrm_cpp_fast_bias_pairwise(st$enc, st$theta, st$theta_exclude,
+      st$beta_list, st$step_cum, 0L, 1L, TRUE, st$alpha)$cells[[1L]]
+    expect_true(all(is.na(b$table$BiasSE)))
+    expect_true(all(grepl("nonunit_observation_weights", b$table$InferenceReason)))
     dd <- f$encoding$retained_data
     expected <- predict(f)
     for (i in c(1L, 5L, 10L)) {
@@ -29,7 +34,7 @@ test_that("GPCM local bias uses fitted slopes, weights and independent cell like
       h <- 1e-3
       curvature <- (nll(optimum + h) - 2 * nll(optimum) + nll(optimum - h)) / h^2
       expect_equal(row$BiasSize, optimum, tolerance = 2e-6)
-      expect_equal(row$BiasSE, 1 / sqrt(curvature), tolerance = 2e-6)
+      expect_equal(native$bias_se[i], 1 / sqrt(curvature), tolerance = 2e-6)
     }
     pw <- b$pairwise
     expect_equal(pw$ContrastSE, sqrt(pw$SE1^2 + pw$SE2^2), tolerance = 1e-12)
@@ -42,10 +47,13 @@ test_that("joint bias changes only the declared interaction and uses checked LRT
   args <- list(data = d, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
     method = "MML", population_formula = ~ 1, weight = "Weight", control = list(quad_points = 41L))
   f <- do.call(fit_mfrm, args)
-  b <- estimate_bias(f, interaction_facets = c("Rater", "Criterion"), method = "joint")
+  expect_warning(b <- estimate_bias(f, interaction_facets = c("Rater", "Criterion"), method = "joint"), "eligible")
   ref <- do.call(fit_mfrm, c(args, list(facet_interactions = list(c("Rater", "Criterion")))))
   expect_equal(b$joint_fit$loglik, ref$loglik, tolerance = 1e-8)
-  expect_equal(b$lrt[c("df", "ChiSq", "pValue")], anova(f, ref)$lrt[c("df", "ChiSq", "pValue")], tolerance = 1e-8)
+  expect_null(b$lrt)
+  expect_warning(comparison <- anova(f, ref), "eligible")
+  expect_null(comparison$lrt)
+  expect_true(all(is.na(b$table$pValue)))
   expect_identical(b$joint_fit$control, f$control)
   for (key in c("weight", "pop_X_mat", "pop_mode", "fixed_sigma", "custom_step_B", "step_cat_min", "step_cat_max"))
     expect_identical(b$joint_fit$encoding[[key]], f$encoding[[key]])
@@ -74,7 +82,12 @@ test_that("DFF retains weights and population covariates in both likelihood fits
   split <- fit_mfrm(ds, "Person", c("Rater", "Criterion"), "Score", method = "MML",
     weight = "Weight", population_formula = ~ X + Group, person_data = pd, control = list(quad_points = 41L))
   expect_equal(z$loglik_base, base$loglik, tolerance = 1e-8)
-  expect_equal(z$table$Statistic[z$table$Level == "R01"], 2 * (split$loglik - base$loglik), tolerance = 1e-7)
+  levels <- split$facets$Level
+  focal <- split$facets$Estimate[levels == paste0("R01_", z$focal)]
+  reference <- split$facets$Estimate[levels == paste0("R01_", z$reference)]
+  expect_equal(z$table$Contrast[z$table$Level == "R01"], focal - reference, tolerance = 1e-7)
+  expect_true(all(is.na(z$table$Statistic)))
+  expect_true(all(grepl("nonunit_observation_weights", z$table$InferenceReason)))
   shuffled <- d[rev(seq_len(nrow(d))), ]
   expect_equal(analyze_dff(f, facet = "Rater", group = "Group", data = shuffled)$table, z$table, tolerance = 1e-10)
   shuffled$Score[1] <- (shuffled$Score[1] %% 4) + 1

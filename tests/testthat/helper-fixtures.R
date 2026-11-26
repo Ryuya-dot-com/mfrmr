@@ -84,9 +84,7 @@ make_toy_fit <- function(method = "JML",
              score = "Score",
              method = method,
              model = model,
-             maxit = maxit,
-             attach_diagnostics = attach_diagnostics,
-             fast = FALSE)
+             maxit = maxit)
   ))
   assign(key, fit, envir = .mfrmr_test_cache)
   fit
@@ -99,7 +97,6 @@ make_toy_diagnostics <- function(fit = NULL,
   if (is.null(fit)) fit <- make_toy_fit()
   suppressMessages(suppressWarnings(
     diagnose_mfrm(fit,
-                  diagnostic_mode = diagnostic_mode,
                   residual_pca = residual_pca)
   ))
 }
@@ -122,4 +119,15 @@ local_toy_fit <- function(envir = parent.frame(),
   envir$.diag <- make_toy_diagnostics(envir$.fit,
                                        diagnostic_mode = diagnostic_mode)
   invisible(envir)
+}
+
+
+make_core_workflow <- function() {
+  key <- "core_workflow_mml"
+  if (!exists(key, envir = .mfrmr_test_cache, inherits = FALSE)) {
+    value <- mfrm_analysis(load_mfrmr_data("example_core"), "Person",
+      c("Rater", "Criterion"), "Score", dff_group = "Group", cut_scores = 2.5)
+    assign(key, value, envir = .mfrmr_test_cache)
+  }
+  get(key, envir = .mfrmr_test_cache, inherits = FALSE)
 }

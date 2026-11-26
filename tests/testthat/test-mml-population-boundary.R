@@ -25,12 +25,8 @@ test_that("linked MML rejects separation with one or both directions of cross-ra
   expect_error(fit(one_way), "No finite maximum-likelihood.*Rater")
   expect_error(fit(separated, "PCM"), "No finite maximum-likelihood.*Rater")
   persons$X <- rep(c(-1, 1, 1, -1), 6)
-  if (requireNamespace("lpSolve", quietly = TRUE)) {
-    expect_error(fit(one_way, formula = ~ 0 + Pool + X),
-      "No finite maximum-likelihood.*Rater")
-  } else {
-    expect_error(fit(one_way, formula = ~ 0 + Pool + X), "Install.*lpSolve")
-  }
+  expect_error(fit(one_way, formula = ~ 0 + Pool + X),
+    "No finite maximum-likelihood.*Rater")
   flipped <- separated
   flipped$Score <- 5L - flipped$Score
   expect_error(fit(flipped), "No finite maximum-likelihood.*Rater")
@@ -52,25 +48,23 @@ test_that("linked MML rejects separation with one or both directions of cross-ra
   expect_error(fit(one_way, "PCM", three_home, three_people),
     "No finite maximum-likelihood.*Rater")
 
-  if (requireNamespace("lpSolve", quietly = TRUE)) {
-    three_people$Trend <- as.integer(three_people$Pool) - 2L
-    separate_home <- three_home
-    separate_home$Rater[separate_home$Person %in% third$Person] <- "C"
-    bridge <- cells[cells$Id %in% 13:15, ]
-    bridge$Rater <- "C"
-    bridge$Score <- 1L
-    links <- rbind(one_way, bridge)
-    anchor <- function(level) data.frame(Facet = "Rater", Level = level, Anchor = 0)
-    for (formula in list(~ Trend, ~ 0 + Trend)) {
-      expect_error(fit(links, "PCM", separate_home, three_people, formula),
-        "No finite maximum-likelihood.*Rater")
-    }
-    expect_error(fit(links, "PCM", separate_home, three_people, anchors = anchor("B")),
-      "No finite maximum-likelihood.*Rater")
-    group <- data.frame(Facet = "Rater", Level = c("A", "C"), Group = "AC", GroupValue = 0)
-    expect_error(fit(links, "PCM", separate_home, three_people, group_anchors = group),
+  three_people$Trend <- as.integer(three_people$Pool) - 2L
+  separate_home <- three_home
+  separate_home$Rater[separate_home$Person %in% third$Person] <- "C"
+  bridge <- cells[cells$Id %in% 13:15, ]
+  bridge$Rater <- "C"
+  bridge$Score <- 1L
+  links <- rbind(one_way, bridge)
+  anchor <- function(level) data.frame(Facet = "Rater", Level = level, Anchor = 0)
+  for (formula in list(~ Trend, ~ 0 + Trend)) {
+    expect_error(fit(links, "PCM", separate_home, three_people, formula),
       "No finite maximum-likelihood.*Rater")
   }
+  expect_error(fit(links, "PCM", separate_home, three_people, anchors = anchor("B")),
+    "No finite maximum-likelihood.*Rater")
+  group <- data.frame(Facet = "Rater", Level = c("A", "C"), Group = "AC", GroupValue = 0)
+  expect_error(fit(links, "PCM", separate_home, three_people, group_anchors = group),
+    "No finite maximum-likelihood.*Rater")
 
   skip_on_cran()
   result_bal <- fit(balanced, "PCM")
@@ -83,7 +77,6 @@ test_that("linked MML rejects separation with one or both directions of cross-ra
   expect_equal(nrow(fair), nrow(three_people))
   expect_true(all(is.finite(fair$FairM)))
 
-  skip_if_not_installed("lpSolve")
   three_people$Trend <- as.integer(three_people$Pool) - 2L
   separate_home <- three_home
   separate_home$Rater[separate_home$Person %in% third$Person] <- "C"
@@ -107,27 +100,4 @@ test_that("linked MML rejects separation with one or both directions of cross-ra
   three_people$Pool <- as.integer(three_people$Pool)
   expect_s3_class(fit(one_way, "PCM", three_home, three_people, formula = ~ Pool), "mfrm_fit")
   three_people$Pool <- factor(three_people$Pool)
-  legacy <- testthat::with_mocked_bindings(
-    fit_mfrm(rbind(three_home, one_way), "Person", c("Rater", "Criterion"), "Score",
-      rating_min = 1, rating_max = 4, method = "MML", model = "PCM",
-      step_facet = "Criterion", population_formula = ~ 0 + Pool, person_data = three_people,
-      quad_points = 21L, fast = FALSE),
-    mfrmr_mml_population_boundary = function(...) NULL,
-    .package = "mfrmr"
-  )
-  path <- tempfile(fileext = ".rds")
-  on.exit(unlink(path), add = TRUE)
-  saveRDS(legacy, path)
-  legacy <- readRDS(path)
-  diagnostics <- diagnose_mfrm(legacy, residual_pca = "none")
-  expect_identical(diagnostics$fair_average$status, "no_finite_mle")
-  expect_equal(nrow(diagnostics$obs), nrow(three_home) + nrow(one_way))
-  expect_error(fair_average_table(legacy, diagnostics = diagnostics),
-    "No finite maximum-likelihood.*Rater")
-  stale <- testthat::with_mocked_bindings(diagnose_mfrm(legacy, residual_pca = "none"),
-    mfrmr_mml_population_boundary = function(...) NULL, .package = "mfrmr")
-  expect_gt(nrow(stale$fair_average$stacked), 0L)
-  # The public fair-score entry must recheck a saved diagnostic bundle.
-  expect_error(fair_average_table(legacy, diagnostics = stale),
-    "No finite maximum-likelihood.*Rater")
 })

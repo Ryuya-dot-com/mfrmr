@@ -1,24 +1,14 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
-# Runs the macOS/R-release cell first on every push and pull request. The
-# remaining Windows/Linux R-version cells start only after that prerequisite
-# succeeds. Push/PR checks use the lightweight suite; the complete Ubuntu
-# release suite is an explicit manual choice for broad changes or a batched
-# release review. Isolated G-theory
-# execution/resume validation remains an explicit slow tier and is not a
-# release check unless MFRMR_RUN_GTHEORY_SLOW is set by a dedicated run.
+# macOS runs the CRAN selection first; Ubuntu release then runs all package
+# tests with NOT_CRAN=true. Other cells retain the CRAN selection.
 on:
   push:
     branches: [main, master, 'dev/**', 'development/**']
   pull_request:
   workflow_dispatch:
     inputs:
-      full_suite:
-        description: Run the complete Ubuntu release test suite
-        type: boolean
-        required: false
-        default: false
       windows_timing:
-        description: Windows-only CRAN timing including manuals (ignores full_suite)
+        description: Windows-only CRAN timing including manuals
         type: boolean
         required: false
         default: false
@@ -61,7 +51,7 @@ jobs:
       os: ${{ matrix.config.os }}
       r: ${{ matrix.config.r }}
       cell-id: ${{ matrix.config.id }}
-      full: ${{ github.event_name == 'workflow_dispatch' && inputs.full_suite && matrix.config.id == 'ubuntu-release' }}
+      full: ${{ matrix.config.id == 'ubuntu-release' }}
       http-user-agent: ${{ matrix.config['http-user-agent'] || '' }}
 
   windows-cran-timing:

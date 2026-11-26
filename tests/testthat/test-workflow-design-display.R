@@ -65,7 +65,7 @@ test_that("explicit over-limit G-Study retains the measurement workflow", {
   expect_warning(
     wf <- mfrm_analysis(d, "Person", facets, "Score", g_facets = facets),
     "supports up to four non-person facets")
-  expect_s3_class(wf$fit, "mfrm_fast_fit")
+  expect_s3_class(wf$fit, "mfrm_fit")
   expect_equal(nrow(augment(wf)), nrow(d))
   expect_match(summary(wf)$gtheory_reason, "four non-person facets")
   expect_match(render_mfrm_report(wf, format = "html"), "G-Study unavailable", fixed = TRUE)

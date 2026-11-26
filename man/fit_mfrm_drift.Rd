@@ -31,7 +31,7 @@ fit_mfrm_drift(
   \item{step_sd}{Weak regularizing prior SD on step parameters (default \code{1}).}
   \item{person_sd}{Standard deviation of the normal person ability distribution (default \code{1}).}
   \item{logistic_scale}{Multiplicative scale constant (default \code{1}; use \code{1.7} for normal-ogive scaling).}
-  \item{quad_points}{Number of Gauss-Hermite quadrature nodes for person integration (default \code{81L}).}
+  \item{quad_points}{Number of normal quadrature grid points for person integration (default \code{81L}).}
   \item{maxit}{Maximum outer optimization iterations (default \code{60L}).}
   \item{tol}{Relative convergence tolerance (default \code{1e-06}).}
   \item{missing}{Missing-value handling: \code{"fail"} or \code{"omit"}.}

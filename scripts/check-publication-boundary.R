@@ -44,27 +44,17 @@ cff_field <- function(name) {
   sub("['\"]$", "", sub("^['\"]", "", trimws(sub("^[^:]+:", "", value))))
 }
 version <- field("Version")
-status <- field("Config/mfrmr/release-status")
 if (is.na(version) || !identical(version, cff_field("version")))
   stop("DESCRIPTION and CITATION.cff versions differ.")
-if (!status %in% c("development", "candidate", "released"))
-  stop("Unknown release status in DESCRIPTION.")
-if (status == "development") {
-  if (!is.na(field("Date")) || !is.na(cff_field("date-released")))
-    stop("Development sources must not declare a release date.")
-} else if (is.na(field("Date")) || !identical(field("Date"), cff_field("date-released"))) {
-  stop("Dated sources require matching DESCRIPTION and CITATION.cff dates.")
-}
-public_version <- field("Config/mfrmr/public-version")
-if (is.na(public_version) ||
-    (status == "released" && !identical(public_version, version)) ||
-    (status != "released" && utils::compareVersion(public_version, version) >= 0L))
-  stop("The declared public version conflicts with this source's release status.")
+if (is.na(field("Date")) || !identical(field("Date"), cff_field("date-released")))
+  stop("DESCRIPTION and CITATION.cff dates differ.")
+# The historical CRAN baseline is local evidence, not current release metadata.
 baseline <- read.csv("inst/validation/public-release-baseline-0.2.4.csv",
                      stringsAsFactors = FALSE)
 if (!all(c("Field", "Value") %in% names(baseline)) ||
     anyDuplicated(baseline$Field) ||
-    !identical(baseline$Value[baseline$Field == "PublicVersion"], public_version) ||
+    (length(baseline$Value[baseline$Field == "PublicVersion"]) != 1L ||
+     utils::compareVersion(baseline$Value[baseline$Field == "PublicVersion"], version) > 0L) ||
     !identical(length(baseline$Value[baseline$Field == "CranSourceSHA256"]), 1L) ||
     !grepl("^[a-f0-9]{64}$", baseline$Value[baseline$Field == "CranSourceSHA256"]))
   stop("Public release baseline is missing or inconsistent with DESCRIPTION.")

@@ -65,12 +65,14 @@ from the canvas and stored in \code{attr(p, "mfrm_notes")}.
 }
 \examples{
 utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_analysis(
+wf <- mfrm_workflow(
   mfrmr_example_core,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score"
-)
+) |>
+  step_mfrm_measure() |>
+  step_mfrm_diagnose()
 p_wright <- plot(wf, type = "wright", palette = "okabe_ito", draw = FALSE)
 p_vir <- plot(wf, type = "raters", palette = "viridis", draw = FALSE)
 p_mono <- plot(wf, type = "steps", palette = "monochrome", draw = FALSE)

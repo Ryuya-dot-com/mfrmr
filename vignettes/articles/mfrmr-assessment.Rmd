@@ -310,7 +310,7 @@ Two earlier development studies address different choices:
 - **Compression** narrows the range of scores across performances. In the
   rater card, a negative **Central tendency screen** correlation suggests low
   expected scores may be scored up and high expected scores down. The card
-  summarizes the rater across criteria. To investigate one domain, use
+  summarizes each criterion separately. To investigate one domain, use
   `augment(wf)` to inspect observed-minus-expected scores by expected score
   within that domain, then check how other raters scored the same performances.
 - **Halo** can make scores on different criteria move together within the
@@ -341,6 +341,13 @@ separation of measures, and G/Phi summarize observed-score dependability for
 a specified design. The recovery figures above evaluate estimation error and
 intervals. Use each diagnostic for its own question when deciding what the
 data support.
+
+The card computes residual–expected-score correlations separately within each
+criterion. A raw residual correlation is not calibrated against zero: fitting
+person scores can induce a negative baseline, whose magnitude depends on the
+model, estimator and rating design. A fixed correction such as −1/(K−1) is
+not supplied. Establish a design-matched reference before attributing an
+association to halo.
 
 ## Compare models on the same ratings
 

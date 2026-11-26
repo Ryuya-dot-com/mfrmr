@@ -38,6 +38,26 @@ For regression tests on a particular feature, use the relevant file in
 distribute. Use short help examples with real calculations and run longer
 examples explicitly when their model or dependencies change.
 
+## Test suites
+
+`tests/testthat.R` selects representative live calculations, S3 contracts,
+inference guards and reporting tests for CRAN. `NOT_CRAN=true` runs every
+package test, including independent numerical checks, repeated refits and
+full Word output. The Ubuntu release CI cell uses this full suite on pushes
+and pull requests; the other cells use the CRAN selection.
+
+After installing the current source, run either suite with saved per-test
+results and timings:
+
+```sh
+Rscript scripts/run-regression.R . cran /tmp/mfrmr-cran-tests
+Rscript scripts/run-regression.R . all /tmp/mfrmr-all-tests
+```
+
+The CRAN workflow test uses two bootstrap replications to check execution and
+result structure; this is not an adequate bootstrap analysis. The full test
+uses ten replications. Neither test estimates coverage or recovery performance.
+
 ## Documentation
 
 The source package includes reference help and two offline vignettes.

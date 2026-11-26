@@ -36,7 +36,7 @@ actionable calibration feedback cards for each rater.}
 to list (default \code{10L}).}
 
 \item{rater}{Optional rater ID. Produce a focused feedback report for this rater.}
-\item{criterion_facet}{Optional non-rater facet identifying the criteria for the rater's matched-residual halo screen.}
+\item{criterion_facet}{Optional non-rater facet identifying criteria for within-criterion residual/expected-score correlations and matched residual associations. These descriptive correlations do not by themselves diagnose central tendency or halo. The residual-correlation null baseline depends on the fitted model and rating design; neither zero nor a fixed negative correction is a calibrated cutoff.}
 \item{reference_plan}{Optional common rating plan for original-scale person Fair Average intervals in the assessment report. See \code{\link{fair_average_table}}.}
 \item{fair_level}{Level of the conditional normal approximation for common-plan scores.}
 
@@ -77,12 +77,14 @@ before interpreting a screening result.
 }
 \examples{
 utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_analysis(
+wf <- mfrm_workflow(
   mfrmr_example_core,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score"
-)
+) |>
+  step_mfrm_measure() |>
+  step_mfrm_diagnose()
 md <- render_mfrm_report(wf, format = "markdown")
 tmp_html <- tempfile(tmpdir = tempdir(), fileext = ".html")
 render_mfrm_report(wf, format = "html", file = tmp_html)

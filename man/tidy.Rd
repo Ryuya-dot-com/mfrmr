@@ -3,8 +3,8 @@
 \name{tidy}
 \alias{tidy}
 \alias{tidy.tidymfrm}
-\alias{tidy.mfrm_fast_fit}
-\alias{tidy.mfrm_fast_gtheory}
+\alias{tidy.mfrm_fit}
+\alias{tidy.mfrm_gtheory}
 \title{Tidy a Many-Facet Model or Workflow Object}
 \usage{
 tidy(x, ...)
@@ -18,7 +18,7 @@ tidy(x, ...)
   ...
 )
 
-\method{tidy}{mfrm_fast_fit}(
+\method{tidy}{mfrm_fit}(
   x,
   component = c("facets", "persons", "steps", "slopes"),
   conf.level = 0.95,
@@ -26,10 +26,10 @@ tidy(x, ...)
   ...
 )
 
-\method{tidy}{mfrm_fast_gtheory}(x, component = c("g_study", "d_study"), ...)
+\method{tidy}{mfrm_gtheory}(x, component = c("g_study", "d_study"), conf.level = 0.95, ...)
 }
 \arguments{
-\item{x}{A \code{tidymfrm}, \code{mfrm_fast_fit}, or \code{mfrm_fast_gtheory} object.}
+\item{x}{A \code{tidymfrm}, \code{mfrm_fit}, or \code{mfrm_gtheory} object.}
 
 \item{...}{Additional arguments (unused).}
 
@@ -53,10 +53,15 @@ Intervals use the public \code{mfrmr::confint()} contract, including
 exponentiated log-slope intervals for GPCM. When calibration is not ready,
 interval endpoints are \code{NA}; \code{inference_status} and \code{inference_reason}
 explain why. Point estimates and SE columns remain descriptive outputs.
+G-Study tables include \code{conf.low}, \code{conf.high}, and
+\code{interval_status}; see \code{\link{mfrm_g_study}} for the approximation
+and the reporting guard for degrees of freedom below one.
 }
 \examples{
 utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+  step_mfrm_measure() |>
+  step_mfrm_diagnose()
 tidy(wf, component = "raters")
 glance(wf)
 head(augment(wf))

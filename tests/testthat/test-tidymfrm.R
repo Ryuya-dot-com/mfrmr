@@ -2,6 +2,11 @@ test_that("the compatibility alias runs the three-pillar workflow", {
   expect_identical(tidymfrm, mfrm_analysis)
   utils::data("mfrmr_example_core", package = "mfrmr")
 
+  on_cran <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+  comparisons <- if (on_cran) "JML" else c("JML", "JML_jeffreys", "CML")
+  bootstrap_reps <- if (on_cran) 2L else 10L
+  withr::local_seed(20261126L)
+
   wf_mml <- tidymfrm(
     mfrmr_example_core,
     person = "Person",
@@ -9,10 +14,10 @@ test_that("the compatibility alias runs the three-pillar workflow", {
     score = "Score",
     model = "RSM",
     method = "MML",
-    compare_methods = c("JML", "JML_jeffreys", "CML"),
+    compare_methods = comparisons,
     dff_group = "Group",
     cut_scores = c(2.5, 3.0),
-    bootstrap = 10L,
+    bootstrap = bootstrap_reps,
     threads = 1L
   )
 
@@ -33,9 +38,13 @@ test_that("the compatibility alias runs the three-pillar workflow", {
   expect_equal(ncol(confint(wf_mml)), 2L)
 
   mc <- wf_mml$method_comparison
-  expect_equal(nrow(mc), 4L)
+  expect_equal(nrow(mc), 1L + length(comparisons))
   expect_true(all(mc$Converged))
   expect_true(all(mc$PersonCor > 0.98))
+
+  expect_equal(nrow(wf_mml$bootstrap), nrow(wf_mml$fit$facets))
+  expect_true(all(wf_mml$bootstrap$BootstrapRequested == bootstrap_reps))
+  expect_true(all(wf_mml$bootstrap$BootstrapAvailable <= bootstrap_reps))
 
   gs <- wf_mml$gtheory$g_study_summary
   expect_true(is.finite(gs$G))
@@ -97,12 +106,9 @@ test_that("Directional sensitivity, step_constraints, and category_support work 
   expect_lt(round(r1$fair_m[r1$term == "R01"], 4), round(r0$fair_m[r0$term == "R01"], 4))
 })
 
-test_that("All plot types render in okabe_ito, viridis, and strict R==G==B monochrome inside tempdir()", {
+test_that("Workflow plots render and monochrome colors have equal RGB channels", {
   utils::data("mfrmr_example_core", package = "mfrmr")
-  wf <- tidymfrm(
-    mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score",
-    cut_scores = 2.5
-  )
+  wf <- make_core_workflow()
 
   tmp_pdf <- tempfile(tmpdir = tempdir(), fileext = ".pdf")
   grDevices::pdf(tmp_pdf, width = 8, height = 6)
@@ -111,7 +117,10 @@ test_that("All plot types render in okabe_ito, viridis, and strict R==G==B monoc
     unlink(tmp_pdf)
   }, add = TRUE)
 
-  for (pal in c("okabe_ito", "viridis", "monochrome")) {
+  # All palettes are constructed in fast-engine-032; full rendering combinations
+  # are checked locally, while CRAN renders every type with the default palette.
+  palettes <- if (!isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) "okabe_ito" else c("okabe_ito", "viridis", "monochrome")
+  for (pal in palettes) {
     for (tp in c("wright", "raters", "steps", "dstudy", "persons")) {
       p <- plot(wf, type = tp, palette = pal, draw = TRUE)
       expect_s3_class(p, "ggplot")
@@ -128,10 +137,7 @@ test_that("All plot types render in okabe_ito, viridis, and strict R==G==B monoc
 
 test_that("render_mfrm_report() and format_mfrm_table() respect Suggests and tempdir()", {
   utils::data("mfrmr_example_core", package = "mfrmr")
-  wf <- tidymfrm(
-    mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score",
-    dff_group = "Group", cut_scores = 2.5
-  )
+  wf <- make_core_workflow()
 
   md_tbl <- format_mfrm_table(wf, component = "raters", engine = "markdown", digits = 2L)
   expect_type(md_tbl, "character")
@@ -153,12 +159,7 @@ test_that("render_mfrm_report() and format_mfrm_table() respect Suggests and tem
   expect_match(ht, "<!DOCTYPE html>")
   expect_match(ht, "Inference readiness")
 
-  if (requireNamespace("officer", quietly = TRUE)) {
-    tmp_docx <- tempfile(tmpdir = tempdir(), fileext = ".docx")
-    on.exit(unlink(tmp_docx), add = TRUE)
-    render_mfrm_report(wf, format = "docx", file = tmp_docx, digits = 2L)
-    expect_true(file.exists(tmp_docx))
-  }
+
 
   # Disconnected islands warn before fitting; the planning failure stays visible.
   disc <- rbind(
@@ -175,7 +176,19 @@ test_that("render_mfrm_report() and format_mfrm_table() respect Suggests and tem
   expect_match(summary(wf_disc)$gtheory_reason, "not identifiable")
 })
 
+test_that("the full Word report writes its tables and rater cards", {
+  skip_on_cran()
+  skip_if_not_installed("officer")
+  wf <- make_core_workflow()
+  tmp_docx <- tempfile(tmpdir = tempdir(), fileext = ".docx")
+  on.exit(unlink(tmp_docx), add = TRUE)
+  render_mfrm_report(wf, format = "docx", file = tmp_docx, digits = 2L)
+  expect_true(file.exists(tmp_docx))
+  expect_true("word/document.xml" %in% utils::unzip(tmp_docx, list = TRUE)$Name)
+})
+
 test_that("the workflow reports GMFRM discrimination and Markov rater drift", {
+  skip_on_cran()
   utils::data("mfrmr_example_core", package = "mfrmr")
   d <- mfrmr_example_core
   d$Wave <- ifelse(as.integer(factor(d$Person)) <= 24L, "T1", "T2")
@@ -185,7 +198,7 @@ test_that("the workflow reports GMFRM discrimination and Markov rater drift", {
     person = "Person",
     facets = c("Rater", "Criterion"),
     score = "Score",
-    model = "GPCM",
+    model = "GMFRM",
     step_facet = "Criterion",
     slope_facet = "Criterion",
     occasion = "Wave",

@@ -2,15 +2,15 @@
     n <- g$design$counts
     data <- g$data
     ids <- c(g$design$person, if (is.null(g$design$facets)) c(g$design$rater, g$design$task) else unname(g$design$facets))
-    if (!is.data.frame(data) || length(ids) != 3L || !all(ids %in% names(data)) || nrow(data) != g$design$rows || 
-        anyNA(data[ids]) || anyDuplicated(data[ids]) || !identical(unname(vapply(data[ids], function(x) length(unique(x)), 
+    if (!is.data.frame(data) || length(ids) != 3L || !all(ids %in% names(data)) || nrow(data) != g$design$rows ||
+        anyNA(data[ids]) || anyDuplicated(data[ids]) || !identical(unname(vapply(data[ids], function(x) length(unique(x)),
         integer(1))), unname(n))) {
-        stop("The G-study must retain its analyzed data and matching facet identities; recreate the G-study.", 
+        stop("The G-study must retain its analyzed data and matching facet identities; recreate the G-study.",
             call. = FALSE)
     }
     subsets <- list(1L, 2L, 3L, c(1L, 2L), c(1L, 3L), c(2L, 3L), 1:3)
     if (isTRUE(g$design$complete)) {
-        if (nrow(data) != prod(as.double(n))) 
+        if (nrow(data) != prod(as.double(n)))
             stop("The stored complete design is inconsistent.", call. = FALSE)
         L <- matrix(0, 7, 7)
         for (i in 1:7) for (j in 1:7) if (all(subsets[[i]] %in% subsets[[j]])) {
@@ -25,12 +25,12 @@
         groups <- lapply(subsets, function(s) .mfrm_mvgt_group(id_groups[s]))
         S <- g$estimation$kernel_gram
         if (!is.matrix(S) || !identical(dim(S), c(7L, 7L)) || any(!is.finite(S))) {
-            stop("The incomplete G-study needs its MINQUE covariance-component equations; recreate it.", 
+            stop("The incomplete G-study needs its MINQUE covariance-component equations; recreate it.",
                 call. = FALSE)
         }
         scale <- sqrt(diag(S))
         inverse <- solve(S/outer(scale, scale))/outer(scale, scale)
-        apply_V <- function(X) Reduce(`+`, lapply(1:7, function(j) theta[j] * rowsum(X, groups[[j]])[groups[[j]], 
+        apply_V <- function(X) Reduce(`+`, lapply(1:7, function(j) theta[j] * rowsum(X, groups[[j]])[groups[[j]],
             , drop = FALSE]))
         apply_A <- function(X) {
             X <- sweep(X, 2L, colMeans(X), "-")
@@ -52,18 +52,18 @@
             C <- C + 2 * crossprod(AV, matrix(VA, nrow = length(E)))
         }
     }
-    if (any(!is.finite(C))) 
+    if (any(!is.finite(C)))
         stop("Sampling covariance exceeds numeric range; review the design and rescale scores.", call. = FALSE)
     (C + t(C))/2
 }
 
 summary.mfrm_multivariate_d_comparison <- function(object, ..., planning = FALSE) {
     rlang::check_dots_empty()
-    if (!is.logical(planning) || length(planning) != 1L || is.na(planning)) 
+    if (!is.logical(planning) || length(planning) != 1L || is.na(planning))
         stop("`planning` must be TRUE or FALSE.", call. = FALSE)
     if (planning) {
-        if (is.null(object$planning)) 
-            stop("Attach costs and targets with recommend_mfrm_design() first.", call. = FALSE)
+        if (is.null(object$planning))
+            stop("This result has no stored cost/target review. Use `planning = FALSE` to return the available plan comparisons.", call. = FALSE)
         review <- object$planning
         plans <- review$plans
         counts <- object$design_grid[plans$Scenario, , drop = FALSE]
@@ -83,11 +83,11 @@ print.mfrm_multivariate_d_comparison <- function(x, digits = NULL, row.names = F
         print(x$weights, digits = digits)
     }
     cat("Future complete crossed plans; counts apply to every person and score.\n")
-    if (!is.null(x$source_design$score_convention)) 
+    if (!is.null(x$source_design$score_convention))
         cat(x$source_design$score_convention, "\n")
     print(x$design_grid, digits = digits, row.names = row.names, ...)
     print(x$comparisons, digits = digits, row.names = row.names, ...)
-    cat(format(100 * x$level), "% approximate pointwise intervals; normal random effects required.\n", 
+    cat(format(100 * x$level), "% approximate pointwise intervals; normal random effects required.\n",
         sep = "")
     cat("Positive G/Phi or negative SEM differences favor the comparison plan.\n")
     cat("An interval containing zero does not establish equivalence.\n")

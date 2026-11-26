@@ -13,7 +13,7 @@ An assessment team should be able to explain whose scores are comparable under a
 `mfrmr 0.3.2` provides direct numerical functions and standard R S3 generics (`predict()`, `coef()`, `vcov()`, `confint()`, `anova()`, `plot()`, `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `summary()`, and `print()`), backed by a unified C++ engine (`cpp11`):
 
 - **Design & connectivity:** `describe_mfrm_data()`, `check_mfrm_connectivity()`, `load_mfrmr_data()`
-- **Measurement & longitudinal drift:** `fit_mfrm()`, `fit_mfrm_drift()`, `mfrm_batch_fit()`, `compare_mfrm()`, `compute_information()`, `apply_empirical_bayes_shrinkage()`, `read_mfrm_posterior()`
+- **Measurement & longitudinal drift:** `fit_mfrm()`, `fit_mfrm_drift()`, `mfrm_batch_fit()`, `compare_mfrm()`, `compute_information()`, `apply_empirical_bayes_shrinkage()`
 - **Diagnostics, Fair(M), bias, DFF, & classification:** `diagnose_mfrm()`, `fair_average_table()`, `estimate_bias()`, `analyze_dff()`, `compute_person_fit_indices()`, `classification_table()`, `interrater_agreement()`
 - **Equating & scale linking:** `make_anchor_table()`, `anchor_to_baseline()`, `detect_anchor_drift()`
 - **Generalizability & Decision Studies:** `mfrm_g_study()`, `mfrm_d_study()`
@@ -65,10 +65,19 @@ and reference plan.
 - **Differential facet functioning (`analyze_dff()`):** Supports parallel warm-started C++ split-element `"mml_lrt"` (with optional latent-regression group-impact adjustment and sandwich SEs), `"cml_lrt"`, `"raju_welch"`, Mantel-Haenszel (`"mh"`), and ordinal logistic (`"logistic"`) tests.
 - **Unified `ggplot2` graphics (`plot()`):** All `plot()` methods return editable `ggplot` objects (omitting canvas titles/footnotes by default and storing notes in `attr(p, "mfrm_notes")`) using color-vision-safe `"okabe_ito"`, `"viridis"`, or strict `R == G == B` `"monochrome"` palettes paired with distinct point shapes and line types.
 
-## Bayesian ecosystem direction
+## Bayesian ecosystem direction (0.4.0)
 
-- `mfrmr` retains `read_mfrm_posterior()` (with SHA-256 `model-data.rds` checksum verification) to reload saved posterior summary bundles and inspect summaries, intervals, and plots.
-- Full joint Bayesian MCMC estimation for multidimensional and generalized many-facet models (including HMC / NUTS sampling for high-dimensional rater, task, and longitudinal drift hierarchies) is planned via external Julia integration (`BayesianMGMFRM.jl`) rather than embedding Stan/JAGS code generators inside `mfrmr`.
+Version 0.3.2 does not import Bayesian posterior bundles or generate Stan or
+brms models. Bayesian estimation is developed in `BayesianMGMFRM.jl`, with a
+separate R interface planned for a later release. Existing bundles should be
+read with the version of the software that created them.
+
+The planned interface will preserve posterior draws and enough model metadata
+to check that the parameterization matches the supported `mfrmr` scoring and
+reporting methods. Initial support will focus on explicitly matched
+unidimensional models. Prediction and diagnostics will be available only where
+the imported model and observed-rating data support their interpretation;
+multidimensional models will need dimension-aware summaries and plots.
 
 ## Future 0.4.x research candidates
 

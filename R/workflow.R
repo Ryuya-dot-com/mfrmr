@@ -50,9 +50,8 @@
 #' @param rater_facet Optional character string naming the rater facet; inferred automatically if `NULL`.
 #' @param occasion Optional character string naming the rating occasion/wave column for Markov rater drift modeling.
 #' @param rating_min,rating_max Optional integer rubric bounds.
-#' @param fit Optional fitted mfrmr calibration, such as an anchored fit.
-#'   Supply the same rating columns and retained rows in their original order.
-#'   Continue with [step_mfrm_gtheory()] or [step_mfrm_diagnose()] directly.
+#' @param fit Optional current `mfrm_fit` calibration, or its linked result from
+#'   [anchor_to_baseline()]. Supply the same rating columns and retained rows.
 #' @param rater_panels Optional named character vector assigning rater IDs to panels.
 #' @param expected_design Optional score-free roster of planned rating cells.
 #' @return A `tidymfrm` workflow object.
@@ -86,7 +85,7 @@ mfrm_workflow <- function(data,
     fit <- fit$fit
   }
   if (!is.null(fit)) {
-    if (!inherits(fit, "mfrm_fast_fit")) stop("fit must be a fitted mfrmr calibration.", call. = FALSE)
+    .mfrm_validate_fit(fit)
     enc <- fit$encoding
     if (!identical(c(person, facets, score), c(enc$person_col, enc$base_facets, enc$score_col))) {
       stop("The fitted calibration must use the same person, facet, and score columns.", call. = FALSE)
@@ -111,7 +110,7 @@ mfrm_workflow <- function(data,
       network = TRUE, rater_panels = rater_panels
     )
   } else {
-    c(.mfrm_fast_connectivity_summary(enc), list(
+    c(.mfrm_connectivity_summary(enc), list(
       rater_linkage = .mfrm_rater_linkage(enc, rater_facet, network = TRUE, rater_panels = rater_panels)
     ))
   }
@@ -158,7 +157,7 @@ mfrm_workflow <- function(data,
 #' Run [step_mfrm_diagnose()] again to attach diagnostics for the new calibration.
 #'
 #' @param wf A `tidymfrm` workflow object from [mfrm_workflow()].
-#' @param model `"RSM"`, `"PCM"`, or `"GPCM"`.
+#' @param model `"GMFRM"` is an alias for `"GPCM"`. `"RSM"`, `"PCM"`, or `"GPCM"`.
 #' @param method Primary estimation method: `"MML"`, `"JML"`, `"JML_jeffreys"`, or `"CML"`.
 #' @param step_facet Facet owning category thresholds when `model` is `"PCM"` or `"GPCM"`.
 #'   For a GMFRM with common steps on a common rubric, use `"Common"`.
@@ -222,7 +221,7 @@ step_mfrm_measure <- function(wf,
                               gpcm_mml_identification = NULL) {
   if (!inherits(wf, "tidymfrm")) stop("`wf` must be a `tidymfrm` object.", call. = FALSE)
   t0 <- proc.time()[[3L]]
-  model <- match.arg(toupper(model[1L]), c("RSM", "PCM", "GPCM"))
+  model <- .mfrm_model_code(model)
   method <- match.arg(method[1L], c("MML", "JML", "JML_jeffreys", "CML"))
   slope_type <- match.arg(slope_type)
   person_score <- match.arg(person_score)
@@ -250,7 +249,6 @@ step_mfrm_measure <- function(wf,
     category_support = category_support,
     facet_formulas = facet_formulas,
     facet_data = facet_data,
-    fast = TRUE,
     warn_connectivity = warn,
     spec = model_spec,
     control = list(
@@ -262,7 +260,7 @@ step_mfrm_measure <- function(wf,
   )
   fit <- fit_with_method(method, warn_connectivity)
   wf$fit <- fit
-  wf$connectivity <- c(.mfrm_fast_connectivity_summary(fit$encoding), wf$connectivity["rater_linkage"])
+  wf$connectivity <- c(.mfrm_connectivity_summary(fit$encoding), wf$connectivity["rater_linkage"])
   wf$connectivity_calibrated <- TRUE
   wf[c("anchor_drift", "drift", "method_comparison", "diagnostics")] <- list(NULL)
   wf$spec$model <- model

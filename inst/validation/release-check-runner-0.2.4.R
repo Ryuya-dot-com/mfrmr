@@ -50,10 +50,7 @@ mfrmr_release_check_main <- function(package_root = ".",
     withr::local_envvar(c(NOT_CRAN = "false", `_R_CHECK_TIMINGS_` = "0",
       `_R_CHECK_DONTTEST_EXAMPLES_` = "true", OMP_NUM_THREADS = "1",
       OPENBLAS_NUM_THREADS = "1", VECLIB_MAXIMUM_THREADS = "1"))
-    mfrmr_release_check_assert(
-      requireNamespace("RTMB", quietly = TRUE) && utils::packageVersion("RTMB") >= "2.0" &&
-        requireNamespace("nleqslv", quietly = TRUE),
-      "The timing profile must exercise RTMB >= 2.0 and nleqslv features.")
+
   }
   output_directory <- normalizePath(
     output_directory, winslash = "/", mustWork = FALSE

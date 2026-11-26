@@ -263,31 +263,28 @@
   p
 }
 
-.mfrm_gg_person_fit <- function(fit_obj, palette = "okabe_ito", base_size = 11) {
-  pfi <- compute_person_fit_indices(fit_obj)$table
-  df <- pfi[is.finite(pfi$OutfitMnSq) & is.finite(pfi$lz), , drop = FALSE]
-  lvls <- c("Acceptable", "Outfit > 1.50", "lz < -2.0", "Both Flagged")
-  st_chr <- ifelse(
-    df$OutfitMnSq > 1.50 & df$lz < -2.0, "Both Flagged",
-    ifelse(df$lz < -2.0, "lz < -2.0",
-           ifelse(df$OutfitMnSq > 1.50, "Outfit > 1.50", "Acceptable"))
-  )
+.mfrm_gg_person_fit <- function(fit_obj, palette = "okabe_ito", base_size = 11, pfi = NULL) {
+  if (is.null(pfi)) pfi <- compute_person_fit_indices(fit_obj)
+  df <- as.data.frame(pfi)
+  df <- df[is.finite(df$OutfitMnSq) & is.finite(df$ReportValue), , drop = FALSE]
+  lvls <- c("Not flagged", "Outfit > 1.50", "Person-fit flag", "Both flagged")
+  st_chr <- ifelse(df$OutfitMnSq > 1.50 & df$ReportFlag, "Both flagged",
+    ifelse(df$ReportFlag, "Person-fit flag", ifelse(df$OutfitMnSq > 1.50, "Outfit > 1.50", "Not flagged")))
   df$Status <- factor(st_chr, levels = lvls)
   cols <- stats::setNames(.mfrm_cvd_palette(4L, palette), lvls)
   shapes <- stats::setNames(c(16L, 17L, 15L, 8L), lvls)
-
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$OutfitMnSq, y = .data$lz)) +
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$OutfitMnSq, y = .data$ReportValue)) +
     ggplot2::geom_vline(xintercept = 1.50, linetype = "dashed", colour = "#666666", linewidth = 0.45) +
-    ggplot2::geom_hline(yintercept = -2.0, linetype = "dotdash", colour = "#666666", linewidth = 0.45) +
+    ggplot2::geom_hline(yintercept = c(-1, 1) * stats::qnorm(.975), linetype = "dotdash", colour = "#666666", linewidth = 0.45) +
     ggplot2::geom_point(ggplot2::aes(colour = .data$Status, shape = .data$Status), size = 2.6, alpha = 0.9) +
     ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Person Fit") +
     ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Person Fit") +
-    ggplot2::labs(x = "Person Outfit Mean-Square (MnSq)", y = "Standardized Log-Likelihood Index (lz)") +
+    ggplot2::labs(x = "Person Outfit Mean-Square (MnSq)", y = "Reported person-fit index (lz* or lz)") +
     .mfrm_gg_theme(base_size = base_size)
   attr(p, "mfrm_notes") <- c(
-    "Reference thresholds: Outfit MnSq > 1.50 (dashed) and lz < -2.0 (dot-dash).",
-    "Person fit status is encoded simultaneously via colour and point shape."
-  )
+    "Uses the same ReportIndex, ReportValue and two-sided normal-reference flags as summary(compute_person_fit_indices(fit)).",
+    "These screening cutoffs do not provide calibrated false-positive rates. Outfit > 1.50 is shown separately.",
+    unique(pfi$ReportCaveat))
   p
 }
 
@@ -429,7 +426,7 @@
 #' strict `"monochrome"` (`R == G == B`) palettes paired with distinct point
 #' `shape` and `linetype` encodings.
 #'
-#' @param x A fitted `mfrm_fit`, `mfrm_fast_gtheory`, `mfrm_bias`, `mfrm_dff`,
+#' @param x A fitted `mfrm_fit`, `mfrm_gtheory`, `mfrm_bias`, `mfrm_dff`,
 #'   `mfrm_information`, or `mfrm_drift` object.
 #' @param type Plot type (`"wright"`, `"pathway"`, `"steps"`, `"persons"`, `"raters"`, etc.).
 #' @param palette Color palette: `"okabe_ito"` (default), `"viridis"`, or `"monochrome"`.
@@ -440,152 +437,87 @@
 #'   Use `"both"` to display Infit and Outfit in separate panels.
 #' @return A `ggplot` object with interpretation notes in `attr(p, "mfrm_notes")`.
 #' @export
-plot.mfrm_fast_fit <- function(x,
-                               type = c("wright", "pathway", "steps", "category_curves", "persons", "raters",
-                                        "person_fit", "residual_qq", "slopes", "qc"),
-                               palette = c("okabe_ito", "viridis", "monochrome"),
-                               facet = NULL,
-                               base_size = 11,
-                               ..., fit_statistic = c("infit", "outfit", "both")) {
-  type <- match.arg(type)
-  palette <- match.arg(palette)
-  interval_ready <- TRUE
-  interval_notes <- character()
-  if (type %in% c("pathway", "raters", "persons", "slopes")) {
-    readiness <- .mfrm_fast_readiness(x)
-    interval_ready <- readiness$ready
-    if (!interval_ready) {
-      interval_notes <- paste0("Intervals unavailable: ", paste(readiness$reason_codes, collapse = ", "),
-                               ". Points are descriptive estimates requiring review.")
-      for (component in c("person", "facets", "slopes")) {
-        if (is.data.frame(x[[component]]))
-          for (se in intersect(c("ModelSE", "RealSE"), names(x[[component]]))) x[[component]][[se]] <- NA_real_
-      }
+plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_curves", "persons", "raters",
+    "person_fit", "residual_qq", "slopes", "qc"), palette = c("okabe_ito", "viridis", "monochrome"), facet = NULL,
+    base_size = 11, ..., fit_statistic = c("infit", "outfit", "both")) {
+    .mfrm_validate_fit(x)
+    type <- match.arg(type)
+    palette <- match.arg(palette)
+    interval_ready <- TRUE
+    interval_notes <- character()
+    if (type %in% c("pathway", "raters", "persons", "slopes")) {
+        readiness <- .mfrm_readiness(x)
+        interval_ready <- readiness$ready
+        if (!interval_ready) {
+            interval_notes <- paste0("Intervals unavailable: ", paste(readiness$reason_codes, collapse = ", "),
+                ". Points are descriptive estimates requiring review.")
+            for (component in c("person", "facets", "slopes")) {
+                if (is.data.frame(x[[component]]))
+                  for (se in intersect(c("ModelSE", "RealSE"), names(x[[component]]))) x[[component]][[se]] <- NA_real_
+            }
+        }
     }
-  }
-  with_interval_notes <- function(p) {
-    attr(p, "mfrm_notes") <- c(attr(p, "mfrm_notes"), interval_notes)
-    p
-  }
-  if (identical(type, "wright")) {
-    label <- .mfrm_model_label(x$model, unique(x$slopes$Facet))
-    return(.mfrm_gg_wright(x$person, x$facets, x$steps, label, palette = palette, base_size = base_size))
-  }
-  if (type %in% c("pathway", "raters")) {
-    fc <- x$facets
-    if (identical(type, "raters") && is.null(facet)) {
-      hit <- grep("rater|judge|examiner|marker|grader", unique(fc$Facet), ignore.case = TRUE, value = TRUE)
-      facet <- if (length(hit) > 0L) hit[1L] else unique(fc$Facet)[1L]
+    with_interval_notes <- function(p) {
+        attr(p, "mfrm_notes") <- c(attr(p, "mfrm_notes"), interval_notes)
+        p
     }
-    if (!is.null(facet)) fc <- fc[fc$Facet %in% facet, , drop = FALSE]
-    return(with_interval_notes(.mfrm_gg_pathway(fc, palette = palette, base_size = base_size,
-                                              fit_statistic = match.arg(fit_statistic))))
-  }
-  if (type %in% c("steps", "category_curves")) {
-    return(.mfrm_gg_ccc(x$step_cumulative, x$steps, x$rating_min,
-                        x$encoding$step_cat_min, x$encoding$step_cat_max,
-                        slopes_df = x$slopes, step_facet = x$encoding$step_facet,
-                        slope_formula = x$encoding$slope_formula %||% 0L,
-                        palette = palette, base_size = base_size))
-  }
-  if (identical(type, "person_fit")) {
-    return(.mfrm_gg_person_fit(x, palette = palette, base_size = base_size))
-  }
-  if (identical(type, "residual_qq")) {
-    return(.mfrm_gg_residual_qq(x, palette = palette, base_size = base_size))
-  }
-  if (identical(type, "slopes")) {
-    ci <- if (interval_ready) stats::confint(x, component = "slopes") else matrix(NA_real_, NROW(x$slopes), 2L)
-    return(with_interval_notes(.mfrm_gg_slopes(x$slopes, palette = palette, base_size = base_size, intervals = ci)))
-  }
-  if (identical(type, "qc")) {
-    return(.mfrm_gg_qc(x, palette = palette, base_size = base_size))
-  }
-  # Persons: Ability vs Fair(M) with RealSE intervals
-  pt <- x$person[is.finite(x$person$Estimate) & is.finite(x$person$FairM), , drop = FALSE]
-  pt$Low <- pt$Estimate - 1.96 * pt$RealSE
-  pt$High <- pt$Estimate + 1.96 * pt$RealSE
-  pt$Band <- factor(
-    ifelse(is.finite(pt$InfitMnSq) & pt$InfitMnSq > 1.30, "Infit MnSq > 1.30", "Infit MnSq <= 1.30"),
-    levels = c("Infit MnSq <= 1.30", "Infit MnSq > 1.30")
-  )
-  cols <- stats::setNames(.mfrm_cvd_palette(2L, palette), levels(pt$Band))
-  p <- ggplot2::ggplot(pt, ggplot2::aes(x = .data$Estimate, y = .data$FairM)) +
-    ggplot2::geom_errorbar(
-      ggplot2::aes(xmin = .data$Low, xmax = .data$High, colour = .data$Band, linetype = .data$Band),
-      orientation = "y", width = 0.0, alpha = 0.65, linewidth = 0.45
-    ) +
-    ggplot2::geom_point(ggplot2::aes(colour = .data$Band, shape = .data$Band), size = 2.3) +
-    ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Person Fit") +
-    ggplot2::scale_shape_manual(values = c("Infit MnSq <= 1.30" = 16L, "Infit MnSq > 1.30" = 17L), drop = FALSE, name = "Person Fit") +
-    ggplot2::scale_linetype_manual(values = c("Infit MnSq <= 1.30" = "solid", "Infit MnSq > 1.30" = "dashed"), drop = FALSE, name = "Person Fit") +
-    ggplot2::labs(x = "Person Ability (Logits; 95% Real-SE CI)", y = "Fair Average Score Fair(M)") +
-    .mfrm_gg_theme(base_size = base_size)
-  attr(p, "mfrm_notes") <- "Person fit status is encoded via colour, point shape, and interval linetype."
-  with_interval_notes(p)
+    if (identical(type, "wright")) {
+        label <- .mfrm_model_label(x$model, unique(x$slopes$Facet))
+        return(.mfrm_gg_wright(x$person, x$facets, x$steps, label, palette = palette, base_size = base_size))
+    }
+    if (type %in% c("pathway", "raters")) {
+        fc <- x$facets
+        if (identical(type, "raters") && is.null(facet)) {
+            hit <- grep("rater|judge|examiner|marker|grader", unique(fc$Facet), ignore.case = TRUE, value = TRUE)
+            facet <- if (length(hit) > 0L)
+                hit[1L]
+            else unique(fc$Facet)[1L]
+        }
+        if (!is.null(facet))
+            fc <- fc[fc$Facet %in% facet, , drop = FALSE]
+        return(with_interval_notes(.mfrm_gg_pathway(fc, palette = palette, base_size = base_size, fit_statistic = match.arg(fit_statistic))))
+    }
+    if (type %in% c("steps", "category_curves")) {
+        return(.mfrm_gg_ccc(x$step_cumulative, x$steps, x$rating_min, x$encoding$step_cat_min, x$encoding$step_cat_max,
+            slopes_df = x$slopes, step_facet = x$encoding$step_facet, slope_formula = x$encoding$slope_formula %||%
+                0L, palette = palette, base_size = base_size))
+    }
+    if (identical(type, "person_fit")) {
+        return(.mfrm_gg_person_fit(x, palette = palette, base_size = base_size))
+    }
+    if (identical(type, "residual_qq")) {
+        return(.mfrm_gg_residual_qq(x, palette = palette, base_size = base_size))
+    }
+    if (identical(type, "slopes")) {
+        ci <- if (interval_ready)
+            stats::confint(x, component = "slopes")
+        else matrix(NA_real_, NROW(x$slopes), 2L)
+        return(with_interval_notes(.mfrm_gg_slopes(x$slopes, palette = palette, base_size = base_size, intervals = ci)))
+    }
+    if (identical(type, "qc")) {
+        return(.mfrm_gg_qc(x, palette = palette, base_size = base_size))
+    }
+    pt <- x$person[is.finite(x$person$Estimate) & is.finite(x$person$FairM), , drop = FALSE]
+    pt$Low <- pt$Estimate - 1.96 * pt$RealSE
+    pt$High <- pt$Estimate + 1.96 * pt$RealSE
+    pt$Band <- factor(ifelse(is.finite(pt$InfitMnSq) & pt$InfitMnSq > 1.3, "Infit MnSq > 1.30", "Infit MnSq <= 1.30"),
+        levels = c("Infit MnSq <= 1.30", "Infit MnSq > 1.30"))
+    cols <- stats::setNames(.mfrm_cvd_palette(2L, palette), levels(pt$Band))
+    p <- ggplot2::ggplot(pt, ggplot2::aes(x = .data$Estimate, y = .data$FairM)) + ggplot2::geom_errorbar(ggplot2::aes(xmin = .data$Low,
+        xmax = .data$High, colour = .data$Band, linetype = .data$Band), orientation = "y", width = 0, alpha = 0.65,
+        linewidth = 0.45) + ggplot2::geom_point(ggplot2::aes(colour = .data$Band, shape = .data$Band), size = 2.3) +
+        ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Person Fit") + ggplot2::scale_shape_manual(values = c(`Infit MnSq <= 1.30` = 16L,
+        `Infit MnSq > 1.30` = 17L), drop = FALSE, name = "Person Fit") + ggplot2::scale_linetype_manual(values = c(`Infit MnSq <= 1.30` = "solid",
+        `Infit MnSq > 1.30` = "dashed"), drop = FALSE, name = "Person Fit") + ggplot2::labs(x = "Person Ability (Logits; 95% Real-SE CI)",
+        y = "Fair Average Score Fair(M)") + .mfrm_gg_theme(base_size = base_size)
+    attr(p, "mfrm_notes") <- "Person fit status is encoded via colour, point shape, and interval linetype."
+    with_interval_notes(p)
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
-plot.mfrm_fit <- function(x,
-                          type = c("wright", "pathway", "steps", "category_curves", "persons", "raters",
-                                   "person_fit", "residual_qq", "slopes", "qc"),
-                          palette = c("okabe_ito", "viridis", "monochrome"),
-                          facet = NULL,
-                          base_size = 11,
-                          ...) {
-  type <- match.arg(type)
-  palette <- match.arg(palette)
-  if (identical(type, "residual_qq")) {
-    return(.mfrm_gg_residual_qq(x, palette = palette, base_size = base_size))
-  }
-  if (identical(type, "slopes")) {
-    return(.mfrm_gg_slopes(x$slopes, palette = palette, base_size = base_size))
-  }
-  st <- .mfrm_as_fast_state(x)
-  enc <- st$enc
-  p_df <- data.frame(Person = enc$person_levels, Estimate = st$theta, stringsAsFactors = FALSE)
-  f_rows <- lapply(seq_along(enc$base_facets), function(f) {
-    data.frame(Facet = enc$base_facets[f], Level = enc$facet_levels[[f]], Estimate = st$beta_list[[f]], stringsAsFactors = FALSE)
-  })
-  f_df <- do.call(rbind, f_rows)
-  s_df <- x$steps
-  if (!"ScaleLevel" %in% names(s_df)) s_df$ScaleLevel <- if ("StepFacet" %in% names(s_df)) s_df$StepFacet else "Common"
 
-  if (identical(type, "wright")) {
-    return(.mfrm_gg_wright(p_df, f_df, s_df, enc$model, palette = palette, base_size = base_size))
-  }
-  if (type %in% c("steps", "category_curves")) {
-    return(.mfrm_gg_ccc(st$step_cum, s_df, enc$rating_min, enc$step_cat_min, enc$step_cat_max,
-                        palette = palette, base_size = base_size))
-  }
-  dg <- diagnose_mfrm(x, residual_pca = "none")
-  if (identical(type, "person_fit")) {
-    pfi <- compute_person_fit_indices(dg, x)$table
-    pfi$OutfitMnSq <- dg$measures$Outfit[match(pfi$Person, dg$measures$Level)]
-    fake_obj <- structure(list(), class = "mfrm_fast_fit")
-    df <- pfi[is.finite(pfi$OutfitMnSq) & is.finite(pfi$lz), , drop = FALSE]
-    lvls <- c("Acceptable", "Outfit > 1.50", "lz < -2.0", "Both Flagged")
-    st_chr <- ifelse(df$OutfitMnSq > 1.50 & df$lz < -2.0, "Both Flagged",
-                     ifelse(df$lz < -2.0, "lz < -2.0", ifelse(df$OutfitMnSq > 1.50, "Outfit > 1.50", "Acceptable")))
-    df$Status <- factor(st_chr, levels = lvls)
-    cols <- stats::setNames(.mfrm_cvd_palette(4L, palette), lvls)
-    shapes <- stats::setNames(c(16L, 17L, 15L, 8L), lvls)
-    return(
-      ggplot2::ggplot(df, ggplot2::aes(x = .data$OutfitMnSq, y = .data$lz)) +
-        ggplot2::geom_vline(xintercept = 1.50, linetype = "dashed", colour = "#666666", linewidth = 0.45) +
-        ggplot2::geom_hline(yintercept = -2.0, linetype = "dotdash", colour = "#666666", linewidth = 0.45) +
-        ggplot2::geom_point(ggplot2::aes(colour = .data$Status, shape = .data$Status), size = 2.6) +
-        ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Person Fit") +
-        ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Person Fit") +
-        ggplot2::labs(x = "Person Outfit Mean-Square (MnSq)", y = "Standardized Log-Likelihood Index (lz)") +
-        .mfrm_gg_theme(base_size = base_size)
-    )
-  }
-  plot.mfrm_diagnostics(dg, facet = facet, palette = palette, base_size = base_size)
-}
-
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
 plot.mfrm_diagnostics <- function(x,
                                   facet = NULL,
@@ -616,7 +548,7 @@ plot.mfrm_diagnostics <- function(x,
     )
     return(p)
   }
-  readiness <- if (inherits(x$fit, "mfrm_fast_fit")) .mfrm_fast_readiness(x$fit) else list(ready = TRUE)
+  readiness <- .mfrm_readiness(x$fit)
   ms <- as.data.frame(x$measures)
   if ("Infit" %in% names(ms) && !"InfitMnSq" %in% names(ms)) ms$InfitMnSq <- ms$Infit
   ms <- ms[ms$Facet != "Person", , drop = FALSE]
@@ -628,14 +560,14 @@ plot.mfrm_diagnostics <- function(x,
   p
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
-plot.mfrm_fast_gtheory <- function(x,
+.mfrm_gstudy_plot_henderson <- function(x,
                                    type = c("dstudy", "variance"),
                                    palette = c("okabe_ito", "viridis", "monochrome"),
                                    base_size = 11,
                                    ...) {
-  x <- .mfrm_fast_refresh_gstudy(x)
+  x <- .mfrm_refresh_gstudy(x)
   type <- match.arg(type)
   palette <- match.arg(palette)
   if (identical(type, "variance")) {
@@ -699,7 +631,7 @@ plot.mfrm_fast_gtheory <- function(x,
   p
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
 plot.mfrm_bias <- function(x,
                            type = c("forest", "pairwise"),
@@ -770,7 +702,7 @@ plot.mfrm_bias <- function(x,
   p
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
 plot.mfrm_dff <- function(x,
                           top_n = 25L,
@@ -812,7 +744,7 @@ plot.mfrm_dff <- function(x,
   p
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
 plot.mfrm_information <- function(x,
                                   type = c("information", "ccc"),
@@ -870,7 +802,7 @@ plot.mfrm_information <- function(x,
   p
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
 plot.mfrm_drift <- function(x,
                             type = c("trajectory", "contrasts"),
@@ -912,83 +844,12 @@ plot.mfrm_drift <- function(x,
   p
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
-plot.mfrm_posterior_summary <- function(x,
-                                        type = c("intervals", "diagnostics"),
-                                        facet = NULL,
-                                        palette = c("okabe_ito", "viridis", "monochrome"),
-                                        base_size = 11,
-                                        ...) {
-  type <- match.arg(type)
-  palette <- match.arg(palette)
-  df <- as.data.frame(x)
-  df <- df[is.na(df$quantity) | df$quantity != "internal_coordinate", , drop = FALSE]
 
-  if (identical(type, "diagnostics")) {
-    df <- df[is.finite(df$rhat) & is.finite(df$ess_bulk), , drop = FALSE]
-    grp <- ifelse(!is.na(df$facet) & nzchar(df$facet), df$facet, df$quantity)
-    grps <- unique(grp)
-    df$Group <- factor(grp, levels = grps)
-    cols <- stats::setNames(.mfrm_cvd_palette(length(grps), palette), grps)
-    shapes <- stats::setNames(.mfrm_cvd_shapes(length(grps)), grps)
-    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$ess_bulk, y = .data$rhat,
-                                          colour = .data$Group, shape = .data$Group)) +
-      ggplot2::geom_hline(yintercept = 1.01, linetype = "dashed", colour = "#666666", linewidth = 0.45) +
-      ggplot2::geom_point(size = 2.6, alpha = 0.9) +
-      ggplot2::scale_colour_manual(values = cols, name = "Parameter Family") +
-      ggplot2::scale_shape_manual(values = shapes, name = "Parameter Family") +
-      ggplot2::labs(x = "Bulk Effective Sample Size (ESS)", y = "Split R-hat") +
-      .mfrm_gg_theme(base_size = base_size)
-    attr(p, "mfrm_notes") <- "Dashed line denotes R-hat = 1.01 convergence diagnostic threshold."
-    return(p)
-  }
-
-  if (!is.null(facet) && nzchar(facet)) {
-    df <- df[!is.na(df$facet) & df$facet == facet, , drop = FALSE]
-  } else {
-    non_person <- df[is.na(df$facet) | df$facet != "Person", , drop = FALSE]
-    if (nrow(non_person) > 0L) df <- non_person
-  }
-  df <- df[is.finite(df$mean), , drop = FALSE]
-  df$Low <- ifelse(is.finite(df$lower), df$lower, df$mean)
-  df$High <- ifelse(is.finite(df$upper), df$upper, df$mean)
-  lbl <- ifelse(
-    !is.na(df$transition) & nzchar(df$transition),
-    paste0(ifelse(!is.na(df$level) & nzchar(df$level), paste0(df$level, " "), ""), "[", df$transition, "]"),
-    ifelse(!is.na(df$level) & nzchar(df$level), paste0(df$facet, ": ", df$level), df$variable)
-  )
-  df$Label <- factor(lbl, levels = rev(unique(lbl)))
-  grp <- ifelse(!is.na(df$facet) & nzchar(df$facet), df$facet, df$quantity)
-  grps <- unique(grp)
-  df$Group <- factor(grp, levels = grps)
-  cols <- stats::setNames(.mfrm_cvd_palette(length(grps), palette), grps)
-  shapes <- stats::setNames(.mfrm_cvd_shapes(length(grps)), grps)
-  ltypes <- stats::setNames(.mfrm_cvd_linetypes(length(grps)), grps)
-
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$mean, y = .data$Label)) +
-    ggplot2::geom_vline(xintercept = 0, linetype = "dotted", colour = "#888888") +
-    ggplot2::geom_errorbar(
-      ggplot2::aes(xmin = .data$Low, xmax = .data$High, colour = .data$Group, linetype = .data$Group),
-      orientation = "y", width = 0.0, linewidth = 0.65
-    ) +
-    ggplot2::geom_point(ggplot2::aes(colour = .data$Group, shape = .data$Group), size = 2.8) +
-    ggplot2::scale_colour_manual(values = cols, name = "Parameter Family") +
-    ggplot2::scale_shape_manual(values = shapes, name = "Parameter Family") +
-    ggplot2::scale_linetype_manual(values = ltypes, name = "Parameter Family") +
-    ggplot2::labs(x = "Posterior Mean & Credible Interval (Logits)", y = NULL) +
-    .mfrm_gg_theme(base_size = base_size)
-  lvl_pct <- round(100 * (x$level %||% 0.95))
-  attr(p, "mfrm_notes") <- sprintf(
-    "Equal-tailed %d%% posterior credible intervals; review status: %s.",
-    lvl_pct, x$decision %||% "recorded"
-  )
-  p
-}
-
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
-plot.mfrm_multivariate_gstudy <- function(x,
+.mfrm_gstudy_plot_moments <- function(x,
                                           palette = c("okabe_ito", "viridis", "monochrome"),
                                           base_size = 11,
                                           ...) {
@@ -1018,7 +879,7 @@ plot.mfrm_multivariate_gstudy <- function(x,
   p
 }
 
-#' @rdname plot.mfrm_fast_fit
+#' @rdname plot.mfrm_fit
 #' @export
 plot.mfrm_multivariate_d_study <- function(x,
                                            palette = c("okabe_ito", "viridis", "monochrome"),

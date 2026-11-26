@@ -94,7 +94,7 @@ test_that("constant observed ratings do not create halo or central tendency scre
   d$Score[d$Rater == "R04"] <- 4
   wf <- mfrm_analysis(d, "Person", c("Rater", "Criterion"), "Score", method = "JML_jeffreys")
   screen <- .mfrm_rater_card(wf, "R04", "Criterion", 3L)$tables
-  expect_identical(screen[["Central tendency screen"]]$Status, "no_observed_score_variation")
+  expect_true(all(screen[["Central tendency screen"]]$Status == "no_observed_score_variation"))
   expect_true(all(screen[["Criterion halo screen"]]$Status == "no_observed_score_variation"))
   expect_true(all(is.na(screen[["Criterion halo screen"]]$ResidualCorrelation)))
 })

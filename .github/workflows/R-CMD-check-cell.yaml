@@ -55,7 +55,6 @@ jobs:
           r-version: ${{ inputs.r }}
           http-user-agent: ${{ inputs.http-user-agent }}
           use-public-rspm: true
-          extra-repositories: https://stan-dev.r-universe.dev
 
       - name: Install XQuartz runtime on macOS
         if: runner.os == 'macOS'
@@ -121,23 +120,6 @@ jobs:
               load_package = "installed", reporter = "tap")
           }
 
-      - name: Check repository research references against the checked package
-        if: ${{ inputs.full && !inputs.cran-timing && steps.package-check.outcome == 'success' }}
-        shell: Rscript {0}
-        run: |
-          checked_library <- normalizePath(
-            "validation-results/release-check/check/mfrmr.Rcheck",
-            winslash = "/", mustWork = TRUE
-          )
-          stopifnot(file.exists(file.path(checked_library, "mfrmr", "DESCRIPTION")))
-          Sys.setenv(R_LIBS = paste(c(checked_library, .libPaths()),
-                                   collapse = .Platform$path.sep))
-          status <- system2(file.path(R.home("bin"), "Rscript"), c(
-            "--vanilla", "scripts/run-regression.R", ".", "reference",
-            "validation-results/release-check/reference"
-          ))
-          if (status != 0L) quit(status = status)
-
       - name: Diagnose indexed manuals without repeating the package check
         if: ${{ inputs.cran-timing && inputs.manual-only }}
         shell: Rscript {0}
@@ -171,22 +153,10 @@ jobs:
       - name: International input and moved-folder replay
         if: ${{ !inputs.cran-timing }}
         run: |
-          check_root <- "validation-results/release-check"
-          checked_library <- file.path(check_root, "check", "mfrmr.Rcheck")
-          .libPaths(c(normalizePath(checked_library), .libPaths()))
-          library(mfrmr)
-          source("inst/validation/user-data-stress-0.2.4.R")
-          output <- file.path(check_root, "portability")
-          inputs <- run_user_data_stress(
-            file.path(output, "inputs"), seeds = 20260913L,
-            only = c("nonstandard_columns", "unicode_long_labels")
-          )
-          archives <- run_user_data_archive_stress(
-            file.path(output, "archives"), library = checked_library
-          )
-          stopifnot(nrow(inputs) == 2L, all(inputs$Passed),
-                    nrow(archives) == 8L, all(archives$Passed))
-        shell: Rscript {0}
+          Rscript --vanilla inst/validation/user-data-replay-0.3.2.R \
+            validation-results/release-check/check/mfrmr.Rcheck \
+            validation-results/release-check/portability
+        shell: bash
 
       - name: Upload check results
         if: always()
@@ -203,7 +173,6 @@ jobs:
             validation-results/release-check/dependency-versions.csv
             validation-results/release-check/session-info.txt
             validation-results/release-check/portability
-            validation-results/release-check/reference
             validation-results/release-check/manual-diagnostic
           if-no-files-found: ignore
 

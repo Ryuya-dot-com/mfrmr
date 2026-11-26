@@ -33,7 +33,10 @@ mfrm_workflow(
 
 \item{rating_min, rating_max}{Optional integer rubric bounds.}
 
-\item{fit}{Optional fitted mfrmr calibration or a linked result from \code{\link{anchor_to_baseline}}.
+\item{fit}{Optional \code{mfrm_fit} calibration from \code{fit_mfrm()},
+or its linked result from \code{\link{anchor_to_baseline}}.
+All supported estimators use the same result schema. Older saved calibrations
+must be refitted from their original data and specification.
 Supply the same rating columns and retained rows in their original order.
 Continue with \code{\link[=step_mfrm_gtheory]{step_mfrm_gtheory()}} or
 \code{\link[=step_mfrm_diagnose]{step_mfrm_diagnose()}} directly.}

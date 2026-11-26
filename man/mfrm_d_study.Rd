@@ -10,7 +10,7 @@ mfrm_d_study(
 }
 \arguments{
   \item{x}{An estimated G-Study object returned by \code{\link{mfrm_g_study}} (or a fitted \code{\link{fit_mfrm}} object).}
-  \item{design_grid}{Optional \code{data.frame} specifying positive integer sample sizes, with one column per facet (e.g., \code{expand.grid(Rater = 1:4, Criterion = 2:5)}). For nested facets, counts are per parent level. If \code{NULL}, returns the default grid evaluated around observed harmonic facet counts.}
+  \item{design_grid}{Optional \code{data.frame} specifying positive integer sample sizes, with one column per facet (e.g., \code{expand.grid(Rater = 1:4, Criterion = 2:5)}). For nested facets, counts are per parent level. For Henderson, \code{NULL} returns the default grid around observed harmonic facet counts. For balanced complete ANOVA/MINQUE designs it projects the observed counts; incomplete or unequal designs require an explicit future grid.}
   \item{...}{Additional arguments forwarded to methods (such as \code{weights} for \code{"anova"}/\code{"minque0"} multivariate G-Study objects).}
 }
 \value{

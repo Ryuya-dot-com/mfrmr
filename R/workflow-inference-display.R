@@ -18,9 +18,11 @@
   base <- sum(vapply(enc$facets, function(fc) {
     tb <- if (fc %in% enc$base_facets) fit$facets[fit$facets$Facet == fc, ] else
       fit$interactions[fit$interactions$Interaction == fc, ]
-    enc$facet_signs[match(fc, enc$facets)] * mean(tb$Estimate)
+    values <- tb$Estimate[is.finite(tb$Estimate)]
+    enc$facet_signs[match(fc, enc$facets)] * if (length(values)) mean(values) else 0
   }, numeric(1)))
-  alpha <- exp(stats::weighted.mean(log(fit$alpha_obs), enc$weight))
+  valid_alpha <- is.finite(fit$alpha_obs) & fit$alpha_obs > 0 & enc$weight > 0
+  alpha <- if (any(valid_alpha)) exp(stats::weighted.mean(log(fit$alpha_obs[valid_alpha]), enc$weight[valid_alpha])) else 1
   mixes <- lapply(seq_len(nrow(pt)), function(i) {
     rows <- which(enc$person0 == i - 1L & enc$weight > 0)
     w <- numeric(nrow(sc))
@@ -65,7 +67,7 @@
       if (any(!is.finite(threshold))) "cut_outside_open_fair_score_range",
       if (readiness$ready && any(!is.finite(pm) | !is.finite(pr))) "some_person_intervals_unavailable"))
     data.frame(CutFairM = ct,
-      CutLogit = if (length(finite_cut) == nrow(pt) && diff(range(finite_cut)) < 1e-8) finite_cut[1L] else NA_real_,
+      CutLogit = if (length(finite_cut) > 0L && diff(range(finite_cut)) < 1e-8) finite_cut[1L] else NA_real_,
       CutLogitMin = if (length(finite_cut)) min(finite_cut) else NA_real_,
       CutLogitMax = if (length(finite_cut)) max(finite_cut) else NA_real_,
       PassCount = if (any(!is.na(pass))) sum(pass, na.rm = TRUE) else NA_integer_,
@@ -162,7 +164,7 @@
     wf$connectivity["rater_linkage"] <- list(conn$rater_linkage)
   }
   if (!is.null(wf$fit$encoding) && !isTRUE(wf$connectivity_calibrated)) {
-    wf$connectivity <- c(.mfrm_fast_connectivity_summary(wf$fit$encoding), wf$connectivity["rater_linkage"])
+    wf$connectivity <- c(.mfrm_connectivity_summary(wf$fit$encoding), wf$connectivity["rater_linkage"])
     wf$connectivity_calibrated <- TRUE
   }
   bootstrap <- wf[["bootstrap"]]
@@ -174,9 +176,7 @@
     )
   }
   if (!is.null(wf$gtheory)) {
-    gt <- wf$gtheory
-    gt$g_study_summary <- summary(gt)$g_study_summary
-    gt$d_study <- mfrm_d_study(gt)
+    gt <- .mfrm_refresh_gstudy(wf$gtheory)
     gt$d_study$MeetsTargetG <- gt$d_study$G >= gt$targets[["G"]]
     gt$d_study$MeetsTargetPhi <- gt$d_study$Phi >= gt$targets[["Phi"]]
     for (key in c("g", "phi")) {

@@ -6,7 +6,7 @@
     ft <- flextable::autofit(flextable::theme_booktabs(flextable::flextable(table)))
     return(flextable::body_add_flextable(doc, ft))
   }
-  officer::body_add_table(doc, value = table, style = "table_template")
+  officer::body_add_table(doc, value = table, style = NULL)
 }
 
 .mfrm_rater_card <- function(wf, rater, criterion_facet, max_cases) {
@@ -17,7 +17,7 @@
   selected <- match(rater, rt$Level)
   if (is.na(selected)) stop("Run step_mfrm_diagnose() and supply a known rater ID.", call. = FALSE)
   rx <- rt[selected, , drop = FALSE]
-  ready <- .mfrm_fast_readiness(wf$fit)$ready
+  ready <- .mfrm_readiness(wf$fit)$ready
   rating_rows <- wf$diagnostics$observations
   obs <- rating_rows[as.character(rating_rows[[sp$rater_facet]]) == rater, , drop = FALSE]
   cmp <- as.character(rt$Level[is.finite(rt$Estimate)])
@@ -33,28 +33,30 @@
              paste("Recommended review:", rx$RecommendedAction),
              "Higher severity implies lower expected scores when other fitted effects are fixed. The comparison panel uses the observed rating network.")
 
-  usable <- is.finite(obs$Residual) & is.finite(obs$Expected)
-  center_n <- sum(usable)
-  center_p <- length(unique(obs[[sp$person]][usable]))
   correlation <- function(a, b, persons) {
     ok <- is.finite(a) & is.finite(b)
     if (ready && length(unique(persons[ok])) >= 3L &&
         length(unique(a[ok])) > 1L && length(unique(b[ok])) > 1L)
       stats::cor(a[ok], b[ok]) else NA_real_
   }
-  constant <- length(unique(obs$Observed[usable])) < 2L
-  center <- data.frame(
-    ResidualExpectedCorrelation = if (constant) NA_real_ else
-      correlation(obs$Residual, obs$Expected, obs[[sp$person]]),
-    Persons = center_p, RatingRows = center_n
-  )
-  center$Status <- if (constant) "no_observed_score_variation" else
-    if (is.finite(center$ResidualExpectedCorrelation)) "descriptive" else "unavailable"
   possible <- setdiff(sp$facets, sp$rater_facet)
   if (!is.null(criterion_facet) && (length(criterion_facet) != 1L || !criterion_facet %in% possible))
     stop("criterion_facet must select a non-rater facet.", call. = FALSE)
   if (is.null(criterion_facet))
     criterion_facet <- if (length(possible) == 1L) possible else if ("Criterion" %in% possible) "Criterion"
+  center_rows <- if (is.null(criterion_facet)) list(All = seq_len(nrow(obs))) else
+    split(seq_len(nrow(obs)), as.character(obs[[criterion_facet]]))
+  center <- do.call(rbind, lapply(names(center_rows), function(level) {
+    z <- obs[center_rows[[level]], , drop = FALSE]
+    usable <- is.finite(z$Residual) & is.finite(z$Expected)
+    constant <- length(unique(z$Observed[usable])) < 2L
+    value <- if (constant) NA_real_ else correlation(z$Residual, z$Expected, z[[sp$person]])
+    data.frame(Criterion = level, ResidualExpectedCorrelation = value,
+      Persons = length(unique(z[[sp$person]][usable])), RatingRows = sum(usable),
+      Status = if (constant) "no_observed_score_variation" else
+        if (is.finite(value)) "descriptive" else "unavailable")
+  }))
+  rownames(center) <- NULL
   halo <- NULL
   if (!is.null(criterion_facet)) {
     criterion <- as.character(obs[[criterion_facet]])
@@ -91,8 +93,11 @@
       }))
     }
   }
-  notes <- c(notes, "A negative residual\u2013expectation correlation suggests compressed scores. Positive matched residual correlations across criteria screen for halo; shared performance features and model misfit can also contribute.",
-             if (is.null(halo)) "Matched criterion pairs are unavailable for a halo screen.")
+  notes <- c(notes,
+    "Residual versus expected-score correlations are descriptive within each criterion. Negative values may reflect score compression, model misfit or conditioning on estimated person scores; they do not establish central tendency.",
+    "Criterion-pair residual correlations are descriptive. Their null baseline depends on the fitted model, person scoring and rating design and can be negative. Neither a zero cutoff nor -1/(K-1) is calibrated here. Halo claims require a design-matched reference and review of shared performance features and model misfit.",
+    if (is.null(criterion_facet)) "No criterion facet was selected; the central-tendency table pools scores and may confound criterion difficulty with compression.",
+    if (is.null(halo)) "Matched criterion pairs are unavailable for a halo screen.")
   cases <- wf$diagnostics$unexpected
   cases <- cases[as.character(cases[[sp$rater_facet]]) == rater, , drop = FALSE]
   case_cols <- intersect(c(".row_id", possible, "Observed", "Expected", "StdResidual"), names(cases))

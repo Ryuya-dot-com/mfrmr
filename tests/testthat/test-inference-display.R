@@ -44,8 +44,14 @@ test_that("FairM cutoffs invert weighted expectations for each person's task mix
     expect_equal(out$CutLogitMin, min(cuts), tolerance = 1e-8)
     expect_equal(out$CutLogitMax, max(cuts), tolerance = 1e-8)
     p <- pnorm((f$person$Estimate - cuts) / f$person$ModelSE)
-    expect_equal(out$Borderline90_ModelSE, sum(p > .05 & p < .95))
-    expect_equal(out$Available_ModelSE, nrow(f$person))
+    expect_true(is.na(out$Borderline90_ModelSE))
+    expect_equal(out$Available_ModelSE, 0L)
+    expect_match(out$InferenceReason, "nonunit_observation_weights")
+    # Verify the normal-probability arithmetic separately from its eligibility.
+    arithmetic <- mfrmr:::.tidymfrm_cut_decisions(f, 2.5,
+      readiness = list(ready = TRUE, reason_codes = character()))
+    expect_equal(arithmetic$Borderline90_ModelSE, sum(p > .05 & p < .95))
+    expect_equal(arithmetic$Available_ModelSE, nrow(f$person))
     if (model != "RSM") expect_true(is.na(out$CutLogit))
     outside <- mfrmr:::.tidymfrm_cut_decisions(f, 4)
     expect_true(is.na(outside$Borderline90_ModelSE))
@@ -125,7 +131,8 @@ test_that("unidentifiable planning retains calibration and rating review", {
   d <- d[d$Criterion == lev[(match(d$Person, unique(d$Person)) - 1L) %% length(lev) + 1L], ]
   calibration <- mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score") |>
     step_mfrm_measure()
-  expect_true(glance(calibration)$inference_ready)
+  expect_false(glance(calibration)$inference_ready)
+  expect_true("population_assumption_linked" %in% summary(calibration$fit)$readiness$reason_codes)
   expect_error(step_mfrm_gtheory(calibration), "not identifiable")
   expect_warning(wf <- tidymfrm(d, "Person", c("Rater", "Criterion"), "Score"), "G-Study unavailable")
   wf <- unserialize(serialize(wf, NULL))
@@ -134,7 +141,7 @@ test_that("unidentifiable planning retains calibration and rating review", {
   expect_match(summary(wf)$gtheory_reason, "not identifiable")
   expect_equal(nrow(summary(wf)$rater_diagnostics), 4L)
   html <- render_mfrm_report(wf, "html")
-  expect_match(html, "Inference readiness is ready", fixed = TRUE)
+  expect_match(html, "Inference readiness is review_required (population_assumption_linked)", fixed = TRUE)
   expect_match(html, "G-Study unavailable:.*not identifiable")
   expect_error(tidymfrm(d, "Person", c("Rater", "Criterion"), "Score", g_facets = "Absent"),
                "Missing column")

@@ -13,7 +13,7 @@ fit_mfrm(
   rating_max = NULL, weight = NULL, anchors = NULL, group_anchors = NULL,
   population_formula = NULL, person_data = NULL, facet_interactions = NULL,
   step_constraints = NULL, category_support = NULL, facet_formulas = NULL,
-  facet_data = NULL, person_score = c("auto", "EAP", "WLE"), fast = TRUE,
+  facet_data = NULL, person_score = c("auto", "EAP", "WLE"),
   warn_connectivity = TRUE, spec = NULL, control = list(), ...)
 }
 \arguments{
@@ -22,7 +22,7 @@ fit_mfrm(
   \item{facets}{Character vector naming one or more non-person facet columns (e.g., \code{c("Rater", "Criterion")}). By default, non-person facets carry negative sign (\code{Sign = -1}) so larger logit estimates represent higher rater severity or higher task/criterion difficulty.}
   \item{score}{Character string naming the integer or numeric rubric score column.
     Convert factor labels to numeric rubric values before using the unified engine.}
-  \item{model}{Measurement model family: \code{"RSM"} (shared step thresholds across elements), \code{"PCM"} (facet-specific step thresholds governed by \code{step_facet}), or \code{"GPCM"} (GMFRM with facet-specific discrimination and steps governed by \code{slope_facet} and \code{step_facet}).}
+  \item{model}{\code{"GMFRM"} is accepted as an alias for \code{"GPCM"}; fitted objects retain the code \code{"GPCM"}. Measurement model family: \code{"RSM"} (shared step thresholds across elements), \code{"PCM"} (facet-specific step thresholds governed by \code{step_facet}), or \code{"GPCM"} (GMFRM with facet-specific discrimination and steps governed by \code{slope_facet} and \code{step_facet}).}
   \item{method}{Estimation method: \code{"MML"} (Gauss-Hermite or Laplace-adaptive marginal ML), \code{"JML"} / \code{"JMLE"} (joint ML), \code{"JML_jeffreys"} (Jeffreys/Firth-penalized JML with finite extreme-score estimates and Block-Schur standard errors), or \code{"CML"} (conditional ML conditioning on person total scores for \code{"RSM"} and \code{"PCM"}).}
   \item{step_facet}{Character string naming the facet in \code{facets} that owns category step thresholds when \code{model} is \code{"PCM"} or \code{"GPCM"}. For a GMFRM with common category steps on a common rubric, use \code{step_facet = "Common"}.}
   \item{slope_facet}{Character vector of length 1 or 2 naming the facet(s) in \code{facets} with element-specific discrimination slopes when \code{model = "GPCM"}.}
@@ -39,14 +39,13 @@ fit_mfrm(
   \item{facet_formulas}{Optional named list of one-sided covariate formulas (e.g., \code{list(Rater = ~ Experience)}) decomposing facet locations via explanatory linear predictors.}
   \item{facet_data}{Optional named list of element-level covariate \code{data.frame}s corresponding to \code{facet_formulas}, with one row per element ID in each table.}
   \item{person_score}{Primary person ability estimator stored in \code{fit$person$Estimate}: \code{"auto"} (\code{"EAP"} for \code{MML}, \code{"WLE"} for \code{CML}, \code{"JML"} for \code{JML}), \code{"EAP"}, or \code{"WLE"} (Warm, 1989).}
-  \item{fast}{Logical; if \code{TRUE} (default), executes the unified C++ solver engine returning an \code{"mfrm_fast_fit"} object.}
   \item{warn_connectivity}{Logical; if \code{TRUE} (default), audits multi-facet graph connectivity, design rank, and interior category support prior to optimization and emits a warning if disconnected subsets or rank deficiencies are detected.}
   \item{spec}{Optional named list of advanced model specification settings, including \code{slope_reference} (reference facet constrained to geometric mean 1 when two facets have discrimination parameters), \code{slope_type} (\code{"full_predictor"} or \code{"ability_only"}), \code{gpcm_mml_identification} (\code{"free_population"}, \code{"fixed_standard_normal"}, or \code{"unconstrained_slopes"}), \code{noncenter_facet}, \code{positive_facets}, \code{dummy_facets}, and \code{centering_scope} (\code{"remainder"} or \code{"facet"}).}
-  \item{control}{Optional named list of numerical and regularization controls, including \code{quad_points} (default \code{31}), \code{mml_integration} (\code{"fixed"} or \code{"adaptive"}), \code{facet_shrinkage} (\code{"none"}, \code{"empirical_bayes"}, or \code{"laplace"}), \code{facet_prior_sd}, \code{slope_prior_sd}, \code{xtreme}, \code{whexact}, \code{maxit}, and \code{reltol}.}
-  \item{...}{Additional canonical specification or control arguments passed by name for backward compatibility. In particular, \code{missing_codes} recodes specified values before retaining complete rating rows: an explicit vector applies to the score and identifier columns; \code{TRUE} or \code{"default"} applies the default codes (99, 999, -1, N, NA, n/a, period, blank) to scores only.}
+  \item{control}{Optional named list of numerical and regularization controls, including \code{quad_points} (default \code{31}), \code{mml_integration} (\code{"fixed"}, \code{"adaptive"}, or \code{"auto"}), \code{facet_shrinkage} (\code{"none"}, \code{"empirical_bayes"}, or \code{"laplace"}), \code{facet_prior_sd}, \code{slope_prior_sd}, \code{xtreme}, \code{whexact}, \code{maxit}, and \code{reltol}.}
+  \item{...}{Additional supported specification or control arguments, supplied by name. In particular, \code{missing_codes} recodes specified values before retaining complete rating rows: an explicit vector applies to the score and identifier columns; \code{TRUE} or \code{"default"} applies the default codes (99, 999, -1, N, NA, n/a, period, blank) to scores only.}
 }
 \value{
-An object of class \code{c("mfrm_fast_fit", "mfrm_fit")} containing:
+An object of class \code{"mfrm_fit"} containing:
 \itemize{
   \item \code{person}: \code{data.frame} of person ability estimates (\code{Estimate}, \code{ModelSE}, \code{RealSE}, \code{WLE}, \code{WLE_SE}, \code{FairM}, \code{FairZ}, \code{InfitMnSq}, \code{OutfitMnSq}, \code{ExtremeFlag}).
   \item \code{facets}: \code{data.frame} of non-person facet location estimates, \code{ModelSE}, \code{RealSE}, \code{SandwichSE}, \code{FairM}, and fit statistics.
@@ -57,6 +56,34 @@ An object of class \code{c("mfrm_fast_fit", "mfrm_fit")} containing:
 Supports \code{summary()}, \code{plot()}, \code{predict()}, \code{coef()}, \code{vcov()}, \code{confint()}, \code{anova()}, \code{logLik()}, \code{AIC()}, \code{BIC()}, \code{fitted()}, and \code{residuals()}.
 }
 \details{
+Use the named main arguments for the data and model, \code{spec} for
+advanced model assumptions, and \code{control} for numerical settings.
+Additional named arguments in \code{...} are retained for compatibility;
+do not specify the same setting in both places.
+
+Non-unit observation weights leave point estimates available but withhold
+inferential reporting because the supported weight interpretation has not
+been validated. A deficit in the constrained facet-location design after
+projecting out centered person-location contrasts is also flagged: MML comparisons then
+rely on population assumptions when effective anchors do not resolve the
+deficit. This conditional location check is not a proof of global
+identifiability for all nonlinear slope or threshold structures.
+
+All estimators return the same \code{mfrm_fit} schema and work with
+\code{mfrm_workflow(fit = ...)}. The implementation is selected internally;
+there is no engine-selection argument. Refit saved objects from older versions
+using their original data and model specification. Relabelling their class
+does not convert the underlying parameter and covariance layout.
+
+With \code{mml_integration = "auto"}, fixed quadrature fits at \eqn{q} and
+\eqn{2q+1} points are compared. The finer fit is returned. Relative free-parameter
+changes, absolute expected-score changes, and log-likelihood changes per rating
+are checked against \code{1e-4}, \code{1e-4}, and \code{1e-6}, respectively.
+The results and selected order are retained in \code{quadrature_check}.
+A failed check withholds inferential reporting; increase \code{quad_points} and
+inspect stability. Agreement at these two orders is a sensitivity check, not a
+bound on integration error, global-optimum guarantee, or coverage validation.
+
 The Generalized Many-Facet Rasch Model (GMFRM) is a unidimensional
 adjacent-category model that estimates discrimination. The name follows Uto
 and Ueno (2020), who use GMFRM for an extension of the many-facet Rasch model.
@@ -71,7 +98,7 @@ Reports name the facets that carry discrimination. When two facets
 carry discrimination, their slopes are multiplied. Report the step facet,
 slope placement, scale identification, and estimation method when
 describing the fitted model. \code{summary(fit)$model_label} gives the
-display label for a fast fit; the model code is \code{"GPCM"}.
+display label for a fitted model; the model code is \code{"GPCM"}.
 
 \code{Converged} reports the optimizer stopping condition. Separately,
 \code{summary$InferenceReady} and \code{readiness$reason_codes} report failed
@@ -80,13 +107,12 @@ For unified RSM and PCM MML, the population location terms must be
 identifiable together with the constrained facet effects. A rank-deficient
 joint design cannot identify these effects separately. Recheck the rating
 assignments, fixed reference values and population formula.
-For unpenalized RSM/PCM MML, \code{boundary_audit} uses \pkg{lpSolve}, when installed,
+For unpenalized RSM/PCM MML, \code{boundary_audit} uses the required dependency \pkg{lpSolve}
 to seek a structural direction that improves every observed category probability
 without changing person ability. A certified direction implies no finite structural
 MLE and makes inference unavailable. Failure to find this sufficient condition is
 not a general proof of existence; GPCM boundaries and all population-boundary
-directions are not covered by this particular test. Missing solver availability is
-recorded explicitly. These checks do not establish finite-sample coverage.
+directions are not covered by this particular test. An unsuccessful numerical boundary check keeps inference unavailable. These checks do not establish finite-sample coverage.
 
 Person and facet fit statistics, expected averages, FairM/FairZ, and local-bias
 diagnostics use the primary person score. Selecting MML \code{person_score = "WLE"}

@@ -1,5 +1,65 @@
 # mfrmr 0.3.2
 
+- Expand method abbreviations in the package description and correct the
+  reference identifier for Raju (1990).
+
+- Clarify the drift model's normal quadrature grid and the available D-Study
+  result accessors. `lpSolve` is now required for MML structural-boundary
+  audits, keeping inference-eligibility checks available in standard installs.
+- Posterior-bundle import and Stan/brms model-generation tools are not included
+  in 0.3.2. Read saved bundles with their producer version; BayesianMGMFRM.jl
+  interoperability is planned for a later release.
+- Print common-reference Fair Average scores and intervals, pairwise bias
+  contrasts and joint-model LRTs. Word fallback tables use the document default
+  style. Reports reuse reliability results only for the matching calibration.
+- Cut-score inversion follows the same finite facet means and reference
+  discrimination as Fair(M); excluded persons no longer hide a common cut logit.
+- Dataset loading covers all 13 bundled tables and provides
+  `load_mfrmr_data("list", details = TRUE)` for their different column roles.
+- Package citations include the CRAN DOI.
+
+
+- Estimation, diagnostics, and G-Study results use `mfrm_fit`,
+  `mfrm_diagnostics`, and `mfrm_gtheory`. Refit saved calibration objects from
+  earlier versions using their original data and model specifications; changing
+  a class label does not convert a saved object.
+- Profile-adjusted JML controls and comparison-only fit objects are no longer
+  supported. `JML_jeffreys` is a distinct estimator and does not reproduce
+  profile-adjusted JML results. Compare fitted models with `anova()` or
+  `compare_mfrm()`.
+- Bias and DFF analyses require a current fitted calibration. Select the test
+  explicitly with `method`; former `residual` and `refit` switches no longer
+  silently choose another procedure.
+- MML automatic quadrature compares two orders and records numerical sensitivity;
+  unstable checks withhold inferential reporting.
+- ANOVA, MINQUE(0), and Henderson G-Study estimates use consistent result
+  fields while retaining estimator-specific assumptions. Balanced ANOVA keeps
+  MLS intervals; Henderson intervals with Satterthwaite degrees of freedom
+  below one are withheld.
+- Fair Average `confint()` returns conditional ability-based score intervals.
+  Legacy calibration-bootstrap and joint-delta options are not supported.
+
+- Person-fit tables use consistent columns across supported estimators,
+  including `$table`, conditional JML ability correction, and matching
+  summary/plot screening flags and unavailable-state reasons.
+- Explicit composite weights retain their supplied scale and named order;
+  omitted weights still define an equal-weight average.
+- Fits with non-unit observation weights or facet locations linked only through
+  population assumptions require review before inference.
+- Rater cards report central-tendency correlations by criterion and explain
+  why raw residual correlations alone do not establish halo.
+- Markdown and HTML report tables preserve literal pipe/backslash characters
+  and HTML-special characters in identifiers and diagnostic text.
+
+- Tidy extractors use the shared `generics` interface, including when broom
+  or tidymodels is attached.
+- G-Study composite weights require explicit `method = "urgenova"`; they
+  no longer override a requested ANOVA or MINQUE(0) estimator.
+- Henderson component intervals with Satterthwaite degrees of freedom below
+  one are withheld with a reason in `confint()`, tidy tables, and reports.
+- Workflows accept all supported fitted calibrations. Diagnostics are reported
+  only when they match the calibration attached to the workflow.
+
 - Calibration and new-data prediction reject duplicate identifiers in the
   person or facet covariate tables they use.
 - Workflow score bounds and extreme-score flags use the fitted calibration's
@@ -24,7 +84,7 @@
 - Fitted models with discrimination estimates display as Generalized
   Many-Facet Rasch Model (GMFRM), with the facets carrying discrimination.
   Following Uto and Ueno (2020), this name denotes an extension of the
-  constant-discrimination many-facet Rasch model. Use `model = "GPCM"`
+  constant-discrimination many-facet Rasch model. Use `model = "GMFRM"` or its retained code `"GPCM"`
   in code. The display label is available as `summary(fit)$model_label`.
 
 - `mfrm_analysis()` connects calibration, diagnostics, G-Study and D-Study,
@@ -44,13 +104,13 @@
   reported as unavailable. Anchor displacement is reported separately as a
   conditional one-step diagnostic.
 
-- Rating plans now apply their counts to information curves for fast fits.
+- Rating plans now apply their counts to information curves for fitted calibrations.
   Observed exposure can also be reported per person. The original
   one-per-context reference curve remains available by default.
 - The design check reports Person-by-rater components and individual linking
   persons separately from the multi-facet graph.
 - Pathway plots can show Infit and Outfit side by side. Residual PCA is
-  available on request for fast fits, with a first-contrast plot.
+  available on request for fitted calibrations, with a first-contrast plot.
 
 - Fits from a shared-design score matrix retain the ratings from their own
   replication for residuals, diagnostics, and reuse. The batch fitter checks
@@ -107,7 +167,7 @@
   `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `summary()`,
   and `print()`), removing external-software wrappers (`TAM`, `ConQuest`, and
   `FACETS` importers/crosswalk guides).
-- Upgrade `fit_mfrm()` (unified C++ fast engine as default `fast = TRUE`),
+- Upgrade `fit_mfrm()` (unified C++ estimation),
   `check_mfrm_connectivity()`, and `mfrm_batch_fit()`:
   - Native C++ solvers for Joint Maximum Likelihood (`"JML"`), Jeffreys/Firth
     penalized JML (`"JML_jeffreys"` with exact Block-Schur inverse-information

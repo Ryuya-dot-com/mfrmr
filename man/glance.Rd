@@ -3,17 +3,17 @@
 \name{glance}
 \alias{glance}
 \alias{glance.tidymfrm}
-\alias{glance.mfrm_fast_fit}
+\alias{glance.mfrm_fit}
 \title{Glance at a Single-Row Summary of a Many-Facet Workflow or Fit}
 \usage{
 glance(x, ...)
 
 \method{glance}{tidymfrm}(x, ...)
 
-\method{glance}{mfrm_fast_fit}(x, ...)
+\method{glance}{mfrm_fit}(x, ...)
 }
 \arguments{
-\item{x}{A \code{tidymfrm} or \code{mfrm_fast_fit} object.}
+\item{x}{A \code{tidymfrm} or \code{mfrm_fit} object.}
 
 \item{...}{Additional arguments (unused).}
 }
@@ -29,6 +29,7 @@ and flagged rater counts.
 }
 \examples{
 utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+  step_mfrm_measure()
 glance(wf)
 }

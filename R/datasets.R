@@ -1,3 +1,13 @@
+.mfrm_dataset_names <- c(
+  example_core = "mfrmr_example_core", example_bias = "mfrmr_example_bias",
+  example_operational = "mfrmr_example_operational", study1 = "ej2021_study1",
+  study2 = "ej2021_study2", combined = "ej2021_combined",
+  study1_itercal = "ej2021_study1_itercal", study2_itercal = "ej2021_study2_itercal",
+  combined_itercal = "ej2021_combined_itercal", example_agreement = "mfrmr_example_agreement",
+  example_gtheory_crossed = "mfrmr_example_gtheory_crossed",
+  example_gtheory_nested = "mfrmr_example_gtheory_nested",
+  example_operational_design = "mfrmr_example_operational_design")
+
 #' Legacy synthetic MFRM datasets inspired by Eckes and Jin (2021)
 #'
 #' Synthetic many-facet rating datasets in long format.
@@ -87,7 +97,7 @@
 #' row-binding or prefixing identifiers alone does not create a common scale.
 #'
 #' @section Typical workflow:
-#' 1. Inspect available datasets with [list_mfrmr_data()].
+#' 1. Inspect available datasets with `load_mfrmr_data("list")`.
 #' 2. Load one dataset using [load_mfrmr_data()].
 #' 3. Fit and diagnose with [fit_mfrm()] and [diagnose_mfrm()].
 #'
@@ -260,36 +270,25 @@ NULL
 #' library(mfrmr)
 #'
 #' # See the names accepted by load_mfrmr_data()
-#' list_mfrmr_data()
+#' load_mfrmr_data("list")
 #'
 #' # Compare the purpose and design of the available datasets
-#' catalog <- list_mfrmr_data(details = TRUE)
+#' catalog <- load_mfrmr_data("list", details = TRUE)
 #' catalog[, c("Key", "PrimaryUse", "Design")]
 #'
 #' # Choose one dataset
 #' ratings <- load_mfrmr_data("example_operational")
 #' head(ratings)
 #' @rdname load_mfrmr_data
-#' @export
 list_mfrmr_data <- function(details = FALSE) {
   if (!is.logical(details) || length(details) != 1L || is.na(details)) {
     stop("`details` must be TRUE or FALSE.", call. = FALSE)
   }
-  keys <- c(
-    "example_core",
-    "example_bias",
-    "example_operational",
-    "study1",
-    "study2",
-    "combined",
-    "study1_itercal",
-    "study2_itercal",
-    "combined_itercal"
-  )
+  keys <- names(.mfrm_dataset_names)
   if (!isTRUE(details)) return(keys)
 
   catalog <- data.frame(
-    Key = keys,
+    Key = keys[seq_len(9L)],
     Rows = c(768L, 384L, 282L, 1842L, 3287L, 5129L, 1842L, 3341L, 5183L),
     Persons = c(48L, 48L, 48L, 307L, 206L, 307L, 307L, 206L, 307L),
     Raters = c(4L, 4L, 6L, 18L, 12L, 18L, 18L, 12L, 18L),
@@ -325,16 +324,31 @@ list_mfrmr_data <- function(details = FALSE) {
     Empirical = FALSE,
     stringsAsFactors = FALSE
   )
-  catalog
+  extras <- keys[-seq_len(9L)]
+  purposes <- c("Rater agreement with repeated contexts", "Crossed multivariate G-Study",
+    "Nested multivariate G-Study", "Planned rating assignments; contains no scores")
+  designs <- c("Long ratings; Person x Task defines the rating unit",
+    "Wide Content and Organization outcomes; crossed raters and tasks",
+    "Wide Content and Organization outcomes; raters nested within tasks",
+    "Complete planned roster for example_operational")
+  extra_rows <- lapply(seq_along(extras), function(i) {
+    d <- getExportedValue("mfrmr", .mfrm_dataset_names[[extras[i]]])
+    count <- function(column) if (column %in% names(d)) length(unique(d[[column]])) else NA_integer_
+    data.frame(Key = extras[i], Rows = nrow(d), Persons = count("Person"), Raters = count("Rater"),
+      Criteria = count("Criterion"), CountBasis = "unique labels; absent columns reported as NA",
+      PrimaryUse = purposes[i], Design = designs[i], Empirical = FALSE)
+  })
+  dplyr::bind_rows(c(list(catalog), extra_rows))
 }
 
 #' Load a packaged ordered-response MFRM dataset
 #'
-#' @param name Dataset key. One of the values from [list_mfrmr_data()]. If
+#' @param details With `name = "list"`, return the annotated dataset catalogue.
+#' @param name Dataset key. One of the values from `load_mfrmr_data("list")`. If
 #'   omitted, the backward-compatible default is `"example_core"`; new code
 #'   should pass a key explicitly.
 #'
-#' @return A data.frame in long format: each row is one rating, not one Person.
+#' @return A dataset data.frame, available keys, or an annotated catalogue.
 #' @details
 #' For a first MFRM analysis, run
 #' `ratings <- load_mfrmr_data("example_operational")`. This reads data already
@@ -348,20 +362,20 @@ list_mfrmr_data <- function(details = FALSE) {
 #' vignettes. The equivalent base-R alternative
 #' `data("<object-name>", package = "mfrmr")` remains available for users
 #' who prefer the full `data()` spelling; both paths return identical
-#' long-format data frames.
+#' data frames.
 #'
-#' All returned datasets include the core long-format columns
-#' `Study`, `Person`, `Rater`, `Criterion`, and `Score`.
+#' Rating tables contain person/facet identifiers and a score. G-Study tables
+#' have multiple outcome columns; the planned roster has no observed score.
 #' Some datasets, such as the packaged documentation examples, also include
 #' auxiliary variables like `Group` for DIF/bias demonstrations.
 #' The supplied ratings are synthetic teaching data, not empirical records.
 #' For observed-score G-theory examples with multiple score columns, see
 #' [mfrmr_gtheory_data]; for agreement examples, see [mfrmr_agreement_data].
-#' Those datasets use `data()` because their row/column roles differ from the
-#' ordered-response MFRM tables returned here.
+#' Load them with `example_gtheory_crossed`, `example_gtheory_nested`,
+#' `example_agreement`, or `example_operational_design`; inspect their column roles.
 #'
 #' @section Interpreting output:
-#' The return value is a plain long-format `data.frame`. The example and
+#' Rating datasets return a long-format `data.frame`. The rating-example and
 #' study-specific keys are ready for [fit_mfrm()] after checking role and score
 #' mappings. The `combined` keys are design-review objects: overlapping IDs or
 #' simple Study-based prefixes do not establish a common measurement scale, so
@@ -369,11 +383,11 @@ list_mfrmr_data <- function(details = FALSE) {
 #' fit is interpretable.
 #'
 #' @section Typical workflow:
-#' 1. list valid names with [list_mfrmr_data()].
+#' 1. list valid names with `load_mfrmr_data("list")`.
 #' 2. load one dataset key with `load_mfrmr_data(name)`.
 #' 3. fit a model with [fit_mfrm()] and inspect with `summary()` / `plot()`.
 #'
-#' @seealso [list_mfrmr_data()], [ej2021_data]
+#' @seealso `load_mfrmr_data("list")`, [ej2021_data]
 #' @examples
 #' library(mfrmr)
 #'
@@ -387,42 +401,19 @@ list_mfrmr_data <- function(details = FALSE) {
 #' data("mfrmr_example_operational", package = "mfrmr")
 #' identical(ratings, mfrmr_example_operational) # TRUE: both contain the same data
 #' @export
-load_mfrmr_data <- function(name = c(
-                            "example_core",
-                            "example_bias",
-                            "example_operational",
-                            "study1",
-                            "study2",
-                            "combined",
-                            "study1_itercal",
-                            "study2_itercal",
-                            "combined_itercal"
-                          )) {
-  if (is.null(name) || (length(name) == 1L && identical(tolower(name), "list"))) {
-    return(list_mfrmr_data())
-  }
-  key <- match.arg(tolower(name), choices = list_mfrmr_data())
-
-  obj_name <- switch(
-    key,
-    example_core = "mfrmr_example_core",
-    example_bias = "mfrmr_example_bias",
-    example_operational = "mfrmr_example_operational",
-    study1 = "ej2021_study1",
-    study2 = "ej2021_study2",
-    combined = "ej2021_combined",
-    study1_itercal = "ej2021_study1_itercal",
-    study2_itercal = "ej2021_study2_itercal",
-    combined_itercal = "ej2021_combined_itercal"
-  )
-
-  getExportedValue("mfrmr", obj_name)
+load_mfrmr_data <- function(name = "example_core", details = FALSE) {
+  if (!is.logical(details) || length(details) != 1L || is.na(details))
+    stop("details must be TRUE or FALSE.", call. = FALSE)
+  if (is.null(name) || identical(tolower(name), "list")) return(list_mfrmr_data(details))
+  if (details) stop("details = TRUE is only available for the dataset list.", call. = FALSE)
+  key <- match.arg(tolower(name), choices = names(.mfrm_dataset_names))
+  getExportedValue("mfrmr", .mfrm_dataset_names[[key]])
 }
 
 #' Synthetic crossed and nested data for learning G theory
 #'
 #' Existing tutorial examples supplied as ready-to-load tables. Load one with
-#' `data("mfrmr_example_gtheory_crossed", package = "mfrmr")`, then assign it
+#' `load_mfrmr_data("example_gtheory_crossed")`, then assign it
 #' to a shorter name such as `ratings`. No simulation code is needed to run
 #' the G-study or D-study examples.
 #'

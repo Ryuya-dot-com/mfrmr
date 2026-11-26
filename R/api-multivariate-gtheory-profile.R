@@ -8,18 +8,18 @@
         ans$warnings <- messages
         ans
     }
-    fits <- lapply(starts, function(start) attempt(stats::nlminb(start, objective, lower = lower, control = list(iter.max = 1000L, 
+    fits <- lapply(starts, function(start) attempt(stats::nlminb(start, objective, lower = lower, control = list(iter.max = 1000L,
         eval.max = 2000L, rel.tol = 1e-11))))
     best <- fits[[which.min(vapply(fits, `[[`, numeric(1), "objective"))]]
     if (is.finite(best$objective)) {
         second <- attempt({
-            fit <- minqa::bobyqa(best$par, objective, lower = lower, control = list(maxfun = 10000L, 
+            fit <- minqa::bobyqa(best$par, objective, lower = lower, control = list(maxfun = 10000L,
                 rhobeg = 0.1 * max(1, abs(best$par)), rhoend = 1e-07))
-            list(par = fit$par, objective = fit$fval, convergence = fit$ierr, message = fit$msg, evaluations = fit$feval, 
+            list(par = fit$par, objective = fit$fval, convergence = fit$ierr, message = fit$msg, evaluations = fit$feval,
                 optimizer = "bobyqa")
         })
         fits[[length(fits) + 1L]] <- second
-        if (second$convergence == 0 && second$objective <= best$objective + 1e-07) 
+        if (second$convergence == 0 && second$objective <= best$objective + 1e-07)
             best <- second
     }
     list(best = best, attempts = fits)
@@ -47,9 +47,9 @@
         for (refinement in 0:refinements) {
             fine <- derivative(h/2)
             error <- abs(fine - coarse)/3
-            if (is.finite(error) && error < best["error"]) 
+            if (is.finite(error) && error < best["error"])
                 best <- c(gradient = (4 * fine - coarse)/3, error = error)
-            if (is.finite(error) && error < 5e-04) 
+            if (is.finite(error) && error < 5e-04)
                 break
             coarse <- fine
             h <- h/2
@@ -59,7 +59,7 @@
     gradient <- derivatives[1L, ]
     kkt <- max(ifelse(par > lower + 1e-08, abs(gradient), pmax(-gradient, 0)))
     error <- max(derivatives[2L, ])
-    list(gradient = gradient, error = error, kkt = kkt, valid = is.finite(kkt) && is.finite(error) && 
+    list(gradient = gradient, error = error, kkt = kkt, valid = is.finite(kkt) && is.finite(error) &&
         kkt < 0.002 && error < 5e-04)
 }
 
@@ -68,26 +68,26 @@
     terms <- paste0("group", seq_len(length(groups) - 1L))
     for (j in seq_along(terms)) d[[terms[j]]] <- factor(groups[[j]])
     build <- function() {
-        parsed <- lme4::lFormula(stats::reformulate(paste0("(1|", terms, ")"), response = "response"), 
+        parsed <- lme4::lFormula(stats::reformulate(paste0("(1|", terms, ")"), response = "response"),
             data = d, REML = TRUE)
         order <- match(terms, names(parsed$reTrms$cnms))
-        if (anyNA(order) || length(order) != length(parsed$reTrms$theta)) 
+        if (anyNA(order) || length(order) != length(parsed$reTrms$theta))
             stop("Unexpected random-effect representation in the REML calculation.", call. = FALSE)
         list(deviance = do.call(lme4::mkLmerDevfun, parsed), order = order)
     }
     state <- build()
     function(v, details = FALSE) {
-        unavailable <- if (details) 
+        unavailable <- if (details)
             list(objective = Inf, sigma2 = NA_real_)
         else Inf
-        if (length(v) != length(terms) || any(!is.finite(v)) || any(v < 0)) 
+        if (length(v) != length(terms) || any(!is.finite(v)) || any(v < 0))
             return(unavailable)
-        if (is.null(state)) 
+        if (is.null(state))
             state <<- build()
         theta <- numeric(length(v))
         theta[state$order] <- sqrt(v)
         suspect <- FALSE
-        value <- tryCatch(withCallingHandlers(state$deviance(theta), warning = function(w) suspect <<- TRUE), 
+        value <- tryCatch(withCallingHandlers(state$deviance(theta), warning = function(w) suspect <<- TRUE),
             error = function(e) {
                 state <<- NULL
                 warning("REML trial rejected: ", conditionMessage(e), call. = FALSE)
@@ -97,7 +97,7 @@
             state <<- NULL
             return(unavailable)
         }
-        if (!details) 
+        if (!details)
             return(value)
         environment <- environment(state$deviance)
         sigma2 <- (environment$pp$sqrL(1) + environment$resp$wrss())/(length(y) - 1L)
@@ -110,15 +110,15 @@
 }
 
 .mfrm_mvgt_profile_source <- function(g, weights) {
-    for (package in c("lme4", "minqa")) if (!requireNamespace(package, quietly = TRUE)) 
+    for (package in c("lme4", "minqa")) if (!requireNamespace(package, quietly = TRUE))
         stop("`method = 'reml_profile'` requires the optional ", package, " package.", call. = FALSE)
     ids <- c(g$design$person, unname(g$design$facets))
     scores <- g$design$scores
-    if (!is.data.frame(g$data) || !all(c(ids, scores) %in% names(g$data)) || nrow(g$data) != g$data_usage$counts[["UsedRows"]]) 
-        stop("REML profiles require the original used ratings in the G-study; recreate it from the source data.", 
+    if (!is.data.frame(g$data) || !all(c(ids, scores) %in% names(g$data)) || nrow(g$data) != g$data_usage$counts[["UsedRows"]])
+        stop("REML profiles require the original used ratings in the G-study; recreate it from the source data.",
             call. = FALSE)
     groups <- lapply(g$data[ids], factor)
-    subsets <- if (length(ids) == 2L) 
+    subsets <- if (length(ids) == 2L)
         list(1L, 2L, 1:2)
     else list(1L, 2L, 3L, c(1L, 2L), c(1L, 3L), c(2L, 3L), 1:3)
     if (!is.null(g$design$nesting)) {
@@ -131,7 +131,7 @@
     names(groupings) <- names(g$components)
     active <- which(weights[scores] != 0)
     y <- as.matrix(g$data[scores[active]])
-    if (any(!is.finite(y))) 
+    if (any(!is.finite(y)))
         stop("Invalid stored source ratings.", call. = FALSE)
     unit <- apply(abs(y), 2L, max)
     unit[unit == 0] <- 1
@@ -141,27 +141,27 @@
     y <- sweep(y, 2L, unit, "/")
     y <- drop(sweep(y, 2L, colMeans(y), "-") %*% w)
     y_unit <- max(abs(y))
-    scale <- if (y_unit == 0) 
+    scale <- if (y_unit == 0)
         0
     else y_unit * sqrt(sum((y/y_unit)^2)/(length(y) - 1L))
     estimate <- vapply(g$components, function(m) {
         m <- sweep(sweep(m[active, active, drop = FALSE], 1L, unit, "/"), 2L, unit, "/")
         as.numeric(crossprod(w, m %*% w))
     }, numeric(1))
-    ans <- list(weights = weights, estimate = estimate, groups = groupings, raw_estimate = sign(estimate) * 
-        exp(log(abs(estimate)) + 2 * log_unit), y = y, score_scale = exp(log_unit + log(scale)), valid = FALSE, 
+    ans <- list(weights = weights, estimate = estimate, groups = groupings, raw_estimate = sign(estimate) *
+        exp(log(abs(estimate)) + 2 * log_unit), y = y, score_scale = exp(log_unit + log(scale)), valid = FALSE,
         status = "Degenerate selected score")
-    if (!is.finite(scale) || scale <= 0) 
+    if (!is.finite(scale) || scale <= 0)
         return(ans)
     y <- y/scale
     estimate <- (estimate/scale)/scale
     objective <- .mfrm_mvgt_profile_objective(y, groupings)
     k <- length(groupings)
-    initial <- if (is.finite(estimate[k]) && estimate[k] > 0) 
+    initial <- if (is.finite(estimate[k]) && estimate[k] > 0)
         pmax(estimate[-k], 0)/estimate[k]
     else rep(1, k - 1L)
     fit <- .mfrm_mvgt_profile_minimize(list(initial, rep(1, k - 1L), rep(0.1, k - 1L)), objective)
-    check <- if (is.finite(fit$best$objective)) 
+    check <- if (is.finite(fit$best$objective))
         .mfrm_mvgt_profile_gradient(fit$best$par, objective)
     else list(valid = FALSE)
     ans$y <- y
@@ -171,7 +171,7 @@
     ans$attempts <- fit$attempts
     ans$check <- check
     ans$valid <- fit$best$convergence == 0 && check$valid
-    ans$status <- if (ans$valid) 
+    ans$status <- if (ans$valid)
         "Numerically checked REML source"
     else "Unresolved REML source optimum"
     ans$relative_variances <- c(fit$best$par, 1)
@@ -184,7 +184,7 @@
     critical <- stats::qchisq(level, 1)
     tolerance <- min(1e-05, 1e-05 * critical)
     resolution <- 64 * .Machine$double.eps * max(1, abs(objective))
-    list(critical = critical, tolerance = tolerance, resolution = resolution, valid = is.finite(critical) && 
+    list(critical = critical, tolerance = tolerance, resolution = resolution, valid = is.finite(critical) &&
         critical > 0 && tolerance >= resolution)
 }
 
@@ -213,27 +213,27 @@
     objective <- function(par) source$objective(expand(par))
     k <- length(error)
     fit <- .mfrm_mvgt_profile_minimize(list(source$fit$par[-1L], rep(1, k - 2L), rep(0.1, k - 2L)), objective)
-    check <- if (is.finite(fit$best$objective)) 
+    check <- if (is.finite(fit$best$objective))
         .mfrm_mvgt_profile_gradient(fit$best$par, objective)
     else list(valid = FALSE)
     lr <- fit$best$objective - source$fit$objective
-    list(target = rho, lr = lr, fit = fit$best, attempts = fit$attempts, check = check, relative_variances = c(expand(fit$best$par), 
-        1), valid = source$valid && fit$best$convergence == 0 && check$valid && is.finite(lr) && lr >= 
+    list(target = rho, lr = lr, fit = fit$best, attempts = fit$attempts, check = check, relative_variances = c(expand(fit$best$par),
+        1), valid = source$valid && fit$best$convergence == 0 && check$valid && is.finite(lr) && lr >=
         -1e-06)
 }
 
 .mfrm_mvgt_profile_set <- function(source, error, level) {
-    ans <- list(bounds = c(NA_real_, NA_real_), candidate_bounds = c(NA_real_, NA_real_), center = NA_real_, 
+    ans <- list(bounds = c(NA_real_, NA_real_), candidate_bounds = c(NA_real_, NA_real_), center = NA_real_,
         status = source$status, error_coefficients = error)
-    if (is.null(source$relative_variances)) 
+    if (is.null(source$relative_variances))
         return(ans)
     v <- source$relative_variances
     center <- v[1L]/(v[1L] + sum(error * v))
     ans$center <- center
-    if (!source$valid) 
+    if (!source$valid)
         return(ans)
     if (!is.finite(center) || center < 0 || center >= 1) {
-        ans$status <- if (is.finite(center) && center == 1) 
+        ans$status <- if (is.finite(center) && center == 1)
             "REML coefficient center rounds to one at numeric resolution; profile search unavailable"
         else "REML coefficient center outside the finite [0,1) profiling range"
         return(ans)
@@ -248,13 +248,13 @@
     cache <- new.env(parent = emptyenv())
     evaluate <- function(rho) {
         key <- sprintf("%.17g", rho)
-        if (!exists(key, cache, inherits = FALSE)) 
+        if (!exists(key, cache, inherits = FALSE))
             assign(key, .mfrm_mvgt_profile_at(source, rho, error), cache)
         get(key, cache, inherits = FALSE)
     }
     statistic <- function(rho) {
         p <- evaluate(rho)
-        if (p$valid) 
+        if (p$valid)
             p$lr - critical
         else NA_real_
     }
@@ -263,20 +263,20 @@
     if (is.finite(tail(value, 1)) && tail(value, 1) <= 0) {
         last <- tail(grid, 1)
         for (rho in 1 - (1 - last) * c(0.1, 0.01, 0.001)) {
-            if (rho >= 1) 
+            if (rho >= 1)
                 break
             grid <- c(grid, rho)
             value <- c(value, statistic(rho))
-            if (is.finite(tail(value, 1)) && tail(value, 1) > 0) 
+            if (is.finite(tail(value, 1)) && tail(value, 1) > 0)
                 break
         }
     }
-    crossings <- which(is.finite(head(value, -1)) & is.finite(tail(value, -1)) & head(value, -1) * tail(value, 
+    crossings <- which(is.finite(head(value, -1)) & is.finite(tail(value, -1)) & head(value, -1) * tail(value,
         -1) < 0)
     roots <- grid[which(is.finite(value) & value == 0)]
     failures <- character()
     for (j in crossings) {
-        root <- tryCatch(stats::uniroot(statistic, grid[c(j, j + 1L)], tol = min(1e-08, (grid[j + 1L] - 
+        root <- tryCatch(stats::uniroot(statistic, grid[c(j, j + 1L)], tol = min(1e-08, (grid[j + 1L] -
             grid[j]) * 1e-06), check.conv = TRUE)$root, error = function(e) {
             failures <<- c(failures, conditionMessage(e))
             NA_real_
@@ -284,7 +284,7 @@
         if (is.finite(root)) {
             roots <- c(roots, root)
             residual <- statistic(root)
-            if (!is.finite(residual) || abs(residual) > cutoff$tolerance) 
+            if (!is.finite(residual) || abs(residual) > cutoff$tolerance)
                 failures <- c(failures, "A numerical endpoint did not recover the likelihood-ratio cutoff.")
         }
     }
@@ -293,13 +293,13 @@
     sets <- matrix(numeric(), 0L, 2L, dimnames = list(NULL, c("Lower", "Upper")))
     for (j in seq_len(length(breaks) - 1L)) {
         midpoint <- statistic(mean(breaks[c(j, j + 1L)]))
-        if (is.finite(midpoint) && midpoint <= 0) 
+        if (is.finite(midpoint) && midpoint <= 0)
             sets <- rbind(sets, breaks[c(j, j + 1L)])
     }
     profiles <- as.list(cache)
-    scan <- do.call(rbind, lapply(profiles, function(p) data.frame(Target = p$target, LR = p$lr, KKT = if (is.null(p$check$kkt)) 
+    scan <- do.call(rbind, lapply(profiles, function(p) data.frame(Target = p$target, LR = p$lr, KKT = if (is.null(p$check$kkt))
         NA_real_
-    else p$check$kkt, GradientError = if (is.null(p$check$error)) 
+    else p$check$kkt, GradientError = if (is.null(p$check$error))
         NA_real_
     else p$check$error, Valid = p$valid)))
     scan <- scan[order(scan$Target), ]
@@ -310,15 +310,15 @@
     ans$scan <- scan
     ans$profiles <- profiles
     ans$failures <- failures
-    if (nrow(sets)) 
+    if (nrow(sets))
         ans$candidate_bounds <- c(min(sets[, 1L]), max(sets[, 2L]))
-    resolved <- !length(failures) && all(scan$Valid) && nrow(sets) > 0L && is.finite(tail(value, 1)) && 
-        tail(value, 1) > 0 && ans$candidate_bounds[1L] <= center && ans$candidate_bounds[2L] >= center && 
+    resolved <- !length(failures) && all(scan$Valid) && nrow(sets) > 0L && is.finite(tail(value, 1)) &&
+        tail(value, 1) > 0 && ans$candidate_bounds[1L] <= center && ans$candidate_bounds[2L] >= center &&
         ans$candidate_bounds[1L] < ans$candidate_bounds[2L]
     ans$status <- "Unresolved numerical profile; inspect candidate bounds and diagnostics"
     if (resolved) {
         ans$bounds <- ans$candidate_bounds
-        ans$status <- if (nrow(sets) == 1L) 
+        ans$status <- if (nrow(sets) == 1L)
             "Computed profile approximation"
         else "Envelope of disconnected numerical profile sets"
     }
@@ -342,7 +342,7 @@
         error <- c(0, 0, 0, 1/counts[1L], 1/counts[2L], 0, 1/prod(counts))
         extra <- c(0, 1/counts[1L], 1/counts[2L], 0, 0, 1/prod(counts), 0)
     }
-    if (metric %in% c("Phi", "AbsoluteSEM")) 
+    if (metric %in% c("Phi", "AbsoluteSEM"))
         error <- error + extra
     stats::setNames(error, names(g$components))
 }
@@ -351,27 +351,27 @@
     g <- d$gstudy
     sem <- metric %in% c("RelativeSEM", "AbsoluteSEM")
     source <- .mfrm_mvgt_profile_source(g, weights)
-    if (sem && (!is.finite(source$score_scale) || source$score_scale <= 0) && source$valid) 
+    if (sem && (!is.finite(source$score_scale) || source$score_scale <= 0) && source$valid)
         stop("SEM units exceed numeric range; rescale the scores or weights.", call. = FALSE)
     rows <- diagnostics <- vector("list", nrow(tab))
     for (i in seq_len(nrow(tab))) {
         error <- .mfrm_mvgt_profile_error(d, i, metric)
         duplicate <- which(vapply(diagnostics[seq_len(i - 1L)], function(x) {
             old <- x$error_coefficients
-            if (sem) 
+            if (sem)
                 identical(unname(old/tail(old, 1)), unname(error/tail(error, 1)))
             else identical(old, error)
         }, logical(1)))
-        ans <- if (length(duplicate)) 
+        ans <- if (length(duplicate))
             diagnostics[[duplicate[1L]]]
-        else if (sem) 
+        else if (sem)
             .mfrm_mvgt_variance_set(source, error, level)
         else .mfrm_mvgt_profile_set(source, error, level)
         if (sem && length(duplicate)) {
             factor <- unname(tail(error, 1)/tail(ans$error_coefficients, 1))
-            for (name in c("bounds", "candidate_bounds", "center", "anchor")) if (!is.null(ans[[name]])) 
+            for (name in c("bounds", "candidate_bounds", "center", "anchor")) if (!is.null(ans[[name]]))
                 ans[[name]] <- ans[[name]] * factor
-            if (!is.null(ans$scan)) 
+            if (!is.null(ans$scan))
                 ans$scan$Target <- ans$scan$Target * factor
             ans$profiles <- lapply(ans$profiles, function(p) {
                 p$target <- p$target * factor
@@ -380,7 +380,7 @@
             })
             ans$error_coefficients <- error
         }
-        restore <- if (sem) 
+        restore <- if (sem)
             function(x) sqrt(x) * source$score_scale
         else identity
         reported <- .mfrm_mvgt_profile_restore(ans, restore)
@@ -411,20 +411,20 @@
     attr(out, "source_design") <- g$design[c("facets", "counts", "method", "balanced", "complete", "score_convention")]
     attr(out, "source_rows") <- g$data_usage$counts
     attr(out, "diagnostics") <- diagnostics
-    attr(out, "notes") <- c("Explicit experimental REML target-profile intervals under independent normal random effects and positive residual variance. Missing source cells must be noninformative conditional on the declared fixed assignment. Future plans remain complete balanced plans.", 
-        "Estimate and PointStatus retain the original ANOVA/MINQUE D-study, including unavailable points. IntervalCenter is the separately estimated REML coefficient. Both concern the same population target; the source point can lie outside the interval. Plots retain the source points, not IntervalCenter.", 
-        "The chi-square(1) cutoff is an asymptotic approximation, not an exact boundary mixture or finite-sample coverage guarantee. Small checks gave some below-nominal inclusion rates, with substantial Monte Carlo uncertainty; this method is not the automatic default and is not distribution robust.", 
-        "The numerical inversion checks a grid and brackets cutoff crossings, retaining accepted pieces and their envelope. Multiple starts, BOBYQA and variance-coordinate gradient checks do not prove global optima or exclude narrower undetected pieces. Available describes numerical completion only.", 
-        "Failed source/profile checks or an unresolved upper tail leave Lower/Upper unavailable. A coefficient center rounded to one also withholds the profile interval with a numeric-resolution status; it does not establish perfect reliability or zero uncertainty. CandidateLower/Upper and diagnostics retain exploratory endpoints; they are not accepted confidence bounds. Uncertainty is never replaced by zero or an automatic [0,1].", 
-        "Intervals are pointwise for a fixed score/composite and future plan. They do not supply component, covariance-element, plan-difference or simultaneous intervals. Increasing future counts adds no source information.", 
-        "Raw used ratings are needed once for REML fitting. Save the complete result with saveRDS(); plotting and reloading use saved intervals without refitting. Inspect reml_source and row-aligned diagnostics for objective values, optimizer attempts, gradients and cutoff scans.", 
+    attr(out, "notes") <- c("Explicit experimental REML target-profile intervals under independent normal random effects and positive residual variance. Missing source cells must be noninformative conditional on the declared fixed assignment. Future plans remain complete balanced plans.",
+        "Estimate and PointStatus retain the original ANOVA/MINQUE D-study, including unavailable points. IntervalCenter is the separately estimated REML coefficient. Both concern the same population target; the source point can lie outside the interval. Plots retain the source points, not IntervalCenter.",
+        "The chi-square(1) cutoff is an asymptotic approximation, not an exact boundary mixture or finite-sample coverage guarantee. Small checks gave some below-nominal inclusion rates, with substantial Monte Carlo uncertainty; this method is not the automatic default and is not distribution robust.",
+        "The numerical inversion checks a grid and brackets cutoff crossings, retaining accepted pieces and their envelope. Multiple starts, BOBYQA and variance-coordinate gradient checks do not prove global optima or exclude narrower undetected pieces. Available describes numerical completion only.",
+        "Failed source/profile checks or an unresolved upper tail leave Lower/Upper unavailable. A coefficient center rounded to one also withholds the profile interval with a numeric-resolution status; it does not establish perfect reliability or zero uncertainty. CandidateLower/Upper and diagnostics retain exploratory endpoints; they are not accepted confidence bounds. Uncertainty is never replaced by zero or an automatic [0,1].",
+        "Intervals are pointwise for a fixed score/composite and future plan. They do not supply component, covariance-element, plan-difference or simultaneous intervals. Increasing future counts adds no source information.",
+        "Raw used ratings are needed once for REML fitting. Save the complete result with saveRDS(); plotting and reloading use saved intervals without refitting. Inspect reml_source and row-aligned diagnostics for objective values, optimizer attempts, gradients and cutoff scans.",
         "A likelihood-ratio cutoff below numerical resolution, or a nonzero interval lost when restoring score units, leaves bounds unavailable with a specific Status. Estimates and representable REML centers are retained; diagnostics$cutoff records the criterion tolerance and resolution.")
     if (sem) {
         notes <- attr(out, "notes")
         notes[2L] <- "Estimate and PointStatus retain the original ANOVA/MINQUE SEM, including unavailable points. IntervalCenter is the separate REML SEM in score units; plots retain the original points. Measurement SEM and its sampling uncertainty are different quantities."
         notes[4L] <- "For SEM, invert the error-variance profile and take square roots. Search outward from the REML center to the first checked cutoff crossing in each direction. This gives a numerical interval around that center; it does not enumerate disconnected remote accepted regions or certify global nuisance optima. All required evaluations and endpoints must pass the same numerical criteria. Available describes numerical completion, not coverage."
         notes[5L] <- "An unresolved source, required profile evaluation, cutoff root or tail leaves Lower/Upper unavailable; resolved CandidateLower/Upper are retained separately. A search limit is not an infinite confidence bound."
-        attr(out, "notes") <- c(notes, "In a limited normal-model SEM check with 40 samples per condition, true-value inclusion was 92.5-100% for positive-component populations and 82.5-100% at checked boundaries, counting failures as misses. The 82.5% result (MCSE 6.0 percentage points) had 97.5% numerical availability. Numerical completion is therefore not a nominal-coverage guarantee; these checks concern true-value acceptance rather than full endpoint coverage.", 
+        attr(out, "notes") <- c(notes, "In a limited normal-model SEM check with 40 samples per condition, true-value inclusion was 92.5-100% for positive-component populations and 82.5-100% at checked boundaries, counting failures as misses. The 82.5% result (MCSE 6.0 percentage points) had 97.5% numerical availability. Numerical completion is therefore not a nominal-coverage guarantee; these checks concern true-value acceptance rather than full endpoint coverage.",
             "SEM diagnostics retain error-variance targets in the standardized scalar-score units used for fitting. Multiply their square roots by reml_source$score_scale to obtain SEM units. Zero nonresidual variances are permitted; residual variance is strictly positive. The constrained calculation uses log1p variance ratios to preserve exact zeros.")
     }
     .mfrm_mvgt_interval_result(out, d, source, "reml_profile")
@@ -432,7 +432,7 @@
 
 .mfrm_mvgt_profile_difference <- function(d, tab, weights, metric, level, reference) {
     g <- d$gstudy
-    count_column <- if (is.null(g$design$nesting)) 
+    count_column <- if (is.null(g$design$nesting))
         names(d$design_grid)[1L]
     else g$design$count_columns[[unname(g$design$nesting)]]
     counts <- d$design_grid[[count_column]]
@@ -446,14 +446,14 @@
     a <- counts[reference]
     factor <- (a - counts)/(sqrt(a) + sqrt(counts))/sqrt(a)/sqrt(counts)
     image <- function(bounds) {
-        if (any(!is.finite(bounds))) 
-            return(list(lower = rep(NA_real_, length(counts)), upper = rep(NA_real_, length(counts)), 
+        if (any(!is.finite(bounds)))
+            return(list(lower = rep(NA_real_, length(counts)), upper = rep(NA_real_, length(counts)),
                 status = rep(base$Status, length(counts))))
-        if (!sem) 
+        if (!sem)
             return(.mfrm_mvgt_count_difference_range(stats::qlogis(bounds), counts, a, "Available"))
         lo <- factor * bounds[1L]
         hi <- factor * bounds[2L]
-        list(lower = pmin(lo, hi), upper = pmax(lo, hi), status = ifelse(counts == a, "Identical counts", 
+        list(lower = pmin(lo, hi), upper = pmax(lo, hi), status = ifelse(counts == a, "Identical counts",
             "Available"))
     }
     bounds <- image(c(base$Lower, base$Upper))
@@ -474,26 +474,26 @@
     out$CandidateUpper <- candidates$upper
     out$Level <- level
     out$Method <- "REML profile-set image (approximate)"
-    out$Status <- if (base$Available) 
+    out$Status <- if (base$Available)
         paste("REML profile image:", bounds$status)
     else base$Status
     out$Validation <- base$Validation
     out <- out[-reference, , drop = FALSE]
     rownames(out) <- NULL
     attr(out, "base_interval") <- base
-    for (name in c("reml_source", "source_data", "weights", "assumption", "source_design", "source_rows")) attr(out, 
+    for (name in c("reml_source", "source_data", "weights", "assumption", "source_design", "source_rows")) attr(out,
         name) <- attr(base, name)
-    attr(out, "reference") <- list(scenario = as.integer(reference), count = a, value = tab[[metric]][reference], 
+    attr(out, "reference") <- list(scenario = as.integer(reference), count = a, value = tab[[metric]][reference],
         point_status = tab[[paste0(metric, "Status")]][reference])
-    attr(out, "diagnostics") <- lapply(seq_along(counts)[-reference], function(i) list(base_scenario = 1L, 
+    attr(out, "diagnostics") <- lapply(seq_along(counts)[-reference], function(i) list(base_scenario = 1L,
         count = counts[i], reference_count = a, sem_multiplier = if (sem) factor[i] else NULL))
     notes <- attr(base, "notes")
     notes[grepl("^Intervals are pointwise", notes)] <- "All returned comparisons map one common base interval. Whenever it contains the population target, all mapped intervals contain their differences jointly for this fixed score/composite. The base method's approximate calibration and numerical limitations remain; this is not an exact or distribution-robust coverage guarantee."
     notes[grepl("^Estimate and PointStatus", notes)] <- "Estimate and PointStatus retain the original ANOVA/MINQUE plan difference, including unavailable points. IntervalCenter is the separately estimated REML difference. Plots retain source differences, not REML centers."
     notes[grepl("^Raw used ratings", notes)] <- "Raw used ratings are needed once for REML fitting. Save the complete result with saveRDS(); plotting and reloading do not refit. Inspect base_interval for the shared profile scans, objective values, optimizer attempts and gradient checks."
-    attr(out, "notes") <- c(if (sem) "SEM differences multiply one shared base SEM interval by 1/sqrt(comparison count) - 1/sqrt(reference count), reversing bounds for negative multipliers. Negative differences favor the comparison plan." else "G/Phi differences map the entire shared base interval, including interior extrema. They do not subtract marginal confidence limits. Positive differences favor the comparison plan.", 
-        "base_interval retains the canonical future count of one, its accepted/candidate bounds and fitting diagnostics. In nested plans it retains the common future child count; the observed incomplete or unequal assignment is never averaged or replaced. ReferenceCount counts parents. Only proportional future error vectors are supported.", 
-        "Estimate is the original ANOVA/MINQUE plan difference and IntervalCenter is the separate REML difference. A missing source point stays missing. Failed base intervals stay unavailable even for identical plans; candidate images are exploratory, not accepted bounds.", 
+    attr(out, "notes") <- c(if (sem) "SEM differences multiply one shared base SEM interval by 1/sqrt(comparison count) - 1/sqrt(reference count), reversing bounds for negative multipliers. Negative differences favor the comparison plan." else "G/Phi differences map the entire shared base interval, including interior extrema. They do not subtract marginal confidence limits. Positive differences favor the comparison plan.",
+        "base_interval retains the canonical future count of one, its accepted/candidate bounds and fitting diagnostics. In nested plans it retains the common future child count; the observed incomplete or unequal assignment is never averaged or replaced. ReferenceCount counts parents. Only proportional future error vectors are supported.",
+        "Estimate is the original ANOVA/MINQUE plan difference and IntervalCenter is the separate REML difference. A missing source point stays missing. Failed base intervals stay unavailable even for identical plans; candidate images are exploratory, not accepted bounds.",
         notes)
     .mfrm_mvgt_interval_result(out, d, attr(base, "reml_source"), "reml_profile")
 }
@@ -507,17 +507,17 @@
     })
     out <- do.call(rbind, rows)
     rownames(out) <- NULL
-    for (result in results) for (name in setdiff(names(attributes(result)), c("names", "row.names", "class"))) if (is.null(attr(out, 
-        name))) 
+    for (result in results) for (name in setdiff(names(attributes(result)), c("names", "row.names", "class"))) if (is.null(attr(out,
+        name)))
         attr(out, name) <- attr(result, name)
     attr(out, "diagnostics") <- unlist(lapply(results, function(x) {
         diagnostics <- attr(x, "diagnostics")
-        if (is.null(diagnostics)) 
+        if (is.null(diagnostics))
             rep(list(NULL), nrow(x))
         else diagnostics
     }), recursive = FALSE)
     attr(out, "notes") <- unique(unlist(lapply(results, function(x) attr(x, "notes")), use.names = FALSE))
-    attr(out, "method_results") <- stats::setNames(results, vapply(results, function(x) unique(x$MethodCode), 
+    attr(out, "method_results") <- stats::setNames(results, vapply(results, function(x) unique(x$MethodCode),
         character(1)))
     class(out) <- c("mfrm_dstudy_intervals", "data.frame")
     out

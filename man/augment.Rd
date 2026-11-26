@@ -24,6 +24,7 @@ residuals, observed category probabilities, and unexpected-response flags
 }
 \examples{
 utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+  step_mfrm_measure()
 head(augment(wf))
 }

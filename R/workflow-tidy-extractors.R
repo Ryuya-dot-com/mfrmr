@@ -7,7 +7,7 @@
 #' Extracts tidy `tibble` summaries of parameters, rater diagnostics, persons,
 #' thresholds, GPCM discrimination slopes, dynamic rater drift, or generalizability studies.
 #'
-#' @param x A `tidymfrm`, `mfrm_fast_fit`, or `mfrm_fast_gtheory` object.
+#' @param x A `tidymfrm`, `mfrm_fit`, or `mfrm_gtheory` object.
 #' @param component Component to extract: `"raters"`, `"facets"`, `"persons"`,
 #'   `"steps"`, `"slopes"`, `"g_study"`, `"d_study"`, `"dff"`, or `"drift"`.
 #' @param conf.level Confidence level for Wald intervals (default `0.95`).
@@ -17,18 +17,22 @@
 #'   exponentiated log-slope intervals for GPCM. When calibration is not ready,
 #'   interval endpoints are `NA`; `inference_status` and `inference_reason`
 #'   explain why. Point estimates and SE columns remain descriptive outputs.
+#'   G-Study tables include `conf.low`, `conf.high`, and `interval_status`;
+#'   see [mfrm_g_study()] for the approximation and reporting guard.
 #' @param ... Additional arguments (unused).
 #' @return A [tibble::tibble()].
 #' @examples
 #' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+#'   step_mfrm_measure() |>
+#'   step_mfrm_diagnose()
 #' tidy(wf, component = "raters")
 #' glance(wf)
 #' head(augment(wf))
+#' @name tidy
+#' @importFrom generics tidy
 #' @export
-tidy <- function(x, ...) {
-  UseMethod("tidy")
-}
+generics::tidy
 
 #' Glance at a Single-Row Summary of a Many-Facet Workflow or Fit
 #'
@@ -36,18 +40,19 @@ tidy <- function(x, ...) {
 #' information criteria, latent EAP reliability, observed-score `G` and `Phi`,
 #' and flagged rater counts.
 #'
-#' @param x A `tidymfrm` or `mfrm_fast_fit` object.
+#' @param x A `tidymfrm` or `mfrm_fit` object.
 #' @param ... Additional arguments (unused).
 #' @return A single-row [tibble::tibble()]. `model` is the API code and
 #'   `model_label` is the display name, including GMFRM discrimination facets.
 #' @examples
 #' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+#'   step_mfrm_measure()
 #' glance(wf)
+#' @name glance
+#' @importFrom generics glance
 #' @export
-glance <- function(x, ...) {
-  UseMethod("glance")
-}
+generics::glance
 
 #' Augment Observation Rows with Expected Scores and Standardized Residuals
 #'
@@ -60,12 +65,13 @@ glance <- function(x, ...) {
 #' @return A [tibble::tibble()] of observation-level expectations and residuals.
 #' @examples
 #' utils::data("mfrmr_example_core", package = "mfrmr")
-#' wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+#' wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+#'   step_mfrm_measure()
 #' head(augment(wf))
+#' @name augment
+#' @importFrom generics augment
 #' @export
-augment <- function(x, ...) {
-  UseMethod("augment")
-}
+generics::augment
 
 #' @rdname tidy
 #' @export
@@ -106,10 +112,10 @@ tidy.tidymfrm <- function(x,
     ))
   }
   if (component %in% c("facets", "persons", "steps", "slopes")) {
-    return(tidy.mfrm_fast_fit(x$fit, component = component, conf.level = conf.level, use_real_se = use_real_se))
+    return(tidy.mfrm_fit(x$fit, component = component, conf.level = conf.level, use_real_se = use_real_se))
   }
   if (component == "g_study") {
-    return(x$gtheory$variance_components)
+    return(if (is.null(x$gtheory)) tibble::tibble() else tidy(x$gtheory, conf.level = conf.level))
   }
   if (component == "d_study") {
     return(x$gtheory$d_study)
@@ -126,82 +132,67 @@ tidy.tidymfrm <- function(x,
 
 #' @rdname tidy
 #' @export
-tidy.mfrm_fast_fit <- function(x,
-                               component = c("facets", "persons", "steps", "slopes"),
-                               conf.level = 0.95,
-                               use_real_se = TRUE,
-                               ...) {
-  component <- match.arg(component)
-  ci <- .tidymfrm_intervals(x, if (component == "persons") "person" else component, conf.level, use_real_se)
-  readiness <- summary(x)$readiness
-  status <- readiness$status
-  reason <- paste(readiness$reason_codes, collapse = "; ")
-  if (component == "slopes") {
-    sl <- x$slopes
-    if (is.null(sl) || nrow(sl) == 0L) return(tibble::tibble())
-    return(tibble::tibble(
-      facet = sl$Facet,
-      term = sl$Level,
-      estimate = sl$Estimate,
-      log.estimate = sl$LogEstimate,
-      std.error = sl$ModelSE,
-      sandwich.se = sl$SandwichSE,
-      conf.low = ci[, 1L], conf.high = ci[, 2L],
-      inference_status = status, inference_reason = reason,
-      formula = sl$Formula
-    ))
-  }
-  if (component == "facets") {
-    fc <- x$facets
-    return(tibble::tibble(
-      facet = fc$Facet,
-      term = fc$Level,
-      estimate = fc$Estimate,
-      std.error = fc$ModelSE,
-      real.se = fc$RealSE,
-      sandwich.se = fc$SandwichSE,
-      conf.low = ci[, 1L], conf.high = ci[, 2L],
-    inference_status = status, inference_reason = reason,
-      fair_m = fc$FairM,
-      infit_mnsq = fc$InfitMnSq,
-      infit_zstd = fc$InfitZSTD,
-      outfit_mnsq = fc$OutfitMnSq,
-      outfit_zstd = fc$OutfitZSTD
-    ))
-  }
-  if (component == "persons") {
-    pt <- x$person
-    return(tibble::tibble(
-      term = pt$Person,
-      estimate = pt$Estimate,
-      std.error = pt$ModelSE,
-      real.se = pt$RealSE,
-      wle = pt$WLE,
-      wle.se = pt$WLE_SE,
-      conf.low = ci[, 1L], conf.high = ci[, 2L],
-    inference_status = status, inference_reason = reason,
-      fair_m = pt$FairM,
-      infit_mnsq = pt$InfitMnSq,
-      infit_zstd = pt$InfitZSTD,
-      extreme_flag = pt$ExtremeFlag
-    ))
-  }
-  st <- x$steps
-  tibble::tibble(
-    scale = st$ScaleLevel,
-    step = st$Step,
-    estimate = st$Estimate,
-    std.error = st$ModelSE,
-    conf.low = ci[, 1L], conf.high = ci[, 2L],
-    inference_status = status, inference_reason = reason
-  )
+tidy.mfrm_fit <- function(x, component = c("facets", "persons", "steps", "slopes"), conf.level = 0.95, use_real_se = TRUE,
+    ...) {
+    .mfrm_validate_fit(x)
+    component <- match.arg(component)
+    ci <- .tidymfrm_intervals(x, if (component == "persons")
+        "person"
+    else component, conf.level, use_real_se)
+    readiness <- summary(x)$readiness
+    status <- readiness$status
+    reason <- paste(readiness$reason_codes, collapse = "; ")
+    if (component == "slopes") {
+        sl <- x$slopes
+        if (is.null(sl) || nrow(sl) == 0L)
+            return(tibble::tibble())
+        return(tibble::tibble(facet = sl$Facet, term = sl$Level, estimate = sl$Estimate, log.estimate = sl$LogEstimate,
+            std.error = sl$ModelSE, sandwich.se = sl$SandwichSE, conf.low = ci[, 1L], conf.high = ci[, 2L],
+            inference_status = status, inference_reason = reason, formula = sl$Formula))
+    }
+    if (component == "facets") {
+        fc <- x$facets
+        return(tibble::tibble(facet = fc$Facet, term = fc$Level, estimate = fc$Estimate, std.error = fc$ModelSE,
+            real.se = fc$RealSE, sandwich.se = fc$SandwichSE, conf.low = ci[, 1L], conf.high = ci[, 2L], inference_status = status,
+            inference_reason = reason, fair_m = fc$FairM, infit_mnsq = fc$InfitMnSq, infit_zstd = fc$InfitZSTD,
+            outfit_mnsq = fc$OutfitMnSq, outfit_zstd = fc$OutfitZSTD))
+    }
+    if (component == "persons") {
+        pt <- x$person
+        return(tibble::tibble(term = pt$Person, estimate = pt$Estimate, std.error = pt$ModelSE, real.se = pt$RealSE,
+            wle = pt$WLE, wle.se = pt$WLE_SE, conf.low = ci[, 1L], conf.high = ci[, 2L], inference_status = status,
+            inference_reason = reason, fair_m = pt$FairM, infit_mnsq = pt$InfitMnSq, infit_zstd = pt$InfitZSTD,
+            extreme_flag = pt$ExtremeFlag))
+    }
+    st <- x$steps
+    tibble::tibble(scale = st$ScaleLevel, step = st$Step, estimate = st$Estimate, std.error = st$ModelSE,
+        conf.low = ci[, 1L], conf.high = ci[, 2L], inference_status = status, inference_reason = reason)
 }
 
 #' @rdname tidy
 #' @export
-tidy.mfrm_fast_gtheory <- function(x, component = c("g_study", "d_study"), ...) {
+tidy.mfrm_gtheory <- function(x, component = c("g_study", "d_study"), conf.level = 0.95, ...) {
+  .mfrm_validate_gstudy(x)
+  if (x$method_code != "urgenova") {
+    component <- match.arg(component)
+    if (component == "d_study") return(tibble::as_tibble(mfrm_d_study(x)$coefficients))
+    rows <- lapply(names(x$components), function(source) {
+      m <- x$components[[source]]
+      ij <- which(upper.tri(m, diag = TRUE), arr.ind = TRUE)
+      data.frame(Component = source, Score1 = rownames(m)[ij[,1L]],
+        Score2 = colnames(m)[ij[,2L]], Estimate = m[ij],
+        interval_status = "not_requested", stringsAsFactors = FALSE)
+    })
+    return(tibble::as_tibble(do.call(rbind, rows)))
+  }
   component <- match.arg(component)
-  if (component == "d_study") tibble::as_tibble(mfrm_d_study(x)) else tibble::as_tibble(x$variance_components)
+  if (component == "d_study") return(tibble::as_tibble(mfrm_d_study(x)))
+  ci <- stats::confint(x, level = conf.level, component = "variance_components")
+  out <- tibble::as_tibble(x$variance_components)
+  out$conf.low <- ci[, 1L]
+  out$conf.high <- ci[, 2L]
+  out$interval_status <- unname(attr(ci, "status"))
+  out
 }
 
 #' @rdname glance
@@ -235,25 +226,14 @@ glance.tidymfrm <- function(x, ...) {
 
 #' @rdname glance
 #' @export
-glance.mfrm_fast_fit <- function(x, ...) {
-  fit_summary <- summary(x)
-  readiness <- fit_summary$readiness
-  tibble::tibble(
-    model = x$model,
-    method = x$method,
-    score_method = x$score_method,
-    n_obs = x$n_obs,
-    n_person = x$n_person,
-    connected = x$connectivity$connected,
-    n_subsets = x$connectivity$n_subsets,
-    converged = x$converged,
-    inference_ready = readiness$ready,
-    inference_status = readiness$status,
-    logLik = x$loglik,
-    eap_reliability = x$population$eap_reliability,
-    elapsed_sec = x$elapsed_sec,
-    model_label = .tidymfrm_model_label(x, fit_summary)
-  )
+glance.mfrm_fit <- function(x, ...) {
+    .mfrm_validate_fit(x)
+    fit_summary <- summary(x)
+    readiness <- fit_summary$readiness
+    tibble::tibble(model = x$model, method = x$method, score_method = x$score_method, n_obs = x$n_obs, n_person = x$n_person,
+        connected = x$connectivity$connected, n_subsets = x$connectivity$n_subsets, converged = x$converged,
+        inference_ready = readiness$ready, inference_status = readiness$status, logLik = x$loglik, eap_reliability = x$population$eap_reliability,
+        elapsed_sec = x$elapsed_sec, model_label = .tidymfrm_model_label(x, fit_summary))
 }
 
 #' @rdname augment

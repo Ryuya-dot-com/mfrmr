@@ -23,7 +23,7 @@
     Centering = if (is.null(enc$centering_scope)) NA_character_ else
       if (identical(enc$centering_scope, 1L)) "facet" else "remainder",
     RatingRows = fit$n_obs, OmittedRatingRows = nrow(wf$data) - fit$n_obs,
-    Converged = isTRUE(fit$converged), InferenceStatus = .mfrm_fast_readiness(fit)$status
+    Converged = isTRUE(fit$converged), InferenceStatus = .mfrm_readiness(fit)$status
   )
   list(calibration = fitting,
        notes = c(paste("Estimator:", fit$method, "| Person scoring:", fit$score_method, "|", bias),
@@ -60,7 +60,7 @@
     }
   }
   if (!nrow(anchors)) return(NULL)
-  ready <- .mfrm_fast_readiness(fit)$ready
+  ready <- .mfrm_readiness(fit)$ready
   p <- if (ready) predict(fit, type = "probs")
   cats <- if (ready) as.numeric(colnames(p))
   expected <- if (ready) drop(p %*% cats)
@@ -103,7 +103,9 @@
     interrater_agreement(fit, rater = sp$rater_facet, context_facets = context, model_expected = TRUE),
     error = identity
   )
-  reliability <- diagnose_mfrm(fit)$reliability
+  checked <- .tidymfrm_check_diagnostics(wf)
+  reliability <- checked$diagnostics$report_statistics$reliability
+  if (is.null(reliability)) reliability <- diagnose_mfrm(fit)$reliability
   if (NROW(reliability))
     reliability$HomogeneityBasis <- "ModelSE diagonal; no covariance adjustment"
   list(reliability = reliability,

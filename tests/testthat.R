@@ -6,29 +6,19 @@ is_cran_check <- local({
   if (identical(env, "")) !interactive() else !isTRUE(as.logical(env))
 })
 
+# Live native numerics, S3 contracts, inference guards and one complete workflow.
+# Broader regressions remain in this directory and run with NOT_CRAN=true.
 cran_light_tests <- c(
-  "fast-engine-032",
-  "review-regressions-032",
+  "engine-032",
   "rating-design-display",
   "tidymfrm",
-  "inference-display",
-  "model-planning-plots",
-  "workflow-design-display",
   "report-statistics",
-  "feedback-contracts-032",
-  "posterior-summary",
   "mml-population-boundary",
   "step-constraints",
-  "adaptive-native",
   "classification",
-  "bias-numerics",
   "markov-drift",
-  "multivariate-gtheory",
-  "gstudy-sampling-vcov",
-  "mantel-haenszel",
-  "ordinal-logistic",
-  "krippendorff-alpha",
-  "optimizer-curvature"
+  "unified-contracts",
+  "public-polish"
 )
 
 cran_light_filter <- paste0("(^|/)(test-)?(", paste(cran_light_tests, collapse = "|"), ")$")

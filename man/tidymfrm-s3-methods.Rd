@@ -35,9 +35,9 @@ model or workflow summary.
 }
 \examples{
 utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+  step_mfrm_measure()
 coef(wf)
 confint(wf)
 head(predict(wf, type = "response"))
 }
-\keyword{internal}

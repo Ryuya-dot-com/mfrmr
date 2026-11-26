@@ -6,25 +6,18 @@ Computes fast C++ fixed-measure 2-way local bias tables (FACETS Table 13) and pa
 }
 \usage{
 estimate_bias(
-  fit, diagnostics = NULL, facet_a = NULL, facet_b = NULL,
+  fit, facet_a = NULL, facet_b = NULL,
   interaction_facets = NULL, method = c("local", "joint"),
-  df_method = c("facets", "classical"), p_adjust = "holm", max_abs = 10,
-  omit_extreme = TRUE, max_iter = 4, tol = 0.001, xtreme = 0)
+  df_method = c("facets", "classical"), p_adjust = "holm")
 }
 \arguments{
   \item{fit}{A fitted model object returned by \code{\link{fit_mfrm}}.}
-  \item{diagnostics}{Optional \code{\link{diagnose_mfrm}} object when running legacy higher-order bias analysis.}
   \item{facet_a}{Optional character string naming the first interaction facet.}
   \item{facet_b}{Optional character string naming the second interaction facet.}
   \item{interaction_facets}{Character vector of two facet names, or \code{"all"} to screen all 2-way non-person facet pairs.}
   \item{method}{\code{"local"} (fixed-calibration post-hoc bias and pairwise contrasts) or \code{"joint"} (simultaneous C++ main-effect + sum-to-zero interaction refit with omnibus LRT).}
   \item{df_method}{Degrees-of-freedom convention for pairwise contrasts: \code{"facets"} (FACETS 4.5.3 \code{RajuSA-Welch} integer truncation with \code{df >= 1} floor) or \code{"classical"} (untruncated Welch-Satterthwaite).}
   \item{p_adjust}{Multiple-testing adjustment method passed to \code{\link[stats]{p.adjust}} (default \code{"holm"}).}
-  \item{max_abs}{Maximum absolute logit bias bound for cell Newton updates on legacy fits (default \code{10}).}
-  \item{omit_extreme}{Logical; whether to exclude extreme person patterns in fixed-calibration local bias.}
-  \item{max_iter}{Maximum Newton iterations per cell on legacy fits (default \code{4}).}
-  \item{tol}{Convergence tolerance for cell Newton updates on legacy fits (default \code{0.001}).}
-  \item{xtreme}{Extreme-cell score adjustment on legacy fits (default \code{0}).}
 }
 \value{
 An S3 object of class \code{c("mfrm_bias", "mfrm_bundle")} containing \code{table} (cell-level bias estimates, \code{BiasSE}, \code{t}, \code{df}, \code{pValue}, \code{pAdj}), \code{pairwise} (pairwise context contrasts with \code{TestType}, \code{df}, \code{dfUnrounded}, \code{pAdj}), \code{summary}, and (when \code{method = "joint"}) \code{lrt} and \code{joint_fit}.
@@ -49,7 +42,7 @@ are satisfied; otherwise \code{lrt} is \code{NULL} and
 Unready calibrations retain descriptive estimates but return \code{NA} for
 interval SEs and p-values. All-unavailable screen counts are \code{NA}, not zero.
 Numerical readiness is not a guarantee of coverage or diagnostic accuracy.
-Legacy GPCM objects require a unified refit before fast local analysis.
+Older saved calibrations require refitting with the current fit_mfrm().
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{analyze_dff}}, \code{\link{plot.mfrm_fit}}

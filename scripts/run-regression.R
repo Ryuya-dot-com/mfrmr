@@ -1,8 +1,8 @@
 # Run against an installed copy of the same package sources.
-# Rscript scripts/run-regression.R SOURCE cran|extended|reference|all OUTPUT
+# Rscript scripts/run-regression.R SOURCE cran|all OUTPUT
 args <- commandArgs(TRUE)
-if (length(args) != 3L || !args[2L] %in% c("cran", "extended", "reference", "all"))
-  stop("Usage: Rscript run-regression.R SOURCE cran|extended|reference|all OUTPUT")
+if (length(args) != 3L || !args[2L] %in% c("cran", "all"))
+  stop("Usage: Rscript run-regression.R SOURCE cran|all OUTPUT")
 source_dir <- normalizePath(args[1L], winslash = "/", mustWork = TRUE)
 mode <- args[2L]
 dir.create(args[3L], recursive = TRUE, showWarnings = FALSE)
@@ -11,16 +11,11 @@ selection <- new.env(parent = baseenv())
 for (expr in parse(file.path(source_dir, "tests", "testthat.R"))) {
   if (is.call(expr) && identical(expr[[1L]], as.name("<-")) &&
       as.character(expr[[2L]]) %in%
-        c("cran_light_tests", "extended_regression_tests", "reference_tests"))
+        "cran_light_tests")
     eval(expr, selection)
 }
-stopifnot(length(selection$cran_light_tests) > 0L,
-          length(selection$extended_regression_tests) > 0L,
-          length(selection$reference_tests) > 0L)
-selected <- switch(mode, cran = selection$cran_light_tests,
-  extended = c(selection$cran_light_tests, selection$extended_regression_tests),
-  reference = selection$reference_tests,
-  all = NULL)
+stopifnot(length(selection$cran_light_tests) > 0L)
+selected <- if (mode == "cran") selection$cran_light_tests else NULL
 if (!is.null(selected)) {
   stopifnot(!anyDuplicated(selected), all(file.exists(file.path(source_dir,
     "tests", "testthat", paste0("test-", selected, ".R")))))

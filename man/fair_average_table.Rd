@@ -5,28 +5,17 @@
 Translates latent logit parameter estimates for persons and non-person facets back onto the original rubric score scale by computing model-expected average ratings against a cohort-mean reference context (\code{FairM}) and a zero-logit reference context (\code{FairZ}), alongside raw observed averages (\code{ObsAvg}).
 }
 \usage{
-fair_average_table(
-  fit, diagnostics = NULL, facets = NULL, totalscore = TRUE, umean = 0,
-  uscale = 1, udecimals = 2, reference = c("both", "mean", "zero"),
-  label_style = c("both", "native", "legacy"), omit_unobserved = FALSE,
-  xtreme = 0, fair_se = FALSE, ci_level = 0.95,
-  xtreme_method = c("display", "facets"), reference_plan = NULL)
+fair_average_table(fit, diagnostics = NULL, facets = NULL, umean = 0,
+  uscale = 1, fair_se = FALSE, ci_level = 0.95, reference_plan = NULL)
 }
 \arguments{
   \item{fit}{A fitted model object returned by \code{\link{fit_mfrm}}.}
-  \item{diagnostics}{Optional precomputed \code{\link{diagnose_mfrm}} object for legacy fits.}
+  \item{diagnostics}{Optional precomputed \code{\link{diagnose_mfrm}} object from the same calibration.}
   \item{facets}{Optional character vector filtering which facets (including \code{"Person"}) to return.}
-  \item{totalscore}{Logical; whether to include total observed/expected score columns on legacy tables.}
   \item{umean}{Additive origin shift applied to reported logit measures \code{umean + uscale * Estimate} (default \code{0}).}
   \item{uscale}{Multiplicative scale factor applied to reported logit measures and \code{SE} (default \code{1}).}
-  \item{udecimals}{Rounding precision for formatted legacy display columns (default \code{2}).}
-  \item{reference}{Which reference expectation to report on legacy fits: \code{"both"}, \code{"mean"}, or \code{"zero"}.}
-  \item{label_style}{Column naming convention on legacy fits (\code{"both"}, \code{"native"}, or \code{"legacy"}).}
-  \item{omit_unobserved}{Logical; whether to omit elements with zero observed ratings.}
-  \item{xtreme}{Extreme-score adjustment for legacy \code{JML} display.}
-  \item{fair_se}{Logical; request uncertainty. For the unified engine supply a common \code{reference_plan}; on legacy fits this requests delta-method standard errors.}
+  \item{fair_se}{Logical; request uncertainty. Supply a common \code{reference_plan}.}
   \item{ci_level}{Confidence level in \code{(0, 1)} when intervals are requested (default \code{0.95}).}
-  \item{xtreme_method}{Extreme-score handling convention on legacy fits (\code{"display"} or \code{"facets"}).}
   \item{reference_plan}{Optional common rating plan \code{data.frame} containing exactly all fitted base facet columns plus optional \code{Weight}. Levels must be known, cells unique and weights finite and strictly positive. Weights are normalized to sum to one.}
 }
 \value{
@@ -35,6 +24,20 @@ When a plan is supplied, also returns \code{reference_plan} with
 \code{NormalizedWeight}, and \code{reference_scores} with one person per row.
 }
 \details{
+Printing shows the common-plan \code{reference_scores}, including conditional
+intervals when requested, before the observed-design Fair(M) tables.
+Observed-design Fair(M) uses finite facet-level means, an observation-weighted
+geometric reference discrimination for GMFRM, and each person's weighted
+step-group mix. A geometric-mean-one identification constraint is not itself a
+reference-panel definition. Use an explicit \code{reference_plan} to compare
+people or models against the same specified rating plan.
+
+\code{confint(x, level = 0.95)} returns these conditional person-score
+intervals for a fair-average table with a reference plan. These intervals hold
+calibration parameters fixed; they do not propagate estimated-anchor or
+calibration uncertainty. Legacy refit-bootstrap and joint-delta arguments are
+not supported by this method.
+
 For the unified engine, \code{reference_scores$Estimate} is the weighted mean
 model-expected rating under the same supplied plan for every person, conditional
 on that person's primary ability estimate. It is on the original rubric scale

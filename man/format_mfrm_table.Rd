@@ -34,6 +34,8 @@ formats it as GitHub-flavored Markdown, HTML (\code{kableExtra}), or Word/Office
 }
 \examples{
 utils::data("mfrmr_example_core", package = "mfrmr")
-wf <- mfrm_analysis(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score")
+wf <- mfrm_workflow(mfrmr_example_core, "Person", c("Rater", "Criterion"), "Score") |>
+  step_mfrm_measure() |>
+  step_mfrm_diagnose()
 cat(format_mfrm_table(wf, component = "raters", engine = "markdown"))
 }

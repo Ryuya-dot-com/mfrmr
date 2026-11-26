@@ -6,24 +6,17 @@ Summarizes facet- and person-level measurement quality from a fitted Many-Facet 
 }
 \usage{
 diagnose_mfrm(
-  fit, interaction_pairs = NULL, top_n_interactions = 20, whexact = FALSE,
-  fit_df_method = "facets",
-  diagnostic_mode = c("both", "legacy", "marginal_fit"),
+  fit,
   residual_pca = c("none", "overall", "facet", "both"),
   pca_max_factors = 10L)
 }
 \arguments{
   \item{fit}{A fitted model object returned by \code{\link{fit_mfrm}}.}
-  \item{interaction_pairs}{Optional list of facet pairs to summarize in legacy marginal residual tables.}
-  \item{top_n_interactions}{Maximum number of largest interaction cells retained in legacy summaries (default \code{20}).}
-  \item{whexact}{Logical; if \code{TRUE}, applies the exact Wilson-Hilferty cube-root transformation for \code{ZSTD} on legacy fits.}
-  \item{fit_df_method}{Degrees-of-freedom convention for legacy fit standardization (default \code{"facets"}).}
-  \item{diagnostic_mode}{Diagnostic mode for legacy \code{fast = FALSE} fits (\code{"both"}, \code{"legacy"}, or \code{"marginal_fit"}).}
   \item{residual_pca}{Optional residual principal-components mode (\code{"none"}, \code{"overall"}, \code{"facet"}, or \code{"both"}).}
   \item{pca_max_factors}{Maximum number of residual PCA factors extracted when \code{residual_pca != "none"}.}
 }
 \value{
-An S3 diagnostic bundle of class \code{"mfrm_diagnostics"} (and \code{"mfrm_fast_diagnostics"} for C++ fits) containing \code{reliability} (per-facet \code{ModelReliability}, \code{RealReliability}, \code{ModelSeparation}, \code{RealSeparation}, \code{Strata}, and \code{HomogeneityChiSq}), \code{measures} (element-level \code{Estimate}, \code{ModelSE}, \code{RealSE}, \code{FairM}, \code{Infit}, \code{InfitZSTD}, \code{Outfit}, \code{OutfitZSTD}), and \code{unexpected} (flagged rating rows sorted by \code{|StdResidual|}).
+An S3 diagnostic bundle of class \code{"mfrm_diagnostics"} containing \code{reliability} (per-facet \code{ModelReliability}, \code{RealReliability}, \code{ModelSeparation}, \code{RealSeparation}, \code{Strata}, and \code{HomogeneityChiSq}), \code{measures} (element-level \code{Estimate}, \code{ModelSE}, \code{RealSE}, \code{FairM}, \code{Infit}, \code{InfitZSTD}, \code{Outfit}, \code{OutfitZSTD}), and \code{unexpected} (flagged rating rows sorted by \code{|StdResidual|}).
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{compute_person_fit_indices}}, \code{\link{fair_average_table}}, \code{\link{plot.mfrm_fit}}

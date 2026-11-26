@@ -20,7 +20,7 @@
                 j <- pos[r]
                 d <- df[i] + df[j]
                 g <- 1 - d/stats::qchisq(tail, d, lower.tail = FALSE)
-                K[i, j] <- K[j, i] <- (g^2 * d^2/(df[i] * df[j]) - G[i]^2 * df[i]/df[j] - G[j]^2 * df[j]/df[i])/(2 * 
+                K[i, j] <- K[j, i] <- (g^2 * d^2/(df[i] * df[j]) - G[i]^2 * df[i]/df[j] - G[j]^2 * df[j]/df[i])/(2 *
                   (length(pos) - 1))
             }
         }
@@ -39,10 +39,10 @@
     breaks <- sort(unique(c(0, 1, crossing[crossing > 0 & crossing < 1 & !is.na(crossing)])))
     matrices <- lapply(seq_len(length(breaks) - 1), function(i) {
         signs <- sign(a - mean(breaks[i + 0:1]) * b)
-        list(lower = .mfrm_mvgt_mls_matrix(map$df, signs, (1 - level)/2), upper = .mfrm_mvgt_mls_matrix(map$df, 
+        list(lower = .mfrm_mvgt_mls_matrix(map$df, signs, (1 - level)/2), upper = .mfrm_mvgt_mls_matrix(map$df,
             -signs, (1 - level)/2))
     })
-    list(a = a, b = b, df = map$df, breaks = breaks, crossing = crossing, matrices = matrices, level = level, 
+    list(a = a, b = b, df = map$df, breaks = breaks, crossing = crossing, matrices = matrices, level = level,
         error = error)
 }
 
@@ -64,10 +64,10 @@
 
 .mfrm_mvgt_mls_null_interval <- function(ms, problem, rho, snap = FALSE) {
     h <- problem$a - rho * problem$b
-    if (snap) 
+    if (snap)
         h[which(!is.na(problem$crossing) & problem$crossing == rho)] <- 0
     point <- sum(ms * h)
-    point + c(-.mfrm_mvgt_mls_width(ms, problem$df, h, (1 - problem$level)/2), .mfrm_mvgt_mls_width(ms, 
+    point + c(-.mfrm_mvgt_mls_width(ms, problem$df, h, (1 - problem$level)/2), .mfrm_mvgt_mls_width(ms,
         problem$df, -h, (1 - problem$level)/2))
 }
 
@@ -87,12 +87,12 @@
     for (i in seq_along(problem$matrices)) {
         lo <- problem$breaks[i]
         hi <- problem$breaks[i + 1]
-        origin <- if (is.finite(point) && abs(point - hi) < abs(point - lo)) 
+        origin <- if (is.finite(point) && abs(point - hi) < abs(point - lo))
             hi
         else lo
         C <- cbind(ms * (problem$a - origin * problem$b), -ms * problem$b)
         step <- max(abs(C[, 1]))/max(abs(C[, 2]))
-        if (!is.finite(step) || step == 0) 
+        if (!is.finite(step) || step == 0)
             step <- hi - lo
         C[, 2] <- C[, 2] * step
         C <- C/max(abs(C))
@@ -100,7 +100,7 @@
         mu2 <- c(mu[1]^2, 2 * mu[1] * mu[2], mu[2]^2)
         vl <- polynomial(problem$matrices[[i]]$lower, C)
         vu <- polynomial(problem$matrices[[i]]$upper, C)
-        roots <- unlist(lapply(list(mu, vl, vu, mu2 - vl, mu2 - vu), .mfrm_mvgt_mls_poly_roots, lo = (lo - 
+        roots <- unlist(lapply(list(mu, vl, vu, mu2 - vl, mu2 - vu), .mfrm_mvgt_mls_poly_roots, lo = (lo -
             origin)/step, hi = (hi - origin)/step))
         coordinates <- origin + step * roots
         if (any(coordinates <= lo | coordinates >= hi)) {
@@ -122,7 +122,7 @@
         nodes <- c(nodes, cuts)
     }
     nodes <- sort(unique(nodes))
-    node_ci <- t(vapply(nodes, function(r) .mfrm_mvgt_mls_null_interval(ms, problem, r, snap = TRUE), 
+    node_ci <- t(vapply(nodes, function(r) .mfrm_mvgt_mls_null_interval(ms, problem, r, snap = TRUE),
         numeric(2)))
     node_scale <- vapply(nodes, function(r) sum(abs(ms * (problem$a - r * problem$b))), numeric(1))
     node_tol <- 256 * .Machine$double.eps * pmax(node_scale, rowSums(abs(node_ci)))
@@ -130,17 +130,17 @@
     accepted <- node_ok & node_ci[, 1] <= node_tol & node_ci[, 2] >= -node_tol
     endpoints <- c(unlist(pieces), nodes[accepted])
     valid <- !length(unresolved) && all(node_ok)
-    list(valid = valid, empty = valid && !length(endpoints), bounds = if (valid && length(endpoints)) range(endpoints) else c(NA_real_, 
-        NA_real_), pieces = if (length(pieces)) do.call(rbind, pieces) else matrix(numeric(), 0, 2), 
+    list(valid = valid, empty = valid && !length(endpoints), bounds = if (valid && length(endpoints)) range(endpoints) else c(NA_real_,
+        NA_real_), pieces = if (length(pieces)) do.call(rbind, pieces) else matrix(numeric(), 0, 2),
         nodes = nodes, node_accepted = accepted, node_ci = node_ci, unresolved = unresolved, polynomials = polys)
 }
 
 .mfrm_mvgt_mls_complete <- function(fit, ms, problem) {
     if (fit$valid) {
-        return(list(available = !fit$empty, bounds = fit$bounds, formula_complete = TRUE, undefined = matrix(numeric(), 
+        return(list(available = !fit$empty, bounds = fit$bounds, formula_complete = TRUE, undefined = matrix(numeric(),
             0, 2), status = "Computed MLS set"))
     }
-    failed <- list(available = FALSE, bounds = c(NA_real_, NA_real_), formula_complete = FALSE, undefined = matrix(numeric(), 
+    failed <- list(available = FALSE, bounds = c(NA_real_, NA_real_), formula_complete = FALSE, undefined = matrix(numeric(),
         0, 2), status = "Unresolved numerical inversion")
     if (!length(fit$polynomials) || !length(fit$unresolved)) {
         return(failed)
@@ -186,13 +186,13 @@
                 complete <- .mfrm_mvgt_mls_complete(fit, p$ms, problem)
                 complete$numerical_complete <- isTRUE(fit$valid) || isTRUE(complete$available)
                 complete$empty <- isTRUE(fit$empty)
-                if (complete$empty) 
+                if (complete$empty)
                   complete$status <- "Empty MLS confidence set"
                 complete$fit <- fit
                 complete$problem <- problem
                 complete
             }, error = function(e) {
-                list(available = FALSE, bounds = c(NA_real_, NA_real_), formula_complete = FALSE, numerical_complete = FALSE, 
+                list(available = FALSE, bounds = c(NA_real_, NA_real_), formula_complete = FALSE, numerical_complete = FALSE,
                   empty = FALSE, status = conditionMessage(e))
             })
         }
@@ -217,17 +217,17 @@
     rownames(out) <- NULL
     attr(out, "weights") <- p$weights
     attr(out, "assumption") <- "normal"
-    attr(out, "source_design") <- d$gstudy$design[c("facets", "counts", "method", "balanced", "complete", 
+    attr(out, "source_design") <- d$gstudy$design[c("facets", "counts", "method", "balanced", "complete",
         "score_convention")]
     attr(out, "source_rows") <- d$gstudy$data_usage$counts
     attr(out, "mean_squares") <- list(normalized = p$ms, scale = p$restore, df = p$design$df, component_map = p$design$A)
     attr(out, "diagnostics") <- diagnostics
-    attr(out, "notes") <- c("Approximate intervals for individual G/Phi targets from a balanced Person-by-two-crossed-random-facet source under independent normal effects. Select a prespecified score or composite. These are not nested, incomplete-source or plan-difference intervals.", 
-        "For each candidate coefficient, invert the unrestricted Ting MLS interval for its signed linear null in the expected mean squares. Source degrees of freedom determine the asymmetric chi-square/F corrections. Original ANOVA estimates and point failures are preserved; no component clipping or fitted-nuisance bootstrap is used.", 
-        "The returned bounds enclose all retained pieces. FormulaComplete is FALSE if a squared MLS width is negative and therefore undefined for some candidates. Those candidates are conservatively retained, with their ranges in diagnostics; the width is not replaced by zero. NumericalComplete concerns the inversion, while Available concerns returned bounds. Neither certifies coverage.", 
-        "When root separation cannot be represented on the coefficient scale, bounds are unavailable with an explicit Status and NumericalComplete=FALSE; the point estimate remains. A genuine parameter-space boundary is not itself a failure.", 
-        "Small sources can give very wide or full [0,1] intervals, including with large proposed future counts. More future ratings do not add source information. Limited normal-model evaluations support this approximation but do not establish uniform finite-sample coverage; see the help for results and scope.", 
-        "The reported sampling evaluations concern 95% intervals. At very low requested confidence levels, squared chi-square corrections can lose their direction; the two-term F limiting identity is not guaranteed there.", 
+    attr(out, "notes") <- c("Approximate intervals for individual G/Phi targets from a balanced Person-by-two-crossed-random-facet source under independent normal effects. Select a prespecified score or composite. These are not nested, incomplete-source or plan-difference intervals.",
+        "For each candidate coefficient, invert the unrestricted Ting MLS interval for its signed linear null in the expected mean squares. Source degrees of freedom determine the asymmetric chi-square/F corrections. Original ANOVA estimates and point failures are preserved; no component clipping or fitted-nuisance bootstrap is used.",
+        "The returned bounds enclose all retained pieces. FormulaComplete is FALSE if a squared MLS width is negative and therefore undefined for some candidates. Those candidates are conservatively retained, with their ranges in diagnostics; the width is not replaced by zero. NumericalComplete concerns the inversion, while Available concerns returned bounds. Neither certifies coverage.",
+        "When root separation cannot be represented on the coefficient scale, bounds are unavailable with an explicit Status and NumericalComplete=FALSE; the point estimate remains. A genuine parameter-space boundary is not itself a failure.",
+        "Small sources can give very wide or full [0,1] intervals, including with large proposed future counts. More future ratings do not add source information. Limited normal-model evaluations support this approximation but do not establish uniform finite-sample coverage; see the help for results and scope.",
+        "The reported sampling evaluations concern 95% intervals. At very low requested confidence levels, squared chi-square corrections can lose their direction; the two-term F limiting identity is not guaranteed there.",
         "Intervals are pointwise for one prespecified score and plan. Curve ribbons add no simultaneous coverage, and interval overlap does not test a plan difference. An empty set is distinct from zero uncertainty or a failed numerical calculation. Save the complete result with saveRDS() to retain notes and diagnostics without recalculation.")
     .mfrm_mvgt_interval_result(out, d, p, "mls")
 }

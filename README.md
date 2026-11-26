@@ -23,12 +23,19 @@ The **Generalized Many-Facet Rasch Model (GMFRM)** follows the terminology of
 [Uto and Ueno (2020)](https://doi.org/10.1007/s41237-020-00115-7). It extends
 the constant-discrimination many-facet Rasch model by estimating discrimination,
 with either facet-specific steps (many-facet GPCM) or shared steps on a common
-rubric (many-facet RS-GPCM). Select it with `model = "GPCM"`.
+rubric (many-facet RS-GPCM). Select it with `model = "GPCM"` (also accepted as `model = "GMFRM"`).
 
 [![Three ggplot examples: rater severity with intervals, task/rater planning curves, and score-category probabilities. All use synthetic data.](man/figures/visual-gallery.png)](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/vignettes/articles/mfrmr-assessment.Rmd)
 
 ## Install and open tutorials
 
+Once version 0.3.2 is available on CRAN, use the standard installation:
+
+```r
+install.packages("mfrmr")
+```
+
+Until 0.3.2 is available from CRAN, install the GitHub source release below.
 Download [mfrmr_0.3.2.tar.gz](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.3.2)
 from GitHub Releases. Install the package dependencies and ensure that your
 R package compiler toolchain works. Run the following from the folder containing the file.
@@ -140,7 +147,7 @@ for comparisons under an explicit common reference panel.
 | Pillar | Entry points |
 | --- | --- |
 | Data & connectivity | `load_mfrmr_data()`, `describe_mfrm_data()`, `check_mfrm_connectivity()`, `interrater_agreement()` |
-| Calibration, GMFRM, & linking | `fit_mfrm()`, `mfrm_batch_fit()`, `fit_mfrm_drift()`, `compare_mfrm()`, `apply_empirical_bayes_shrinkage()`, `make_anchor_table()`, `anchor_to_baseline()`, `detect_anchor_drift()`, `read_mfrm_posterior()` |
+| Calibration, GMFRM, & linking | `fit_mfrm()`, `mfrm_batch_fit()`, `fit_mfrm_drift()`, `compare_mfrm()`, `apply_empirical_bayes_shrinkage()`, `make_anchor_table()`, `anchor_to_baseline()`, `detect_anchor_drift()` |
 | Diagnostics, bias, DFF, & cuts | `diagnose_mfrm()`, `fair_average_table()`, `compute_person_fit_indices()`, `compute_information()`, `classification_table()`, `estimate_bias()`, `analyze_dff()` |
 | G-Study & D-Study | `mfrm_g_study()`, `mfrm_d_study()` |
 | Analysis workflow | `mfrm_analysis()`, `mfrm_workflow()`, `step_mfrm_measure()`, `step_mfrm_gtheory()`, `step_mfrm_diagnose()` |

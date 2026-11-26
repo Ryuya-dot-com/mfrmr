@@ -77,3 +77,8 @@
 ^tests/testthat/test-jml-gpcm-sequence-remainder-diagnostic-reference[.]R$
 ^tests/testthat/test-fixed-calibration-anchors-reference[.]R$
 ^tests/testthat/test-source-publication[.]R$
+
+# Historical examples for removed importers and superseded vignettes.
+^inst/extdata/vignette-artifacts$
+^inst/extdata/facets-example$
+^inst/extdata/facets-graph-example$

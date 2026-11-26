@@ -72,7 +72,12 @@ Inspect `gt$variance_components` and `confint(gt)` before relying on small
 differences. Negative raw component estimates remain visible in `RawEstimate`
 and are truncated to zero in the default projections. The reported intervals
 use a Gaussian plug-in covariance and Satterthwaite or delta approximations;
-they do not provide exact small-sample coverage. An unavailable interval is
+they do not provide exact small-sample coverage. In this example,
+`Person:Criterion` has an estimate much smaller than its SE. Its Satterthwaite
+degrees of freedom are below 1, so the approximate interval is withheld with
+status `unstable_satterthwaite_df`. This reporting guard avoids presenting an
+extremely large, unstable upper bound as informative uncertainty. It does not
+establish coverage for the remaining components. An unavailable interval is
 `NA`, not zero uncertainty. `mfrm_d_study()` reports point projections, so this
 table alone does not establish that one plan is reliably superior. See
 `?mfrm_g_study` for assumptions and `?mfrm_d_study` for the output definitions.
@@ -87,11 +92,11 @@ covariances matter because the two subscores come from the same ratings.
 Specify the weights from the assessment purpose before inspecting reliability:
 
 ```{r}
-data("mfrmr_example_gtheory_nested", package = "mfrmr")
-head(mfrmr_example_gtheory_nested, 4)
+nested_ratings <- load_mfrmr_data("example_gtheory_nested")
+head(nested_ratings, 4)
 
 gt_nested <- mfrm_g_study(
-  mfrmr_example_gtheory_nested,
+  nested_ratings,
   scores = c("Content", "Organization"),
   weights = c(0.6, 0.4),
   person = "Person",
@@ -103,6 +108,12 @@ print(gt_nested)
 gt_nested$univariate
 confint(gt_nested, component = "coefficients")
 ```
+
+Explicit composite weights retain their scale: `c(1, 1)` defines a sum and
+`c(.5, .5)` an average. Multiplying all weights by two doubles SEM and
+quadruples variance components without changing G or Phi. Omitted weights
+define an equal-weight average.
+
 
 The composite summary answers the question for the stated weights, while
 `gt_nested$univariate` describes the separate subscores. A dependable composite

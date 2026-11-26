@@ -102,7 +102,6 @@ test_that("nested comparisons require matching responses, weights and usable lik
 })
 
 test_that("structural likelihood boundaries propagate into classification and saved fits", {
-  skip_if_not_installed("lpSolve")
   d <- expand.grid(Person = paste0("P", 1:20), Rater = paste0("R", 1:3))
   d$Score <- ifelse(d$Rater == "R1", 3, rep(0:2, length.out = nrow(d)))
   expect_warning(f <- fit_mfrm(d, "Person", "Rater", "Score", rating_min = 0, rating_max = 3), "No finite structural MML")
@@ -167,7 +166,7 @@ test_that("prediction delta SE matches numerical perturbations for slopes and in
       for (k in seq_along(e$facets)) {
         pos <- match(j, l$facet_start[k] + seq_len(l$facet_len[k]))
         if (!is.na(pos)) {
-          delta <- mfrmr:::.mfrm_fast_facet_basis(e, k)[, pos] * h
+          delta <- mfrmr:::.mfrm_facet_basis(e, k)[, pos] * h
           if (k <= length(e$base_facets)) {
             ii <- z$facets$Facet == e$facets[k]
             z$facets$Estimate[ii] <- z$facets$Estimate[ii] + delta
@@ -176,7 +175,7 @@ test_that("prediction delta SE matches numerical perturbations for slopes and in
       }
       pos <- match(j, l$step_start + seq_len(l$step_len))
       if (!is.na(pos)) {
-        B <- mfrmr:::.mfrm_fast_step_basis(e, l)
+        B <- mfrmr:::.mfrm_step_basis(e, l)
         K <- e$n_cat - 1L
         for (g in seq_len(e$n_step_groups)) z$step_cumulative[g, ] <- z$step_cumulative[g, ] + c(0, cumsum(B[(g - 1L) * K + seq_len(K), pos] * h))
       }
@@ -236,4 +235,220 @@ test_that("agreement rejects repeated ratings instead of taking the last row", {
   expect_error(interrater_agreement(x[nrow(x):1, ], metric = "exact"), "Repeated ratings")
   x <- rbind(transform(d, Occasion = 1), transform(d, Occasion = 2))
   expect_no_error(interrater_agreement(x, unit = c("Person", "Occasion"), metric = "exact"))
+})
+
+
+test_that("G-Study weights never override the requested estimator", {
+  d <- load_mfrmr_data("example_core")
+  for (method in c("anova", "minque0")) {
+    expect_error(mfrm_g_study(d, "Score", facets = c("Rater", "Criterion"),
+      method = method, weights = 1), "requires method = 'urgenova'", fixed = TRUE)
+  }
+  expect_error(mfrm_g_study(d, "Score", facets = c("Rater", "Criterion"), weights = 1),
+    "requires method = 'urgenova'", fixed = TRUE)
+  a <- mfrm_g_study(d, "Score", facets = c("Rater", "Criterion"), method = "urgenova", weights = 1)
+  b <- mfrm_g_study(d, "Score", facets = c("Rater", "Criterion"), method = "urgenova")
+  expect_equal(a$variance_components, b$variance_components)
+})
+
+test_that("small Satterthwaite df is visible in intervals, saved tidy tables and reports", {
+  d <- load_mfrmr_data("example_core")
+  wf <- step_mfrm_gtheory(mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score"))
+  g <- wf$gtheory
+  ci <- confint(g, component = "variance_components")
+  v <- g$variance_components
+  unstable <- which(is.finite(v$df) & v$df < 1)
+  expect_length(unstable, 1L)
+  expect_identical(v$Component[unstable], "Person:Criterion")
+  expect_true(all(is.na(ci[unstable, ])))
+  expect_identical(unname(attr(ci, "status")[unstable]), "unstable_satterthwaite_df")
+  stable <- which(is.finite(v$df) & v$df >= 1)
+  expected <- v$df[stable] * v$Estimate[stable] / qchisq(.025, v$df[stable])
+  expect_equal(as.numeric(ci[stable, 2L]), expected, ignore_attr = TRUE)
+  expect_identical(unname(attr(confint(g, parm = "Person:Criterion"), "status")),
+    "unstable_satterthwaite_df")
+  expect_error(confint(g, level = 1), "strictly between")
+  expect_error(confint(g, method = "mls"), "must be empty")
+  saved <- unserialize(serialize(wf, NULL))
+  tab <- tidy(saved, "g_study")
+  expect_true(is.na(tab$conf.high[unstable]))
+  expect_identical(tab$interval_status[unstable], "unstable_satterthwaite_df")
+  expect_identical(tidy(g), tidy(unserialize(serialize(g, NULL))))
+  for (format in c("markdown", "html")) {
+    report <- render_mfrm_report(saved, format = format)
+    expect_match(report, "unstable_satterthwaite_df", fixed = TRUE)
+  }
+})
+
+test_that("shared tidy generics dispatch workflows and workflow fits have an explicit contract", {
+  d <- load_mfrmr_data("example_core")
+  wf <- step_mfrm_measure(mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score"))
+  for (fun in c("tidy", "glance", "augment"))
+    expect_identical(getExportedValue("mfrmr", fun), getExportedValue("generics", fun))
+  expect_equal(generics::tidy(wf, "facets"), tidy(wf, "facets"))
+  expect_equal(generics::glance(wf), glance(wf))
+  expect_equal(generics::augment(wf), augment(wf))
+  expect_equal(generics::tidy(wf$fit), tidy(wf$fit))
+  expect_s3_class(mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score", fit = wf$fit), "tidymfrm")
+  canonical <- make_toy_fit()
+  canonical$schema_version <- NULL
+  expect_error(mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score", fit = canonical),
+    "Refit older saved objects")
+})
+
+test_that("calibrations and their diagnostics share person-fit tables, summaries, flags and plots", {
+  d <- load_mfrmr_data("example_core")
+  results <- lapply(c(TRUE, FALSE), function(use_diagnostics) {
+    f <- suppressWarnings(fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", method = "JML"))
+    z <- compute_person_fit_indices(if (use_diagnostics) diagnose_mfrm(f) else f)
+    expect_s3_class(z, "data.frame")
+    expect_identical(z$table, as.data.frame(z))
+    expect_identical(summary(z)$overview$Persons, nrow(z))
+    expect_identical(z$Flagged, z$ReportFlag)
+    expect_equal(z$ReportFlag, abs(z$ReportValue) > qnorm(.975))
+    p <- plot(f, type = "person_fit")
+    expect_equal(p$data$ReportValue, z$ReportValue)
+    expect_true(all(z$lz_star_status == "computed_jml_conditional_calibration"))
+    list(fit = f, result = z)
+  })
+  expect_identical(names(results[[1]]$result), names(results[[2]]$result))
+  f <- results[[1]]$fit
+  z <- results[[1]]$result
+  pr <- predict(f, type = "probs")
+  # Independent category-by-category moments of log probability and ability score.
+  ii <- which(f$encoding$person0 == 0L)
+  moments <- t(vapply(ii, function(i) {
+    p <- unname(pr[i, ]); k <- seq_along(p) - 1L
+    lp <- log(p); m <- sum(p * lp)
+    u <- f$alpha_obs[i] * (k - sum(p * k))
+    c(E = m, V = sum(p * (lp - m)^2), I = sum(p * u^2), C = sum(p * (lp - m) * u),
+      U = u[f$encoding$score0[i] + 1L], L = lp[f$encoding$score0[i] + 1L])
+  }, numeric(6)))
+  m <- colSums(moments)
+  expected <- (m['L'] - m['E'] - m['C'] / m['I'] * m['U']) / sqrt(m['V'] - m['C']^2 / m['I'])
+  expect_equal(z$lz_star[match(f$encoding$person_levels[1], z$Person)], unname(expected))
+  obs <- .mfrm_person_fit_moments(f)
+  obs$PrObserved[ii[1]] <- NA_real_
+  incomplete <- compute_person_fit_indices(list(obs = obs))
+  row <- incomplete[incomplete$Person == obs$Person[ii[1]], ]
+  expect_equal(row$UnavailableN, 1L)
+  expect_equal(row$N, length(ii) - 1L)
+  expect_true(is.na(row$lz))
+  dg <- diagnose_mfrm(f)
+  mismatch <- f; mismatch$person$Estimate[1] <- mismatch$person$Estimate[1] + .1
+  expect_error(compute_person_fit_indices(dg, mismatch), "source calibration")
+  for (scoring in c("EAP", "WLE", "JML_xtreme", "JML_jeffreys")) {
+    changed <- f; changed$score_method <- scoring
+    cz <- compute_person_fit_indices(changed)
+    expect_true(all(is.na(cz$lz_star)))
+    expect_true(all(grepl("^not_applicable", cz$lz_star_status)))
+  }
+  changed <- f; changed$converged <- FALSE
+  expect_true(all(compute_person_fit_indices(changed)$lz_star_status == "fit_not_converged"))
+})
+
+test_that("GMFRM alias preserves model encoding and probability score derivatives", {
+  d <- load_mfrmr_data("example_core")
+  for (form in c("full_predictor", "ability_only")) {
+    args <- list(data = d, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
+      step_facet = "Criterion", slope_facet = c("Rater", "Criterion"),
+      spec = list(slope_type = form, gpcm_mml_identification = "fixed_standard_normal"))
+    f <- do.call(fit_mfrm, c(args, list(model = "GMFRM")))
+    g <- do.call(fit_mfrm, c(args, list(model = "GPCM")))
+    expect_identical(f$model, "GPCM")
+    expect_equal(f$xi, g$xi)
+    obs <- .mfrm_person_fit_moments(f)
+    plus <- minus <- f
+    h <- 1e-5
+    plus$person$Estimate <- plus$person$Estimate + h
+    minus$person$Estimate <- minus$person$Estimate - h
+    gradient <- (log(predict(plus, type = "probs")) - log(predict(minus, type = "probs"))) / (2*h)
+    pr <- predict(f, type = "probs")
+    expect_equal(obs$ScoreInformation, rowSums(pr * gradient^2), tolerance = 1e-7)
+    expect_equal(obs$ObservedScoreDerivative,
+      gradient[cbind(seq_len(nrow(d)), f$encoding$score0 + 1L)], tolerance = 1e-7)
+  }
+})
+
+test_that("explicit G-Study weights preserve the composite scale and names", {
+  d <- expand.grid(Person = 1:8, Rater = 1:4)
+  d$A <- d$Person + sin(seq_len(nrow(d)))
+  d$B <- .7 * d$Person + cos(seq_len(nrow(d))) + .2*d$Rater
+  g <- function(weights) mfrm_g_study(d, c("A", "B"), "Person", facets = "Rater",
+                                     method = "urgenova", weights = weights)
+  average <- g(NULL); total <- g(c(1,1))
+  direct <- transform(d, Score = A + B)
+  sumfit <- mfrm_g_study(direct, "Score", "Person", facets = "Rater", method = "urgenova")
+  expect_equal(total$variance_components$Estimate, sumfit$variance_components$Estimate)
+  expect_equal(total$variance_components$Estimate, 4 * average$variance_components$Estimate)
+  expect_equal(total$variance_components$SE, 4 * average$variance_components$SE)
+  expect_equal(total$g_study_summary[c("RelSEM", "AbsSEM")], 2 * average$g_study_summary[c("RelSEM", "AbsSEM")])
+  expect_equal(total$g_study_summary[c("G", "Phi")], average$g_study_summary[c("G", "Phi")])
+  expect_equal(g(c(B = .2, A = .8))$g_study_summary, g(c(.8,.2))$g_study_summary)
+  expect_error(g(c(X = .2, A = .8)), "match.*exactly")
+  expect_error(g(c(".5", ".5")), "numeric")
+})
+
+test_that("readiness separates population-only links, effective anchors and observation weights", {
+  d <- load_mfrmr_data("example_core")
+  panel <- d[(as.integer(factor(d$Person)) <= 24) == (as.integer(factor(d$Rater)) <= 2), ]
+  f <- suppressWarnings(fit_mfrm(panel, "Person", c("Rater", "Criterion"), "Score"))
+  expect_false(f$readiness$ready)
+  expect_true("population_assumption_linked" %in% f$readiness$reason_codes)
+  expect_error(confint(f), "population_assumption_linked")
+  # Direct design-rank reference with explicit free Person columns.
+  enc <- f$encoding
+  B <- do.call(cbind, lapply(seq_along(enc$facets), function(k)
+    enc$facet_signs[k] * .mfrm_facet_basis(enc,k)[enc$facet_mat0[,k]+1L,,drop=FALSE]))
+  P0 <- model.matrix(~ factor(enc$person0) - 1)
+  P <- P0 %*% rbind(diag(ncol(P0) - 1L), -1)
+  expect_equal(f$conditional_location_rank$rank, qr(cbind(P,B))$rank - ncol(P))
+  anc <- data.frame(Facet = "Rater", Level = sort(unique(panel$Rater)), Anchor = 0)
+  anchored <- suppressWarnings(fit_mfrm(panel, "Person", c("Rater", "Criterion"), "Score", anchors = anc))
+  expect_true(anchored$readiness$ready)
+  d$Weight <- rep(c(.5, 1, 2), length.out = nrow(d))
+  weighted <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", weight = "Weight")
+  expect_true(all(is.finite(weighted$xi)))
+  expect_false(weighted$readiness$ready)
+  expect_true("nonunit_observation_weights_inference_unvalidated" %in% weighted$readiness$reason_codes)
+  old <- weighted; old$conditional_location_rank <- NULL
+  expect_identical(.mfrm_readiness(old), weighted$readiness)
+})
+
+test_that("report table text round-trips delimiters without introducing markup", {
+  values <- c("A|B", "|ZSTD| >= 2", "a\\|b", "a\\\\|b", "<script>x</script>", "**plain**", "a\nb", "")
+  d <- data.frame(values, check.names = FALSE)
+  names(d) <- "Criterion|Name"
+  md <- .tidymfrm_fmt_df_md(d)
+  html <- .tidymfrm_md_to_html(md, "Title <x>")
+  expect_match(md, "A\\|B", fixed = TRUE)
+  expect_equal(lengths(regmatches(html, gregexpr("<td>", html, fixed = TRUE))), length(values))
+  expect_match(html, "<th>Criterion|Name</th>", fixed = TRUE)
+  expect_match(html, "<td>a\\|b</td>", fixed = TRUE)
+  expect_match(html, "<td>a\\\\|b</td>", fixed = TRUE)
+  expect_match(html, "&lt;script&gt;x&lt;/script&gt;", fixed = TRUE)
+  expect_match(html, "<td>**plain**</td>", fixed = TRUE)
+  expect_match(html, "<td>a b</td>", fixed = TRUE)
+  expect_false(grepl("_No rows", .tidymfrm_md_to_html(.tidymfrm_fmt_df_md(d[FALSE,,drop=FALSE]), "Empty"), fixed = TRUE))
+})
+
+test_that("rater-card central tendency is within criterion and halo has no universal cutoff", {
+  wf <- make_core_workflow()
+  rater <- as.character(wf$diagnostics$raters$Level[1L])
+  card <- .mfrm_rater_card(wf, rater, "Criterion", 5L)
+  table <- card$tables[["Central tendency screen"]]
+  obs <- wf$diagnostics$observations
+  obs <- obs[as.character(obs$Rater) == rater, ]
+  expect_equal(nrow(table), length(unique(obs$Criterion)))
+  for (i in seq_len(nrow(table))) {
+    z <- obs[obs$Criterion == table$Criterion[i], ]
+    expect_equal(table$ResidualExpectedCorrelation[i], cor(z$Residual, z$Expected))
+  }
+  changed <- wf
+  delta <- 10 * as.integer(factor(changed$diagnostics$observations$Criterion))
+  changed$diagnostics$observations$Expected <- changed$diagnostics$observations$Expected + delta
+  changed$diagnostics$observations$Residual <- changed$diagnostics$observations$Residual - delta
+  other <- .mfrm_rater_card(changed, rater, "Criterion", 5L)
+  expect_equal(other$tables[["Central tendency screen"]], table)
+  expect_match(paste(card$notes, collapse = " "), "Neither a zero cutoff nor -1/(K-1) is calibrated", fixed = TRUE)
 })

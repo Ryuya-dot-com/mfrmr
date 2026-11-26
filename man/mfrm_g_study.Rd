@@ -22,15 +22,25 @@ mfrm_g_study(
   \item{facets}{Character vector of non-person facet column names.}
   \item{nesting}{Optional named character vector \code{c(Child = "Parent")} declaring nested facets.}
   \item{score}{Alias for \code{scores} in univariate designs.}
-  \item{weights}{Optional nonnegative composite weights matching \code{scores}.}
+  \item{weights}{Optional nonnegative composite weights matching \code{scores}. Weights are used as supplied: \code{c(1, 1)} forms a sum, while \code{c(.5, .5)} forms an average. Named weights are matched to score names; unnamed weights follow score order. The default is an equal-weight average. Requires explicit \code{method = "urgenova"}; weights never change the selected estimator. For ANOVA or MINQUE(0), supply composite weights to \code{mfrm_d_study()} after fitting the separate scores.}
   \item{d_study_grid}{Optional candidate D-Study design grid \code{data.frame}, with one column per facet and positive integer counts only. Nested-facet counts are per parent level.}
   \item{truncate_negative}{Logical; whether to clamp negative variance estimates at zero.}
 }
 \value{
-For \code{method = "urgenova"}, an \code{mfrm_fast_gtheory} object with
-\code{variance_components} (raw and optionally truncated estimates, SE and df),
-\code{vc_vcov}, \code{g_study_summary}, \code{d_study}, and \code{covariance_basis}.
-For other estimators, an \code{mfrm_multivariate_gstudy} object.
+An \code{mfrm_gtheory} object for every estimator, with \code{method_code},
+\code{design}, raw score covariance matrices in \code{components}, composite
+\code{variance_components}, \code{g_study_summary}, and a \code{d_study} table.
+Method-specific numerical ingredients and unavailable summaries are recorded
+explicitly. Incomplete ANOVA/MINQUE designs require a future \code{design_grid};
+observed pool sizes are not silently interpreted as planned replication.
+Use \code{summary(g)$component_diagnostics} to inspect covariance definiteness.
+For Henderson, \code{vc_vcov} describes the supplied composite. For ANOVA/MINQUE,
+\code{vcov(g, score = ..., assumption = "normal")} selects score or composite
+sampling uncertainty. Balanced ANOVA supports \code{confint(g, method = "mls",
+assumption = "normal")}; this interval construction is not applied to unbalanced
+Henderson estimates. \code{tidy(g)} reports covariance entries for ANOVA/MINQUE;
+Henderson's composite table additionally includes interval status.
+
 }
 \details{
 Henderson Method 1 solves the expected mean-product equations for the declared
@@ -53,7 +63,15 @@ finite-sample distribution or a model-free uncertainty estimate.
 \code{confint()} uses Satterthwaite chi-square approximations for positive
 components and logit delta intervals for G/Phi; boundary coefficients may have
 unavailable intervals (\code{NA}). The approximation is particularly limited
-near zero components and in sparse designs.
+near zero components and in sparse designs. As a conservative reporting guard,
+positive components with Satterthwaite degrees of freedom below 1 have both
+endpoints set to \code{NA}. This cutoff is not a coverage guarantee for other
+components. The named \code{status} attribute of the interval matrix records
+\code{unstable_satterthwaite_df}, the approximation used, or numerical
+unavailability. \code{tidy(gt)} and workflow reports carry these statuses and
+95\% component intervals. MLS intervals for the balanced ANOVA representation
+use different mean-product information and are not substituted for this
+unbalanced Henderson approximation.
 }
 \examples{
 ratings <- load_mfrmr_data("example_core")

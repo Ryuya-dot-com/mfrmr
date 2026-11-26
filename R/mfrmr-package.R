@@ -88,7 +88,6 @@
 #' @importFrom graphics abline arrows axis barplot dotchart hist image legend lines mtext plot plot.new points rect segments text title
 #' @importFrom stats cutree hclust kmeans nlminb optim optimHess optimize qt
 #' @importFrom utils zip
-#' @importFrom cli cli_progress_bar cli_progress_done cli_progress_update
 #' @importFrom gtable gtable_add_cols gtable_add_grob gtable_add_rows gtable_matrix
 #' @importFrom rlang .data
 #' @importFrom stats ave confint na.omit optim p.adjust pchisq predict pt qnorm rnorm sd setNames uniroot

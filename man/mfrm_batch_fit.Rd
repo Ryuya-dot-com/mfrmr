@@ -32,7 +32,7 @@ mfrm_batch_fit(
   replicated rating vectors sharing \code{data}'s complete Person and facet
   identifiers. Scores must be finite integers within the declared support.
   Each returned fit retains the ratings from its own column.}
-  \item{model}{Measurement model family (\code{"RSM"}, \code{"PCM"}, or \code{"GPCM"}).}
+  \item{model}{\code{"GMFRM"} is accepted as an alias for \code{"GPCM"}; fitted objects retain the code \code{"GPCM"}. Measurement model family (\code{"RSM"}, \code{"PCM"}, or \code{"GPCM"}).}
   \item{method}{Estimation method (\code{"MML"}, \code{"JML"}, \code{"JML_jeffreys"}, or \code{"CML"}).}
   \item{step_facet}{Facet owning thresholds when \code{model} is \code{"PCM"} or \code{"GPCM"}.}
   \item{slope_facet}{Facet(s) owning discrimination slopes when \code{model = "GPCM"}.}
@@ -59,11 +59,11 @@ mfrm_batch_fit(
   \item{bias_facets}{Optional length-2 character vector for 2-way local bias.}
   \item{maxit}{Maximum optimization iterations (default \code{400L}).}
   \item{reltol}{Relative convergence tolerance (default \code{1e-10}).}
-  \item{threads}{Number of C++ worker threads (default \code{1L} for CRAN safety).}
-  \item{return_fits}{Logical; if \code{TRUE}, returns the list of \code{mfrm_fast_fit} objects; if \code{FALSE}, returns a compact per-replication summary \code{data.frame}.}
+  \item{threads}{Number of C++ worker threads (default \code{1L}). When the CRAN check environment variable \code{_R_CHECK_LIMIT_CORES_} is enabled, requests are capped at two workers.}
+  \item{return_fits}{Logical; if \code{TRUE}, returns the list of \code{mfrm_fit} objects; if \code{FALSE}, returns a compact per-replication summary \code{data.frame}.}
 }
 \value{
-A list of \code{mfrm_fast_fit} objects (when \code{return_fits = TRUE}) or a \code{data.frame} of replication convergence, iteration counts, and log-likelihoods (when \code{return_fits = FALSE}), with attribute \code{"elapsed_sec"}.
+A list of \code{mfrm_fit} objects (when \code{return_fits = TRUE}) or a \code{data.frame} of replication convergence, iteration counts, and log-likelihoods (when \code{return_fits = FALSE}), with attribute \code{"elapsed_sec"}.
 }
 \seealso{
 \code{\link{fit_mfrm}}

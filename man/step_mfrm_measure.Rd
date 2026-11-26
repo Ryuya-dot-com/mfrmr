@@ -34,7 +34,7 @@ step_mfrm_measure(
 \arguments{
 \item{wf}{A \code{tidymfrm} workflow object from \code{\link[=mfrm_workflow]{mfrm_workflow()}}.}
 
-\item{model}{\code{"RSM"}, \code{"PCM"}, or \code{"GPCM"}.}
+\item{model}{\code{"GMFRM"} is accepted as an alias for \code{"GPCM"}; fitted objects retain the code \code{"GPCM"}. \code{"RSM"}, \code{"PCM"}, or \code{"GPCM"}.}
 
 \item{method}{Primary estimation method: \code{"MML"}, \code{"JML"}, \code{"JML_jeffreys"}, or \code{"CML"}.}
 
