@@ -139,10 +139,10 @@ local({
       paste("Specialty proportions within two groups of three raters:",
         "group 1 is entirely Language and group 2 entirely Science.",
         "These are descriptive feature groups, not quality classifications.")),
-    plot.mfrm_fit = c(wright,
-      paste("Signed severity estimates for six raters. R06 has the highest",
-        "and R01 the lowest estimate. Positive values mean more severe scoring",
-        "relative to the fitted reference; no intervals are drawn."), curves),
+    plot.mfrm_fit = paste(
+      "Wright map with a leftward histogram of 48 person abilities alongside rater and criterion locations.",
+      "Category crossings mark equal probabilities for adjacent ratings by R04 on Content.",
+      "The Fair average scale on the right shows expected ratings with facets at their calibration means."),
     score_mfrm_random_rater = paste(
       "Conditional EAP estimates and equal-tail intervals for Persons P001",
       "and P002 under the shared-rater model. The full source roster informs",

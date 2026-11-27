@@ -23,7 +23,14 @@ local({
     xml2::xml_attr(images, "alt") <- ""
     as.character(html)
   }
-  file <- page("plot.mfrm_fit", 3L, c("Authored description", "", ""))
+  file <- page("plot.mfrm_fit", 1L)
+  run_hook()
+  alt <- get_alt(file)
+  stopifnot(grepl("R04 on Content", alt), grepl("Fair average", alt),
+    grepl("calibration means", alt))
+  unlink(file)
+
+  file <- page("as_ggplot", 3L, c("Authored description", "", ""))
   before <- without_alt(file)
   run_hook()
   stopifnot(identical(get_alt(file)[1], "Authored description"),
@@ -84,7 +91,7 @@ local({
     if (n == 2L) stopifnot(grepl("posterior Infit", get_alt(file)[2]))
     unlink(file)
   }
-  for (case in list(c("new_plot", 1L), c("plot.mfrm_fit", 4L))) {
+  for (case in list(c("new_plot", 1L), c("plot.mfrm_fit", 3L))) {
     file <- page(case[1], as.integer(case[2]))
     hash <- tools::md5sum(file)
     error <- tryCatch({run_hook(); NULL}, error = identity)
@@ -93,7 +100,7 @@ local({
       identical(hash, tools::md5sum(file)))
     unlink(file)
   }
-  file <- page("plot.mfrm_fit", 3L)
+  file <- page("as_ggplot", 3L)
   html <- xml2::read_html(file)
   images <- xml2::xml_find_all(html, "//span/img")
   xml2::xml_attr(images, "src") <- rev(xml2::xml_attr(images, "src"))
