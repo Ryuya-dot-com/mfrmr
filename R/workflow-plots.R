@@ -49,41 +49,85 @@
 
 .tidymfrm_flag_styles <- function(palette = c("okabe_ito", "viridis", "monochrome")) {
   palette <- match.arg(palette)
-  lvls <- c("Acceptable", "Markedly Severe", "Markedly Lenient", "Muted / Centrality", "Misfit (Unpredictable)", "Review required")
+  lvls <- c(
+    "Acceptable",
+    "Markedly Severe",
+    "Markedly Lenient",
+    "Outside MnSq (ZSTD Unavailable)",
+    "Below Lower Fit Bound",
+    "Misfit (Unpredictable)",
+    "Review required"
+  )
   cols <- if (identical(palette, "monochrome")) {
-    c("#333333", "#111111", "#666666", "#777777", "#000000", "#555555")
+    c("#333333", "#111111", "#666666", "#444444", "#777777", "#000000", "#555555")
   } else if (identical(palette, "viridis")) {
-    grDevices::hcl.colors(6L, palette = "viridis")
+    grDevices::hcl.colors(7L, palette = "viridis")
   } else {
-    c("#0072B2", "#E69F00", "#56B4E9", "#009E73", "#D55E00", "#666666")
+    c("#0072B2", "#E69F00", "#56B4E9", "#CC79A7", "#009E73", "#D55E00", "#666666")
   }
   list(
     colours = stats::setNames(cols, lvls),
-    shapes = stats::setNames(c(16L, 17L, 15L, 18L, 8L, 4L), lvls),
-    linetypes = stats::setNames(c("solid", "dashed", "dotdash", "twodash", "longdash", "dotted"), lvls)
+    shapes = stats::setNames(c(16L, 17L, 15L, 3L, 18L, 8L, 4L), lvls),
+    linetypes = stats::setNames(c("solid", "dashed", "dotdash", "dotted", "twodash", "longdash", "dotted"), lvls)
   )
 }
 
-.tidymfrm_plot_raters <- function(raters_df, mnsq_range = c(0.70, 1.30), palette = "okabe_ito", base_size = 11) {
-  df <- raters_df[is.finite(raters_df$Estimate) & is.finite(raters_df$InfitMnSq), , drop = FALSE]
-  if (!"DiagnosticFlag" %in% names(df)) {
-    df$DiagnosticFlag <- ifelse(
-      df$InfitMnSq > mnsq_range[2L], "Misfit (Unpredictable)",
-      ifelse(df$InfitMnSq < mnsq_range[1L], "Muted / Centrality", "Acceptable")
-    )
+.tidymfrm_plot_raters <- function(raters_df, mnsq_range = c(0.70, 1.30), zstd_limit = 2.0,
+                                  fit_method = NULL, reference_bands = NULL,
+                                  palette = "okabe_ito", base_size = 11) {
+  mnsq_range <- .mfrm_validate_mnsq_range(mnsq_range)
+  if (!is.numeric(zstd_limit) || is.factor(zstd_limit) || length(zstd_limit) != 1L ||
+      !is.finite(zstd_limit) || zstd_limit < 0) {
+    stop("`zstd_limit` must be a single finite nonnegative number.", call. = FALSE)
   }
+  zstd_limit <- as.double(zstd_limit)
+  ref_list <- .mfrm_normalize_ref_bands(reference_bands)
+  if (identical(fit_method, "both")) {
+    return(.mfrm_gg_pathway(raters_df, mnsq_range = mnsq_range, palette = palette,
+                            base_size = base_size, fit_statistic = "infit",
+                            fit_method = "both", reference_bands = reference_bands,
+                            method_label = "MML"))
+  }
+  fm <- if (!is.null(fit_method)) {
+    .mfrm_resolve_fit_method(raters_df, NULL, fit_method)
+  } else if ("FitBasis" %in% names(raters_df) && length(raters_df$FitBasis) > 0L && !is.na(raters_df$FitBasis[1L])) {
+    raters_df$FitBasis[1L]
+  } else {
+    "plugin"
+  }
+  use_post <- identical(fm, "posterior") && ("PostInfitMnSq" %in% names(raters_df)) && any(is.finite(raters_df$PostInfitMnSq))
+  x_col <- if (use_post) "PostInfitMnSq" else "InfitMnSq"
+  z_col <- if (use_post) "PostInfitZSTD" else "InfitZSTD"
+  was_review <- ("DiagnosticFlag" %in% names(raters_df)) & !is.na(raters_df$DiagnosticFlag) &
+    (raters_df$DiagnosticFlag == "Review required")
+  raters_cls <- .mfrm_classify_raters(
+    raters_df,
+    fit_method_resolved = fm,
+    mnsq_range = mnsq_range,
+    zstd_limit = zstd_limit,
+    ready = !all(was_review) || !length(was_review)
+  )
+  if (any(was_review)) raters_cls$DiagnosticFlag[was_review] <- "Review required"
+  df <- raters_cls[is.finite(raters_cls$Estimate) & is.finite(raters_cls[[x_col]]), , drop = FALSE]
+  df$PlotInfit <- df[[x_col]]
+  zv_plot <- if (z_col %in% names(df)) df[[z_col]] else rep(NA_real_, nrow(df))
   df$RealLow <- df$Estimate - 1.96 * df$RealSE
   df$RealHigh <- df$Estimate + 1.96 * df$RealSE
 
-  unavailable <- df$DiagnosticFlag == "Review required"
+  eb_shrunk <- "MLEEstimate" %in% names(df)
+  unavailable <- df$DiagnosticFlag == "Review required" | eb_shrunk
   df$RealLow[unavailable] <- df$RealHigh[unavailable] <- NA_real_
 
   st <- .tidymfrm_flag_styles(palette = palette)
 
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$InfitMnSq, y = .data$Estimate)) +
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$PlotInfit, y = .data$Estimate)) +
     ggplot2::geom_vline(xintercept = 1.0, linetype = "solid", colour = "#999999", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = mnsq_range, linetype = "dashed", colour = "#666666", linewidth = 0.4) +
-    ggplot2::geom_hline(yintercept = 0.0, linetype = "dotted", colour = "#888888", linewidth = 0.35) +
+    ggplot2::geom_hline(yintercept = 0.0, linetype = "dotted", colour = "#888888", linewidth = 0.35)
+  for (rb in ref_list) {
+    p <- p + ggplot2::geom_vline(xintercept = rb, linetype = "dotdash", colour = "#888888", linewidth = 0.35)
+  }
+  p <- p +
     ggplot2::geom_errorbar(
       ggplot2::aes(ymin = .data$RealLow, ymax = .data$RealHigh,
                    colour = .data$DiagnosticFlag, linetype = .data$DiagnosticFlag),
@@ -102,14 +146,22 @@
     ggplot2::scale_shape_manual(values = st$shapes, name = "Diagnostic Status") +
     ggplot2::scale_linetype_manual(values = st$linetypes, name = "Diagnostic Status") +
     ggplot2::labs(
-      x = "Infit Mean-Square (MnSq)",
+      x = if (use_post) "Posterior Infit Mean-Square (MnSq; TAM Basis)" else "Plug-in Infit Mean-Square (MnSq)",
       y = "Rater Severity (Logits; 95% Real-SE CI)"
     ) +
     .tidymfrm_theme(base_size = base_size)
 
+  ref_note <- if (length(ref_list)) {
+    paste("Dot-dash lines mark secondary reference bounds:",
+          paste(vapply(ref_list, function(r) sprintf("[%.2f, %.2f]", r[1L], r[2L]), character(1)), collapse = ", "))
+  }
   attr(p, "mfrm_notes") <- c(
-    sprintf("Dashed vertical lines indicate Infit MnSq screening bounds [%.2f, %.2f].", mnsq_range[1L], mnsq_range[2L]),
-    "Status is redundantly encoded via colour, point shape, and error-bar linetype.",
+    sprintf("Fit basis: %s. Dashed vertical lines indicate Infit MnSq screening bounds [%.2f, %.2f] (joint workflow flags also require |ZSTD| >= %.1f).",
+            if (use_post) "Posterior-integrated (TAM::msq.itemfit)" else "Plug-in", mnsq_range[1L], mnsq_range[2L], zstd_limit),
+    ref_note,
+    "Status is redundantly encoded via colour, point shape, and error-bar linetype. RealSE intervals use plug-in Infit MnSq.",
+    if (any(!is.finite(zv_plot))) "Raters with unavailable ZSTD (NA) outside MnSq bounds are marked 'Outside MnSq (ZSTD Unavailable)' rather than satisfying joint MnSq + ZSTD screening.",
+    if (eb_shrunk) "Intervals unavailable: empirical_bayes_facet_shrinkage.",
     unique(df$InferenceReason[nzchar(df$InferenceReason)])
   )
   p
@@ -268,7 +320,7 @@
 plot.tidymfrm <- function(x,
                           type = c("wright", "raters", "steps", "category_curves", "dstudy", "persons",
                                    "person_fit", "residual_qq", "slopes", "drift", "qc", "dashboard",
-                                   "dstudy_frontier", "gstudy", "pathway"),
+                                   "dstudy_frontier", "gstudy", "pathway", "fit_sensitivity", "cut_sensitivity"),
                           palette = c("okabe_ito", "viridis", "monochrome"),
                           base_size = 11,
                           draw = TRUE,
@@ -276,6 +328,7 @@ plot.tidymfrm <- function(x,
   x <- .tidymfrm_refresh(x)
   type <- match.arg(type)
   palette <- match.arg(palette)
+  dots <- list(...)
 
   if (type == "dashboard") {
     if (is.null(x$fit)) stop("Run `step_mfrm_measure()` before plotting a dashboard.", call. = FALSE)
@@ -299,7 +352,14 @@ plot.tidymfrm <- function(x,
     type,
     pathway = {
       if (is.null(x$fit)) stop("Run step_mfrm_measure() before plotting a pathway.", call. = FALSE)
-      graphics::plot(x$fit, type = "pathway", palette = palette, base_size = base_size, ...)
+      pw_args <- c(list(x = x$fit, type = "pathway", palette = palette, base_size = base_size), dots)
+      if (is.null(pw_args$fit_method) && !is.null(x$diagnostics$fit_method)) {
+        pw_args$fit_method <- x$diagnostics$fit_method
+      }
+      if (is.null(pw_args$mnsq_range) && !is.null(x$diagnostics$mnsq_range)) {
+        pw_args$mnsq_range <- x$diagnostics$mnsq_range
+      }
+      do.call(graphics::plot, pw_args)
     },
     wright = {
       if (is.null(x$fit)) stop("Run `step_mfrm_measure()` before `type = 'wright'`.", call. = FALSE)
@@ -307,14 +367,49 @@ plot.tidymfrm <- function(x,
     },
     raters = {
       if (!is.null(x$diagnostics$raters)) {
-        .tidymfrm_plot_raters(x$diagnostics$raters, mnsq_range = x$diagnostics$mnsq_range,
-                              palette = palette, base_size = base_size)
+        .tidymfrm_plot_raters(
+          x$diagnostics$raters,
+          mnsq_range = dots$mnsq_range %||% x$diagnostics$mnsq_range,
+          zstd_limit = dots$zstd_limit %||% x$diagnostics$zstd_limit %||% 2.0,
+          fit_method = dots$fit_method,
+          reference_bands = dots$reference_bands,
+          palette = palette,
+          base_size = base_size
+        )
       } else if (!is.null(x$fit)) {
         graphics::plot(x$fit, type = "raters", facet = x$spec$rater_facet,
                        palette = palette, base_size = base_size, ...)
       } else {
         stop("Run `step_mfrm_measure()` before `type = 'raters'`.", call. = FALSE)
       }
+    },
+    fit_sensitivity = {
+      if (is.null(x$fit)) stop("Run `step_mfrm_measure()` before `type = 'fit_sensitivity'`.", call. = FALSE)
+      f_use <- if ("facet" %in% names(dots)) dots$facet else x$spec$rater_facet
+      fc_use <- x$fit$facets
+      if (!is.null(f_use)) fc_use <- fc_use[fc_use$Facet %in% f_use, , drop = FALSE]
+      .mfrm_gg_fit_sensitivity(
+        fc_use,
+        mnsq_range = dots$mnsq_range %||% x$diagnostics$mnsq_range %||% c(0.70, 1.30),
+        zstd_limit = dots$zstd_limit %||% x$diagnostics$zstd_limit %||% 2.0,
+        fit_statistic = dots$fit_statistic %||% "infit",
+        fit_method = dots$fit_method %||% "auto",
+        half_widths = dots$half_widths %||% seq(0.15, 0.55, by = 0.01),
+        palette = palette,
+        base_size = base_size,
+        method_label = x$fit$method
+      )
+    },
+    cut_sensitivity = {
+      if (is.null(x$fit)) stop("Run `step_mfrm_measure()` before `type = 'cut_sensitivity'`.", call. = FALSE)
+      def_cuts <- if (!is.null(x$diagnostics$decisions)) x$diagnostics$decisions$CutFairM else NULL
+      .mfrm_gg_cut_sensitivity(
+        x$fit,
+        cut_scores = dots$cut_scores %||% def_cuts,
+        cut_grid = dots$cut_grid,
+        palette = palette,
+        base_size = base_size
+      )
     },
     steps = ,
     category_curves = {
@@ -331,8 +426,12 @@ plot.tidymfrm <- function(x,
       graphics::plot(x$fit, type = type, palette = palette, base_size = base_size, ...)
     },
     drift = {
-      if (is.null(x$drift)) stop("Supply `occasion` in `mfrm_analysis()` / `step_mfrm_measure()` before `type = 'drift'`.", call. = FALSE)
-      graphics::plot(x$drift, palette = palette, base_size = base_size, ...)
+      dr <- x[["drift"]]
+      if (is.null(dr)) {
+        msg <- x[["drift_reason"]] %||% "Supply `occasion` in `mfrm_analysis()` / `step_mfrm_measure()` before `type = 'drift'`."
+        stop(msg, call. = FALSE)
+      }
+      graphics::plot(dr, palette = palette, base_size = base_size, ...)
     },
     dstudy = {
       if (is.null(x$gtheory)) stop("Run `step_mfrm_gtheory()` before `type = 'dstudy'`.", call. = FALSE)

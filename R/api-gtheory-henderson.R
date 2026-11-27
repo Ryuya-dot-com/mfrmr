@@ -35,10 +35,152 @@
 #' @return An `mfrm_gtheory` object containing `variance_components`,
 #'   `g_study_summary`, `d_study`, `vc_vcov`, and (for multivariate inputs)
 #'   `vcov_components` and `univariate`.
+.mfrm_henderson_admissible_subsets <- function(d, nest_child_idx = integer(0), nest_parent_idx = integer(0)) {
+  all_subsets <- list()
+  for (sz in seq_len(d)) {
+    all_subsets <- c(all_subsets, utils::combn(seq_len(d), sz, simplify = FALSE))
+  }
+  is_admissible <- function(v) {
+    if (length(nest_child_idx) == 0L) return(TRUE)
+    for (kk in seq_along(nest_child_idx)) {
+      if ((nest_child_idx[kk] %in% v) && !(nest_parent_idx[kk] %in% v)) return(FALSE)
+    }
+    TRUE
+  }
+  Filter(is_admissible, all_subsets)
+}
+
+.mfrm_henderson_obs_design <- function(data, person, facets, score_cols, nesting) {
+  all_factors <- c(person, facets)
+  d <- length(all_factors)
+  nest_child_idx <- integer(0)
+  nest_parent_idx <- integer(0)
+  if (!is.null(nesting) && length(nesting) > 0L) {
+    nest_child_idx <- match(names(nesting), all_factors)
+    nest_parent_idx <- match(unname(as.character(nesting)), all_factors)
+  }
+  Y_raw <- as.matrix(data[, score_cols, drop = FALSE])
+  storage.mode(Y_raw) <- "double"
+  keep <- rowSums(!is.finite(Y_raw)) == 0L & !is.na(data[[person]])
+  for (fc in facets) keep <- keep & !is.na(data[[fc]])
+  data <- data[keep, , drop = FALSE]
+  N <- nrow(data)
+  if (N < 2L) stop("Insufficient complete rows.", call. = FALSE)
+  fac_int <- lapply(all_factors, function(col) as.integer(factor(data[[col]])))
+  fac_n_levels <- vapply(fac_int, max, integer(1))
+  make_cell_id <- function(idx_vec) {
+    if (length(idx_vec) == 1L) return(fac_int[[idx_vec]])
+    id <- as.double(fac_int[[idx_vec[1L]]] - 1L)
+    for (k in idx_vec[-1L]) {
+      id <- id * as.double(fac_n_levels[k]) + as.double(fac_int[[k]] - 1L)
+    }
+    match(id, unique(id))
+  }
+  ancestors_of <- function(idx) {
+    anc <- integer(0)
+    frontier <- idx
+    while (length(frontier) > 0L) {
+      pars <- nest_parent_idx[nest_child_idx %in% frontier]
+      pars <- setdiff(pars, anc)
+      anc <- c(anc, pars)
+      frontier <- pars
+    }
+    anc
+  }
+  obs_n_per_facet <- vapply(seq_along(facets), function(f) {
+    f_factor_idx <- f + 1L
+    anc <- ancestors_of(f_factor_idx)
+    base_cols <- sort(unique(c(1L, anc)))
+    parent_cid <- make_cell_id(base_cols)
+    joint_cid <- make_cell_id(sort(unique(c(base_cols, f_factor_idx))))
+    ub <- unique(cbind(parent_cid, joint_cid))
+    cnt_p <- tabulate(ub[, 1L], nbins = max(parent_cid))
+    cnt_p <- cnt_p[cnt_p > 0L]
+    length(cnt_p) / sum(1 / cnt_p)
+  }, numeric(1))
+  names(obs_n_per_facet) <- facets
+
+  subsets <- .mfrm_henderson_admissible_subsets(d, nest_child_idx, nest_parent_idx)
+  M <- length(subsets)
+  cell_ids <- lapply(subsets, make_cell_id)
+  has_replicates <- max(cell_ids[[M]]) < N
+  M_tot <- if (has_replicates) M + 1L else M
+
+  p_id <- fac_int[[1L]]
+  P_n <- fac_n_levels[1L]
+  N_p <- as.double(tabulate(p_id, nbins = P_n))
+  obs_n_total_per_person <- sum(N_p > 0) / sum(1.0 / N_p[N_p > 0])
+
+  # Exact variance multiplier for each person's equal-weight average of all observed ratings:
+  # For person p with N_p ratings, component j level c receiving n_{p,j,c} ratings has weight n_{p,j,c}/N_p,
+  # contributing sum_c (n_{p,j,c} / N_p)^2 * sigma^2_j; average across persons matches 1/HarmonicMean when unshared.
+  obs_component_scales <- rep(1.0, M_tot)
+  for (j in seq.int(2L, M)) {
+    cid_j <- cell_ids[[j]]
+    max_cj <- as.double(max(cid_j))
+    pc_key <- (as.double(p_id) - 1.0) * max_cj + as.double(cid_j)
+    u_pc <- match(pc_key, unique(pc_key))
+    cnt_pc <- as.double(tabulate(u_pc))
+    p_of_pc <- p_id[match(seq_along(cnt_pc), u_pc)]
+    rs <- rowsum(cnt_pc * cnt_pc, p_of_pc, reorder = FALSE)
+    ss_p <- numeric(P_n)
+    ss_p[as.integer(rownames(rs))] <- rs[, 1L]
+    obs_component_scales[j] <- mean((ss_p / (N_p * N_p))[N_p > 0])
+  }
+  if (has_replicates) {
+    obs_component_scales[M_tot] <- 1.0 / obs_n_total_per_person
+  }
+
+  list(
+    n_obs = N,
+    n_structural = M,
+    n_components = M_tot,
+    has_replicates = has_replicates,
+    obs_n_per_facet = obs_n_per_facet,
+    obs_n_total_per_person = obs_n_total_per_person,
+    obs_component_scales = obs_component_scales,
+    obs_component_denoms = ifelse(obs_component_scales > 0, 1.0 / obs_component_scales, Inf)
+  )
+}
+
+.mfrm_henderson_has_replicates <- function(g) {
+  if (!is.null(g$has_replicates) && is.logical(g$has_replicates) && length(g$has_replicates) == 1L && !is.na(g$has_replicates)) {
+    return(g$has_replicates)
+  }
+  all_factors <- c(g$person, g$facets)
+  d <- length(all_factors)
+  nest_child_idx <- if (!is.null(g$nesting) && length(g$nesting) > 0L) match(names(g$nesting), all_factors) else integer(0)
+  nest_parent_idx <- if (!is.null(g$nesting) && length(g$nesting) > 0L) match(unname(as.character(g$nesting)), all_factors) else integer(0)
+  M <- length(.mfrm_henderson_admissible_subsets(d, nest_child_idx, nest_parent_idx))
+  nrow(g$variance_components) > M
+}
+
+.mfrm_henderson_obs_scales <- function(g) {
+  vc <- g$variance_components
+  if (isTRUE(g$obs_denominators_unavailable)) return(rep(NA_real_, nrow(vc)))
+  if (identical(g$obs_scale_version, 2L) && !is.null(g$obs_component_scales) &&
+      length(g$obs_component_scales) == nrow(vc)) {
+    return(as.double(g$obs_component_scales))
+  }
+  if (!is.null(g$obs_component_denoms) && length(g$obs_component_denoms) == nrow(vc)) {
+    return(1.0 / as.double(g$obs_component_denoms))
+  }
+  n_obs_f <- g$obs_n_per_facet
+  np_subs <- g$non_person_subsets
+  if (is.null(n_obs_f) || is.null(np_subs)) return(rep(NA_real_, nrow(vc)))
+  out <- rep(1.0, nrow(vc))
+  for (j in seq_len(nrow(vc))[-1L]) {
+    den <- if (length(np_subs[[j]]) == 0L) 1.0 else prod(n_obs_f[np_subs[[j]]])
+    out[j] <- 1.0 / den
+  }
+  out
+}
+
 #' @export
 .mfrm_gstudy_henderson <- function(data, person, facets, score = NULL, scores = NULL, nesting = NULL, weights = NULL,
-    d_study_grid = NULL, truncate_negative = TRUE) {
+    d_study_grid = NULL, truncate_negative = TRUE, missing = c("omit", "error"), include_vcov = TRUE) {
     t0 <- proc.time()[[3L]]
+    missing <- match.arg(missing)
     if (!is.data.frame(data) || nrow(data) == 0L) {
         stop("`data` must be a non-empty data.frame.", call. = FALSE)
     }
@@ -64,16 +206,47 @@
     nest_parent_idx <- integer(0)
     all_factors <- c(person, facets)
     if (!is.null(nesting) && length(nesting) > 0L) {
-        if (!is.character(nesting) || is.null(names(nesting)) || any(!nzchar(names(nesting)))) {
+        if (!is.character(nesting) || is.null(names(nesting)) || anyNA(names(nesting)) || any(!nzchar(names(nesting))) || anyNA(nesting)) {
             stop("`nesting` must be a named character vector `c(Child = 'Parent')`.", call. = FALSE)
         }
         ch_nms <- names(nesting)
         pa_nms <- unname(as.character(nesting))
+        if (anyDuplicated(ch_nms)) {
+            stop("`nesting` cannot declare multiple parents for the same facet.", call. = FALSE)
+        }
         if (any(!ch_nms %in% facets) || any(!pa_nms %in% all_factors) || any(ch_nms == pa_nms)) {
             stop("`nesting` children must be in `facets` and parents in `c(person, facets)`.", call. = FALSE)
         }
+        parent_map <- stats::setNames(pa_nms, ch_nms)
+        for (ch in ch_nms) {
+            seen <- ch
+            cur <- parent_map[[ch]]
+            while (!is.null(cur) && cur %in% names(parent_map)) {
+                if (cur %in% seen) {
+                    stop("`nesting` must form an acyclic hierarchy (cycle detected).", call. = FALSE)
+                }
+                seen <- c(seen, cur)
+                cur <- parent_map[[cur]]
+            }
+        }
         nest_child_idx <- match(ch_nms, all_factors)
         nest_parent_idx <- match(pa_nms, all_factors)
+    }
+    for (id_col in all_factors) {
+        x <- data[[id_col]]
+        if (!is.null(dim(x)) || !(is.factor(x) || (!is.object(x) && (is.character(x) || is.logical(x) ||
+            (is.numeric(x) && !is.complex(x))))) ||
+            (is.numeric(x) && any(!is.na(x) & !is.finite(x))) ||
+            any(!is.na(x) & !nzchar(trimws(as.character(x))))) {
+            stop("Factor identifiers must be finite, nonmissing, nonblank labels.", call. = FALSE)
+        }
+    }
+    for (sc_col in score_cols) {
+        x <- data[[sc_col]]
+        if (!is.numeric(x) || is.object(x) || is.complex(x) || !is.null(dim(x)) ||
+            any(!is.na(x) & !is.finite(x))) {
+            stop("All selected scores must be finite numeric values or NA; correct invalid scores explicitly.", call. = FALSE)
+        }
     }
     P_sc <- length(score_cols)
     if (is.null(weights)) {
@@ -98,6 +271,9 @@
     keep <- rowSums(!is.finite(Y_raw)) == 0L & !is.na(data[[person]])
     for (fc in facets) keep <- keep & !is.na(data[[fc]])
     if (!all(keep)) {
+        if (identical(missing, "error")) {
+            stop("Missing values are not allowed with missing = 'error'.", call. = FALSE)
+        }
         data <- data[keep, , drop = FALSE]
         Y_raw <- Y_raw[keep, , drop = FALSE]
     }
@@ -203,7 +379,13 @@
             K_mat[s, M_ext] <- length(n_s) - 1
         }
         for (u in seq_len(M_ext)) K_mat[M_ext, u] <- as.numeric(N) - k_empty_ext[u]
-        comp_names <- c(vapply(subsets, format_subset_label, character(1)), "Residual")
+        sub_labels <- vapply(subsets, format_subset_label, character(1))
+        resid_label <- if ("Residual" %in% sub_labels) {
+            tail(make.unique(c(sub_labels, "Residual")), 1L)
+        } else {
+            "Residual"
+        }
+        comp_names <- c(sub_labels, resid_label)
         contains_person <- c(vapply(subsets, function(v) 1L %in% v, logical(1)), TRUE)
         non_person_subsets <- c(lapply(subsets, function(v) setdiff(v, 1L) - 1L), list(seq_along(facets)))
         eff_subsets <- c(subsets, list(seq_len(d + 1L)))
@@ -243,27 +425,39 @@
     else raw_vc
     tot_vc <- sum(pmax(0, est_vc))
     groups <- c(cell_ids, if (has_replicates) list(seq_len(N)) else list())
-    vc_vcov <- .mfrm_gstudy_covariance(groups, pmax(0, raw_vc), K_pinv)
-    dimnames(vc_vcov) <- list(comp_names, comp_names)
-    vc_se <- sqrt(pmax(0, diag(vc_vcov)))
-    vc_df_satt <- ifelse(est_vc > 1e-12 & diag(vc_vcov) > 1e-20, 2 * (est_vc^2)/diag(vc_vcov), NA_real_)
+    if (isTRUE(include_vcov)) {
+        vc_vcov <- .mfrm_gstudy_covariance(groups, pmax(0, raw_vc), K_pinv)
+        dimnames(vc_vcov) <- list(comp_names, comp_names)
+        vc_se <- sqrt(pmax(0, diag(vc_vcov)))
+        vc_df_satt <- ifelse(est_vc > 1e-12 & diag(vc_vcov) > 1e-20, 2 * (est_vc^2)/diag(vc_vcov), NA_real_)
+    } else {
+        vc_vcov <- matrix(NA_real_, nrow = M_tot, ncol = M_tot, dimnames = list(comp_names, comp_names))
+        vc_se <- rep(NA_real_, M_tot)
+        vc_df_satt <- rep(NA_real_, M_tot)
+    }
     vc_df <- data.frame(Component = comp_names, Estimate = est_vc, RawEstimate = raw_vc, SE = vc_se, df = vc_df_satt,
         PercentVariance = if (tot_vc > 0)
             100 * pmax(0, est_vc)/tot_vc
         else rep(NA_real_, length(est_vc)), ContainsPerson = contains_person, Truncated = raw_vc < 0 & isTRUE(truncate_negative),
         stringsAsFactors = FALSE)
-    obs_n_per_facet <- vapply(seq_along(facets), function(f) {
-        f_factor_idx <- f + 1L
-        par_idx <- nest_parent_idx[nest_child_idx == f_factor_idx]
-        base_cols <- unique(c(1L, par_idx))
-        parent_cid <- make_cell_id(base_cols)
-        joint_cid <- make_cell_id(unique(c(base_cols, f_factor_idx)))
-        ub <- unique(cbind(parent_cid, joint_cid))
-        cnt_p <- tabulate(ub[, 1L], nbins = max(parent_cid))
-        cnt_p <- cnt_p[cnt_p > 0L]
-        length(cnt_p)/sum(1/cnt_p)
-    }, numeric(1))
-    names(obs_n_per_facet) <- facets
+    obs_des <- .mfrm_henderson_obs_design(data, person, facets, score_cols, nesting)
+    obs_n_per_facet <- obs_des$obs_n_per_facet
+    obs_n_total_per_person <- obs_des$obs_n_total_per_person
+    obs_component_scales <- stats::setNames(obs_des$obs_component_scales, comp_names)
+    obs_component_denoms <- stats::setNames(obs_des$obs_component_denoms, comp_names)
+    eval_obs_metrics <- function(v_vec) {
+        sigma2_p <- v_vec[1L]
+        sigma2_rel <- 0
+        sigma2_abs <- 0
+        for (j in seq_along(v_vec)[-1L]) {
+            contrib <- v_vec[j] * obs_component_scales[j]
+            sigma2_abs <- sigma2_abs + contrib
+            if (contains_person[j]) {
+                sigma2_rel <- sigma2_rel + contrib
+            }
+        }
+        .mfrm_gstudy_metrics(sigma2_p, sigma2_rel, sigma2_abs)
+    }
     eval_design_row <- function(n_vec) {
         sigma2_p <- est_vc[1L]
         sigma2_rel <- 0
@@ -281,7 +475,7 @@
         }
         .mfrm_gstudy_metrics(sigma2_p, sigma2_rel, sigma2_abs)
     }
-    g_obs_metrics <- eval_design_row(obs_n_per_facet)
+    g_obs_metrics <- eval_obs_metrics(est_vc)
     g_summary <- as.data.frame(c(as.list(stats::setNames(obs_n_per_facet, paste0("Harmonic_", facets))), as.list(g_obs_metrics)),
         stringsAsFactors = FALSE)
     if (is.null(d_study_grid)) {
@@ -313,27 +507,17 @@
             v_p <- vapply(vcov_components, function(S) S[p_i, p_i], numeric(1))
             if (isTRUE(truncate_negative))
                 v_p <- pmax(0, v_p)
-            sp <- v_p[1L]
-            s_rel <- 0
-            s_abs <- 0
-            for (j in seq_along(v_p)[-1L]) {
-                np_idx <- non_person_subsets[[j]]
-                den <- if (length(np_idx) == 0L)
-                  1
-                else prod(obs_n_per_facet[np_idx])
-                s_abs <- s_abs + v_p[j]/den
-                if (contains_person[j])
-                  s_rel <- s_rel + v_p[j]/den
-            }
-            cbind(data.frame(Score = sc_nm, Weight = unname(w_vec[p_i])), .mfrm_gstudy_metrics(sp, s_rel,
-                s_abs))
+            cbind(data.frame(Score = sc_nm, Weight = unname(w_vec[p_i])), eval_obs_metrics(v_p))
         })
         univar_df <- do.call(rbind, u_rows)
         rownames(univar_df) <- NULL
     }
     .mfrm_new_gstudy(structure(list(person = person, facets = facets, score = if (P_sc == 1L) score_cols[1L] else score_cols,
         scores = score_cols, weights = w_vec, nesting = nesting, n_obs = N, n_person = fac_n_levels[1L], facet_levels = fac_n_levels[-1L],
-        obs_n_per_facet = obs_n_per_facet, non_person_subsets = non_person_subsets, method = "Henderson Method 1 (urGENOVA)",
+        obs_n_per_facet = obs_n_per_facet, obs_n_total_per_person = obs_n_total_per_person,
+        obs_component_scales = obs_component_scales, obs_component_denoms = obs_component_denoms,
+        obs_scale_version = 2L, has_replicates = has_replicates,
+        non_person_subsets = non_person_subsets, method = "Henderson Method 1 (urGENOVA)",
         truncate_negative = isTRUE(truncate_negative), variance_components = vc_df, vc_vcov = vc_vcov, covariance_basis = "Gaussian plug-in quadratic-form covariance; negative components set to zero for the working covariance",
         vcov_components = if (P_sc > 1L) vcov_components else NULL, univariate = univar_df, g_study_summary = g_summary,
         d_study = d_df, elapsed_sec = proc.time()[[3L]] - t0), class = "mfrm_gtheory"), "urgenova", data)
@@ -394,18 +578,26 @@
   }
 
   # 2. Logit-transformed delta-method CIs on observed G and Phi
-  n_obs_f <- object$obs_n_per_facet
-  np_subs <- object$non_person_subsets
+  scales <- .mfrm_henderson_obs_scales(object)
   w_rel <- numeric(nrow(vc))
   w_abs <- numeric(nrow(vc))
-  for (j in seq_len(nrow(vc))[-1L]) {
-    den <- if (length(np_subs[[j]]) == 0L) 1.0 else prod(n_obs_f[np_subs[[j]]])
-    w_abs[j] <- if (vc$Estimate[j] > 0) 1.0 / den else 0.0
-    if (isTRUE(vc$ContainsPerson[j])) w_rel[j] <- w_abs[j]
+  if (!isTRUE(object$obs_denominators_unavailable) && all(is.finite(scales[-1L]))) {
+    for (j in seq_len(nrow(vc))[-1L]) {
+      active <- if (isTRUE(object$truncate_negative)) {
+        is.finite(vc$Estimate[j]) && vc$Estimate[j] > 0
+      } else {
+        is.finite(vc$Estimate[j])
+      }
+      w_abs[j] <- if (active) scales[j] else 0.0
+      if (isTRUE(vc$ContainsPerson[j])) w_rel[j] <- w_abs[j]
+    }
   }
   z <- stats::qnorm(1 - alpha / 2)
   logit_ci <- function(sp, s_err, w_err) {
-    if (!is.finite(sp) || sp <= 1e-12 || !is.finite(s_err) || s_err <= 1e-12) return(c(NA_real_, NA_real_))
+    if (isTRUE(object$obs_denominators_unavailable) || !is.finite(sp) || sp <= 1e-12 ||
+        !is.finite(s_err) || s_err <= 1e-12 || is.null(V) || any(is.na(diag(V)))) {
+      return(c(NA_real_, NA_real_))
+    }
     # g = log(sp) - log(s_err); grad_1 = 1/sp, grad_j = -w_err_j / s_err
     grad <- -w_err / s_err
     grad[1L] <- 1.0 / sp
@@ -426,9 +618,12 @@
     coefficients = coef_ci,
     all = rbind(vc_ci, coef_ci)
   )
-  status <- stats::setNames(c(vc_status,
-    ifelse(rowSums(is.finite(coef_ci)) == 2L, "approximate_logit_delta", "unavailable")),
-    c(vc$Component, rownames(coef_ci)))
+  coef_status <- if (isTRUE(object$obs_denominators_unavailable)) {
+    rep("unavailable_observed_denominators", nrow(coef_ci))
+  } else {
+    ifelse(rowSums(is.finite(coef_ci)) == 2L, "approximate_logit_delta", "unavailable")
+  }
+  status <- stats::setNames(c(vc_status, coef_status), c(vc$Component, rownames(coef_ci)))
   if (!is.null(parm)) {
     sel <- if (is.character(parm)) match(parm, rownames(out)) else as.integer(parm)
     out <- out[sel[!is.na(sel)], , drop = FALSE]
@@ -463,6 +658,12 @@
     x$g_study_summary$Phi, x$g_study_summary$AbsSEM
   ))
   cat("  G:", x$g_study_summary$GStatus, "| Phi:", x$g_study_summary$PhiStatus, "\n")
+  if (.mfrm_henderson_has_replicates(x)) {
+    cat(sprintf(
+      "  Note: Observed summary reflects each person's equal-weight rating average (%.2f harmonic ratings/person); D-Study evaluates balanced plans with 1 rating per cell.\n",
+      x$obs_n_total_per_person %||% NA_real_
+    ))
+  }
   invisible(x)
 }
 

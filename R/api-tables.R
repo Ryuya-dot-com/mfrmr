@@ -4,6 +4,11 @@
 fair_average_table <- function(fit, diagnostics = NULL, facets = NULL, umean = 0, uscale = 1, fair_se = FALSE,
     ci_level = 0.95, reference_plan = NULL) {
     .mfrm_validate_fit(fit)
+    if (!is.numeric(umean) || is.complex(umean) || !is.null(dim(umean)) || length(umean) != 1L || !is.finite(umean))
+        stop("`umean` must be a single finite number.", call. = FALSE)
+    if (!is.numeric(uscale) || is.complex(uscale) || !is.null(dim(uscale)) || length(uscale) != 1L || !is.finite(uscale) ||
+        uscale <= 0)
+        stop("`uscale` must be a finite positive number.", call. = FALSE)
     if (!is.null(diagnostics) && !identical(diagnostics$fit, fit))
         stop("Diagnostics must match the source calibration.", call. = FALSE)
     if (isTRUE(fair_se) && is.null(reference_plan))

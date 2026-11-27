@@ -68,9 +68,23 @@ classification_table <- function(fit, rating_plan = NULL, cut_scores = 0, score_
     }
     if (anyDuplicated(plan))
         stop("Duplicate complete facet cells in `rating_plan` are not supported.", call. = FALSE)
+    sg_idx <- if (identical(enc$model_code, 1L)) {
+        m_sg <- match(plan[[enc$step_facet]], enc$step_owners)
+        if (anyNA(m_sg))
+            stop("Unknown step_facet level in `rating_plan`.", call. = FALSE)
+        m_sg
+    }
+    else {
+        rep(1L, nrow(plan))
+    }
+    sg0 <- as.integer(sg_idx - 1L)
+    min_sum <- sum(enc$step_cat_min[sg_idx])
+    att_max_sum <- sum(enc$step_cat_max[sg_idx])
     max_sum <- nrow(plan) * (enc$n_cat - 1L)
     if (is.null(score_cuts)) {
-        score_cuts <- pmin(max_sum, pmax(1L, round(seq(1, length(cut_scores))/(length(cut_scores) + 1) * max_sum)))
+        span_sum <- max(0L, att_max_sum - min_sum)
+        score_cuts <- pmin(att_max_sum, pmax(min(att_max_sum, min_sum + 1L),
+            min_sum + round(seq(1, length(cut_scores))/(length(cut_scores) + 1) * span_sum)))
     }
     if (!finite_vector(score_cuts) || length(score_cuts) != length(cut_scores) || any(score_cuts != floor(score_cuts)) ||
         any(diff(score_cuts) < 0) || any(score_cuts < 0 | score_cuts > max_sum + 1)) {
@@ -94,10 +108,10 @@ classification_table <- function(fit, rating_plan = NULL, cut_scores = 0, score_
         b_vec <- f_sub$Estimate[match(plan[[fnm]], f_sub$Level)]
         offsets <- offsets + enc$facet_signs[fi] * b_vec
     }
-    sg_idx <- if (identical(fit$model, "PCM"))
-        match(plan[[enc$step_facet]], enc$step_owners)
-    else rep(1L, nrow(plan))
     cumulative <- fit$step_cumulative[sg_idx, , drop = FALSE]
+    step_cum_all <- fit$step_cumulative
+    step_min_vec <- enc$step_cat_min
+    step_max_vec <- enc$step_cat_max
     score_map <- data.frame(ObservedScore = enc$rating_min:enc$rating_max, InternalScore = enc$rating_min:enc$rating_max,
         CategoryScore = seq.int(0L, enc$n_cat - 1L))
     cfg_model <- fit$model
@@ -108,7 +122,8 @@ classification_table <- function(fit, rating_plan = NULL, cut_scores = 0, score_
     methods <- c("lee_sum", "rudner_normal")
     tables <- probabilities <- scores <- vector("list", n)
     for (i in seq_len(n)) {
-        point <- mfrm_classification_point(theta[i], offsets, cumulative, score_cuts, operational_cuts)
+        point <- mfrm_classification_point(theta[i], offsets, step_cum_all, score_cuts, operational_cuts,
+            step_group0 = sg0, step_cat_min = step_min_vec, step_cat_max = step_max_vec, rating_min = 0)
         p <- rbind(point$lee, point$rudner)
         status <- c("available", if (all(is.finite(point$rudner))) "available" else "zero_information")
         tables[[i]] <- data.frame(Point = i, Theta = theta[i], TrueCategory = true[i], Method = methods, Accuracy = p[,
@@ -123,7 +138,8 @@ classification_table <- function(fit, rating_plan = NULL, cut_scores = 0, score_
     table <- do.call(rbind, tables)
     probabilities <- do.call(rbind, probabilities)
     cut_moments <- function(x) t(vapply(x, function(t) {
-        z <- mfrm_classification_response(t, offsets, cumulative)
+        z <- mfrm_classification_response(t, offsets, step_cum_all, step_group0 = sg0, step_cat_min = step_min_vec,
+            step_cat_max = step_max_vec, rating_min = 0)
         c(z$expected, z$information, z$sem)
     }, numeric(3)))
     at_true <- cut_moments(cut_scores)
@@ -192,19 +208,45 @@ classification_table <- function(fit, rating_plan = NULL, cut_scores = 0, score_
             "Population indices require supplied true-ability weights; calibration, cut and population estimation uncertainty is excluded."))
 }
 
-mfrm_classification_response <- function(theta, offsets, cumulative) {
-    p <- mfrm_jml_probability_bundle(theta + offsets, rep(0L, length(offsets)), "PCM", cumulative, criterion_idx = seq_along(offsets))$probs
-    if (any(!is.finite(p)) || any(p < 0) || any(abs(rowSums(p) - 1) > 1e-10))
+mfrm_classification_response <- function(theta, offsets, cumulative, step_group0 = NULL, step_cat_min = NULL,
+    step_cat_max = NULL, rating_min = 0) {
+    eta_vec <- theta + offsets
+    if (any(!is.finite(theta)) || any(!is.finite(offsets)) || any(!is.finite(eta_vec)))
         stop("Classification response probabilities are numerically unresolved.", call. = FALSE)
-    k <- seq_len(ncol(p)) - 1L
-    expected <- as.vector(p %*% k)
-    centered <- matrix(k, nrow(p), length(k), byrow = TRUE) - expected
-    information <- sum(p * centered^2)
-    list(probs = p, expected = sum(expected), information = information, sem = 1/sqrt(information))
+    if (is.null(step_group0))
+        step_group0 <- seq_len(nrow(cumulative)) - 1L
+    if (is.null(step_cat_min)) {
+        step_cat_min <- apply(cumulative, 1L, function(r) {
+            w <- which(is.finite(r))
+            if (length(w)) min(w) - 1L else 0L
+        })
+    }
+    if (is.null(step_cat_max)) {
+        step_cat_max <- apply(cumulative, 1L, function(r) {
+            w <- which(is.finite(r))
+            if (length(w)) max(w) - 1L else ncol(cumulative) - 1L
+        })
+    }
+    pred <- .mfrm_eval_row_predictions(
+        eta_vec = eta_vec,
+        step_cum = cumulative,
+        step_group0 = step_group0,
+        step_cat_min = step_cat_min,
+        step_cat_max = step_cat_max,
+        rating_min = 0
+    )
+    p <- pred$probs
+    if (any(!is.finite(p)) || any(p < 0) || any(abs(rowSums(p) - 1) > 1e-10) ||
+        any(!is.finite(pred$expected)) || any(!is.finite(pred$variance)))
+        stop("Classification response probabilities are numerically unresolved.", call. = FALSE)
+    information <- sum(pred$variance)
+    list(probs = p, expected = sum(pred$expected), information = information, sem = 1/sqrt(information))
 }
 
-mfrm_classification_point <- function(theta, offsets, cumulative, score_cuts, operational_cuts) {
-    x <- mfrm_classification_response(theta, offsets, cumulative)
+mfrm_classification_point <- function(theta, offsets, cumulative, score_cuts, operational_cuts, step_group0 = NULL,
+    step_cat_min = NULL, step_cat_max = NULL, rating_min = 0) {
+    x <- mfrm_classification_response(theta, offsets, cumulative, step_group0 = step_group0, step_cat_min = step_cat_min,
+        step_cat_max = step_cat_max, rating_min = rating_min)
     pmf <- 1
     for (j in seq_len(nrow(x$probs))) {
         next_mass <- numeric(length(pmf) + ncol(x$probs) - 1L)

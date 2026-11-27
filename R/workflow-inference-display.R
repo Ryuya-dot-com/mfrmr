@@ -143,9 +143,11 @@
   } else {
     # Older saved workflows have no fit identity but retain fitted residuals.
     observations <- diagnostics$observations
-    isTRUE(all.equal(observations$Expected, as.numeric(stats::fitted(fit, type = "response")),
+    isTRUE(all.equal(.tidymfrm_obs_col(observations, "Expected"),
+                     as.numeric(stats::fitted(fit, type = "response")),
                      tolerance = 1e-10)) &&
-      isTRUE(all.equal(observations$StdResidual, as.numeric(stats::residuals(fit, type = "pearson")),
+      isTRUE(all.equal(.tidymfrm_obs_col(observations, "StdResidual"),
+                       as.numeric(stats::residuals(fit, type = "pearson")),
                        tolerance = 1e-10))
   }
   if (!matches) wf[c("diagnostics", "method_comparison")] <- list(NULL)
@@ -175,6 +177,9 @@
       "Refit with the current workflow for bootstrap intervals."
     )
   }
+  if (!is.null(wf[["drift"]]) && inherits(wf[["drift"]], "mfrm_drift")) {
+    wf[["drift"]] <- .drift_refresh_object(wf[["drift"]])
+  }
   if (!is.null(wf$gtheory)) {
     gt <- .mfrm_refresh_gstudy(wf$gtheory)
     gt$d_study$MeetsTargetG <- gt$d_study$G >= gt$targets[["G"]]
@@ -187,10 +192,31 @@
     }
     wf$gtheory <- gt
   }
+  if (!is.null(wf$fit)) {
+    wf$fit$steps <- .mfrm_screen_steps_table(wf$fit$steps, wf$fit$encoding, wf$fit$xi_layout, wf$fit$step_support_audit)
+  }
   if (is.null(wf$fit) || is.null(wf$diagnostics)) return(wf)
+  rs <- wf$diagnostics$report_statistics
+  if (!is.null(rs) && !identical(rs$agreement_basis, "equal_unit_gwet_workflow_retained_v2")) {
+    ag <- .mfrm_workflow_report_agreement(wf)
+    rs["agreement"] <- list(ag$agreement)
+    rs["agreement_reason"] <- list(ag$agreement_reason)
+    rs$agreement_basis <- ag$agreement_basis
+    wf$diagnostics$report_statistics <- rs
+  }
   r <- summary(wf$fit)$readiness
   wf$diagnostics$readiness <- r
+  if (is.null(wf$diagnostics$fit_method)) wf$diagnostics$fit_method <- "plugin"
   rt <- wf$diagnostics$raters
+  if (!"FitBasis" %in% names(rt)) rt$FitBasis <- rep(wf$diagnostics$fit_method, nrow(rt))
+  legacy_muted <- !is.na(rt$DiagnosticFlag) & rt$DiagnosticFlag == "Muted / Centrality"
+  if (any(legacy_muted)) {
+    rt$DiagnosticFlag[legacy_muted] <- "Below Lower Fit Bound"
+    old_act <- !is.na(rt$RecommendedAction) &
+      grepl("central-tendency or halo restriction", rt$RecommendedAction, fixed = TRUE)
+    rt$RecommendedAction[legacy_muted & old_act] <-
+      "Inspect category-usage frequencies and paired-criterion residuals; low Infit does not by itself establish central tendency or halo."
+  }
   if (is.null(wf$diagnostics$category_counts)) {
     scores <- .tidymfrm_observed_scores(wf, rt)
     rt <- scores$raters
@@ -198,6 +224,17 @@
   }
   rt$InferenceStatus <- r$status
   rt$InferenceReason <- paste(r$reason_codes, collapse = "; ")
+  tb <- wf$diagnostics$dff
+  if (!isTRUE(wf$diagnostics$split_dff_audited) && !is.null(tb)) {
+    audit <- tb$Method %in% c("MML_LRT", "CML_LRT")
+    if (any(audit)) {
+      for (nm in intersect(c("SE", "SandwichSE", "WaldZ", "Statistic", "pValue", "pAdj", "Flagged"), names(tb)))
+        tb[[nm]][audit] <- NA
+      tb$InferenceStatus[audit] <- "review_required"
+      tb$InferenceReason[audit] <- "saved_split_refits_need_review"
+      wf$diagnostics$dff <- tb
+    }
+  }
   if (!r$ready) {
     rt$DiagnosticFlag <- "Review required"
     rt$RecommendedAction <- paste("Review calibration:", rt$InferenceReason)
@@ -207,6 +244,14 @@
       tb$InferenceStatus <- r$status; tb$InferenceReason <- rt$InferenceReason[1L]
       wf$diagnostics$dff <- tb
     }
+  } else if (!is.null(wf$diagnostics$mnsq_range)) {
+    rt <- .mfrm_classify_raters(
+      rt,
+      fit_method_resolved = wf$diagnostics$fit_method,
+      mnsq_range = wf$diagnostics$mnsq_range,
+      zstd_limit = wf$diagnostics$zstd_limit %||% 2.0,
+      ready = TRUE
+    )
   } else {
     endpoint <- nzchar(rt$ScorePattern)
     rt$RecommendedAction[endpoint] <- "Check the raw score records and rubric use for the observed endpoint concentration."

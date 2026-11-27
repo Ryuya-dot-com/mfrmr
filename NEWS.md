@@ -1,3 +1,159 @@
+# mfrmr 0.3.3 (development)
+
+* Cross-check per-step-group observed category frequencies against `category_support`
+  and `step_constraints` across `JML`, `MML`, `CML`, and `JML_jeffreys`, and include
+  estimated `population_formula` and `JML` person-origin shifts in structural
+  likelihood-boundary screening (`RSM`, `PCM`, `GMFRM`). Unobserved step categories
+  without identifying constraints mark calibration readiness as `"review_required"`
+  (`"unobserved_step_category"`), block `confint()`, and withhold unidentified step
+  estimates, standard errors, and covariances (`Identified = FALSE`).
+* Unify rater fit screening across `step_mfrm_diagnose()`, `plot(wf, type = "raters")`,
+  `plot(..., type = "pathway")`, `plot(..., type = "fit_sensitivity")`, and rater
+  feedback cards so user-supplied `mnsq_range`, `zstd_limit`, and `fit_method`
+  recompute displayed flags on diagnosed workflows, and elements outside `MnSq`
+  bounds with unavailable (`NA`) `ZSTD` are marked `"Outside MnSq (ZSTD Unavailable)"`
+  (and `NA` in joint `MnSq + |ZSTD|` sensitivity counts) rather than satisfying
+  joint `MnSq + ZSTD` criteria.
+* Accelerate MML calibration and posterior-integrated fit diagnostics via exact
+  cell-level Gauss--Hermite quadrature factorization across shared population
+  grids and an approximate-Wolfe (Hager--Zhang) line search with scale-invariant
+  secant updates in L-BFGS, eliminating floating-point roundoff line-search
+  stalls while preserving exact quadrature nodes, gradients, and observed/sandwich
+  covariances. `compare_mfrm(..., nested = TRUE)` also recognizes nested chains
+  passing through common-step GMFRM (`model = "GPCM", step_facet = "Common"`).
+* Populate deterministic MML posterior-integrated fit statistics
+  (`PostInfitMnSq`, `PostInfitZSTD`, `PostOutfitMnSq`, `PostOutfitZSTD`,
+  matching `TAM::msq.itemfit` quadrature expectations over $P(\theta \mid y_p)$)
+  alongside traditional point-estimate plug-in `InfitMnSq`/`OutfitMnSq` (matching
+  `TAM::msq.itemfitWLE` under `person_score = "WLE"` and `FACETS` under `JML`).
+  `step_mfrm_diagnose()`, `mfrm_analysis()`, `diagnose_mfrm()`, and `plot()` gain
+  `fit_method = c("auto", "posterior", "plugin")` (defaulting to `"posterior"`
+  for MML screening while keeping `RealSE` anchored to plug-in `InfitMnSq`),
+  rename lower-tail rater flags from `"Muted / Centrality"` to descriptive
+  `"Below Lower Fit Bound"` (refreshing saved workflows on reload), add
+  per-criterion allowed bounds and category-usage frequencies to rater feedback
+  cards, and add threshold-selection visualizations `plot(..., type = "fit_sensitivity")`
+  (symmetric `MnSq` half-width curves comparing `MnSq + |ZSTD|` vs `MnSq`-only
+  and posterior vs plug-in bases, plus `fit_method = "both"` and `reference_bands`
+  on `"pathway"`/`"raters"`) and `plot(..., type = "cut_sensitivity")` (`Fair(M)`
+  pass-rate and 90% `ModelSE` vs `RealSE` borderline examinee curves).
+* CML checks for a finite conditional likelihood solution at the observed person
+  totals via a multi-cut outer approximation on the free structural coordinates
+  (with shared-design template caching in `mfrm_batch_fit()` and an exact
+  network-LP fallback) and withholds inference at a boundary. Both
+  `fit_mfrm(method = "CML")` and `analyze_dff(method = "cml_lrt")` reject
+  nonunit retained weights, and CML rejects unsupported Laplace facet
+  regularization. Plain numeric observation weights are required across
+  calibration, linking, and workflow entry points (factor or character weights
+  are rejected rather than coerced by level index), and `mfrm_workflow(fit = ...)`
+  verifies that any calibration weight column is still present.
+* Validate integer rubric bounds, plain numeric `category_support` (`Min`/`Max`)
+  and `step_constraints` (`From`/`To`/`Value`) columns, distinct `facets` and
+  `bias_facets`, and known `positive_facets`/`dummy_facets`/`noncenter_facet`
+  names across single and batch fits. Validate scalar count/scale arguments
+  (`bootstrap`, `min_obs`, `theta_points`, `pca_max_factors`, `digits`, and
+  positive `uscale` in `fair_average_table()`), and report which anchors were
+  applied. Reject conflicting anchor values, partially observed anchor groups,
+  non-ready anchor exports under `make_anchor_table(readiness_policy = "error")`,
+  and unsupported `anchor_to_baseline(include_person = TRUE)`.
+  `anchor_to_baseline()` inherits baseline facet orientations (`positive_facets`)
+  automatically and rejects conflicting explicit sign overrides.
+  `classification_table()` now honors per-level `category_support` and step
+  groups via the shared row-prediction kernel on a direct zero-origin category
+  scale (avoiding shift cancellation at large `rating_min`). `predict()` honors
+  observation weights and disambiguates reserved model columns in `type = "wle"`
+  across RSM, PCM, and GMFRM, disambiguates model identifier columns named
+  `Theta`/`theta` from latent ability inputs, and rejects factor or recycled
+  ability vectors. Workflows report retained ratings, pass declared rubric
+  `score_levels` to `fit_mfrm_drift()` (withholding drift cleanly when
+  restricted `category_support`, `step_constraints`, or non-rater `PCM` step
+  facets apply, and noting companion assumptions for GMFRM), and carry
+  post-calibration columns (`dff_group`, `occasion`) into DFF and refreshed
+  report agreement caches.
+* Preserve observed assignment identities in model comparisons, withhold
+  `DeltaAIC`/`DeltaBIC` (with a warning when `warn_constraints = TRUE`) unless
+  models share the same unpenalized `MML` or `CML` likelihood, identical
+  retained observations/weights/integration settings, and ready converged fits,
+  and reuse stored factor membership in Henderson D-Study projections.
+  Multi-level nested Henderson G-Studies (`method = "urgenova"`) include all
+  ancestor facets when counting observed harmonic facet sizes, weight observed
+  variance components by each person's exact rating-share sum of squares
+  (including unequal within-cell replicates, without colliding with user facets
+  named `"Residual"`), refresh saved `mfrm_gtheory` summaries and `confint()`
+  intervals on reload, align `confint()` delta-method derivatives with
+  `truncate_negative`, reject cyclic or duplicate-parent `nesting`
+  specifications, and validate finite numeric scores before row filtering.
+  `fit_mfrm_drift()` applies the hyperparameter prior precision once in
+  `"markov_homo"` curvature/SE propagation (refreshing saved objects on reload),
+  withholds inferential SEs, `vcov()`, and drift flags (`NA`) when
+  `NumericalReady` is `FALSE`, sets `"static"` drift flags to `FALSE`, and
+  supports `plot(..., type = "contrasts")`. `interrater_agreement()` indexes
+  co-rating pairs sparsely without dense `unit x rater` allocation, rejects
+  factor scores and out-of-range values against declared `categories` (requiring
+  the calibrated rubric when `model_expected = TRUE`), normalizes linear and
+  quadratic weights by the actual category range even when below `1`, and screens
+  `model_expected = TRUE` pairs by structural category support rather than
+  underflowed tail probabilities.
+* Index two-way interaction cells by level positions rather than concatenated
+  labels in `confint(..., component = "interactions", se_type = "profile")`, and
+  isolate internal columns/attributes in residual diagnostics, DFF, and
+  common-plan Fair Average calculations so user columns named `Expected`,
+  `.mfrm_dff_row`, or `theta` do not collide with internal fields.
+* Replay training-time covariate transformations for new predictions. Mixed
+  batches still predict IDs found in the supplied covariate table.
+* Apply empirical Bayes shrinkage after automatic refinement in single and batch
+  fits. Keep `coef(type = "free")`, `vcov()`, and `confint(component = "free")`
+  aligned on the original unshrunk free coordinates, while withholding shrunk
+  facet intervals (`confint(component = "facets")`), facet interval plots,
+  drift tests, and prediction SEs.
+* DFF refits use unique level IDs and check MML likelihood ratios at matched
+  coarse and fine orders (reusing the validated order pair when automatic
+  refinement stabilized). Native worker failures are propagated as R errors.
+  Saved reports refresh agreement from the retained ratings. Earlier split-DFF
+  tests require rerunning diagnostics for inference. Markdown and HTML reports
+  resolve inline code spans before escaping HTML delimiters and formatting bold
+  text so literal IDs containing backticks and asterisks are preserved.
+* Gauss-Hermite nodes use a symmetric tridiagonal QL solver (`O(Q^2)` time, `O(Q)`
+  space) with exact antisymmetry and an explicit convergence check.
+
+* MML now checks successive quadrature orders by default through fitting, batch and
+  workflow entry points, escalating automatically from fixed to adaptive
+  Gauss-Hermite quadrature when sharp posteriors or high GMFRM slopes do not
+  stabilize on fixed grids. Adaptive MML includes the exact implicit-basis
+  chain-rule gradient and damped Newton polishing, preserving warm-starts across
+  refinement orders. Agreement at two orders is a sensitivity check, not a
+  coverage guarantee.
+* Normal quadrature weights preserve tiny tail weights using normalized
+  Hermite recurrence. Adaptive posterior modes use bracketed Newton steps;
+  failed mode searches cannot produce a converged fit.
+* `whexact` in `Infit`/`Outfit` `ZSTD` calculations now matches the FACETS
+  Wilson-Hilferty convention (`whexact = TRUE` includes `+q/3`; `FALSE` omits it).
+  Penalized `MML` calibrations (`facet_shrinkage = "laplace"` or `slope_prior_sd`)
+  store the unpenalized marginal `logLik` separately from the penalized `objective`.
+* `confint(..., se_type = "profile")` honors the requested structural `component`
+  (`"facets"`, `"steps"`, `"slopes"`, `"explanatory"`, `"interactions"`, or
+  `"free"`), profiles sum-to-zero reference levels and multi-family GMFRM slopes,
+  checks profile-step convergence, and rejects penalized or person/population targets.
+* `predict(..., se.fit = TRUE)` retains factor `xlevels`/`contrasts` for single-row
+  new-examinee or new-element predictions under `population_formula` and
+  `facet_formulas`, and propagates latent-regression coefficient covariance into
+  unseen-examinee link and response standard errors.
+* `fit_mfrm()` and `mfrm_batch_fit()` share `centering_scope = "remainder"` by
+  default and pass specification/shrinkage options consistently. Post-hoc
+  `facet_shrinkage = "empirical_bayes"` preserves anchored/dummy elements,
+  centering, `ExpAvg`, and unshrunk MLE separation reliability in `diagnose_mfrm()`.
+* `analyze_dff()` (`"mh"` and `"logistic"`), `step_mfrm_diagnose()`, rater cards,
+  and assessment reports respect `positive_facets` (`Sign = +1`) polarity.
+  `mfrm_d_study(fit)` retains up to four facets and forwards additional options,
+  and `interrater_agreement()` aligns `ICC` units and ordered-category adjacency.
+* Reports clarify the scope of `InferenceStatus = "ready"`, MML/EAP plug-in
+  `Infit`/`Outfit` `ZSTD` behavior, and `RealSE`-based `Strata`.
+* Numerical controls are validated before integer conversion. Invalid prior
+  standard deviations, out-of-range confidence levels, unused interval arguments,
+  and conflicting score/component selectors are rejected.
+* MML estimates and intervals can change, especially with large GMFRM slopes or
+  partial anchors. Refit original data to apply these corrections to older calibrations.
+
 # mfrmr 0.3.2
 
 - Loading mfrmr defers data-manipulation dependencies until they are needed.

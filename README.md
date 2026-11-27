@@ -25,7 +25,7 @@ the constant-discrimination many-facet Rasch model by estimating discrimination,
 with either facet-specific steps (many-facet GPCM) or shared steps on a common
 rubric (many-facet RS-GPCM). Select it with `model = "GPCM"` (also accepted as `model = "GMFRM"`).
 
-[![Three ggplot examples: rater severity with intervals, task/rater planning curves, and score-category probabilities. All use synthetic data.](man/figures/visual-gallery.png)](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/vignettes/articles/mfrmr-assessment.Rmd)
+[![Three ggplot examples: rater severity with intervals, task/rater planning curves, and score-category probabilities. All use synthetic data.](man/figures/visual-gallery.png)](https://github.com/Ryuya-dot-com/mfrmr/blob/main/vignettes/articles/mfrmr-assessment.Rmd)
 
 ## Install and open tutorials
 
@@ -49,7 +49,7 @@ browseVignettes("mfrmr")
 Source releases are also available from
 [GitHub Releases](https://github.com/Ryuya-dot-com/mfrmr/releases).
 
-Read the [assessment guide](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/vignettes/articles/mfrmr-assessment.Rmd)
+Read the [assessment guide](https://github.com/Ryuya-dot-com/mfrmr/blob/main/vignettes/articles/mfrmr-assessment.Rmd)
 on GitHub. Its examples complement the two offline vignettes bundled with
 `mfrmr`.
 

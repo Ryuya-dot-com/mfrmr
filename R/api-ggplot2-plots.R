@@ -130,36 +130,193 @@
   p
 }
 
+.mfrm_normalize_ref_bands <- function(reference_bands) {
+  if (is.null(reference_bands)) return(list())
+  if (is.numeric(reference_bands) && !is.list(reference_bands)) {
+    return(list(.mfrm_validate_mnsq_range(reference_bands, "`reference_bands`")))
+  }
+  if (!is.list(reference_bands)) {
+    stop("`reference_bands` must be a length-2 numeric vector or a list of length-2 numeric vectors.", call. = FALSE)
+  }
+  lapply(reference_bands, .mfrm_validate_mnsq_range, label = "`reference_bands`")
+}
+
 .mfrm_gg_pathway <- function(facets_df, mnsq_range = c(0.70, 1.30), palette = "okabe_ito", base_size = 11,
-                             fit_statistic = c("infit", "outfit", "both")) {
+                             fit_statistic = c("infit", "outfit", "both"),
+                             fit_method = c("auto", "posterior", "plugin", "both"),
+                             zstd_limit = NULL,
+                             reference_bands = NULL,
+                             method_label = NULL) {
   fit_statistic <- match.arg(fit_statistic)
+  fit_method <- match.arg(fit_method)
+  mnsq_range <- .mfrm_validate_mnsq_range(mnsq_range)
+  ref_list <- .mfrm_normalize_ref_bands(reference_bands)
+  if (!is.null(zstd_limit)) {
+    if (!is.numeric(zstd_limit) || is.factor(zstd_limit) || length(zstd_limit) != 1L ||
+        !is.finite(zstd_limit) || zstd_limit < 0) {
+      stop("`zstd_limit` must be a single finite nonnegative number.", call. = FALSE)
+    }
+    zstd_limit <- as.double(zstd_limit)
+  }
   statistics <- if (fit_statistic == "both") c("Infit", "Outfit") else tools::toTitleCase(fit_statistic)
+
+  if (identical(fit_method, "both")) {
+    has_post <- ("PostInfitMnSq" %in% names(facets_df)) && any(is.finite(facets_df$PostInfitMnSq))
+    if (!has_post) {
+      stop("`fit_method = 'both'` requires an MML calibration with posterior-integrated fit indices.", call. = FALSE)
+    }
+    df_list <- lapply(statistics, function(statistic) {
+      v_plug <- facets_df[[paste0(statistic, "MnSq")]]
+      v_post <- facets_df[[paste0("Post", statistic, "MnSq")]]
+      keep <- is.finite(facets_df$Estimate) & (is.finite(v_plug) | is.finite(v_post))
+      sub_f <- facets_df[keep, , drop = FALSE]
+      rbind(
+        data.frame(sub_f, FitMnSq = v_post[keep], Statistic = rep(statistic, sum(keep)),
+                   FitBasis = "Posterior (TAM)", stringsAsFactors = FALSE),
+        data.frame(sub_f, FitMnSq = v_plug[keep], Statistic = rep(statistic, sum(keep)),
+                   FitBasis = "Plug-in", stringsAsFactors = FALSE)
+      )
+    })
+    df <- do.call(rbind, df_list)
+    df <- df[is.finite(df$FitMnSq), , drop = FALSE]
+    se_use <- if ("RealSE" %in% names(df)) df$RealSE else df$ModelSE
+    df$Low <- df$Estimate - 1.96 * se_use
+    df$High <- df$Estimate + 1.96 * se_use
+    basis_lvls <- c("Posterior (TAM)", "Plug-in")
+    df$FitBasis <- factor(df$FitBasis, levels = basis_lvls)
+    cols <- stats::setNames(.mfrm_cvd_palette(2L, palette), basis_lvls)
+    shapes <- stats::setNames(c(16L, 17L), basis_lvls)
+    ltypes <- stats::setNames(c("solid", "dashed"), basis_lvls)
+
+    seg_list <- lapply(statistics, function(statistic) {
+      v_plug <- facets_df[[paste0(statistic, "MnSq")]]
+      v_post <- facets_df[[paste0("Post", statistic, "MnSq")]]
+      ok <- is.finite(facets_df$Estimate) & is.finite(v_plug) & is.finite(v_post)
+      if (!any(ok)) return(NULL)
+      data.frame(Facet = facets_df$Facet[ok], Level = facets_df$Level[ok],
+                 Estimate = facets_df$Estimate[ok], X0 = v_plug[ok], X1 = v_post[ok],
+                 Statistic = statistic, stringsAsFactors = FALSE)
+    })
+    seg_df <- do.call(rbind, Filter(Negate(is.null), seg_list))
+
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$FitMnSq, y = .data$Estimate)) +
+      ggplot2::geom_vline(xintercept = 1.0, linetype = "solid", colour = "#999999", linewidth = 0.35) +
+      ggplot2::geom_vline(xintercept = mnsq_range, linetype = "dashed", colour = "#666666", linewidth = 0.4) +
+      ggplot2::geom_hline(yintercept = 0.0, linetype = "dotted", colour = "#888888", linewidth = 0.35)
+    for (rb in ref_list) {
+      p <- p + ggplot2::geom_vline(xintercept = rb, linetype = "dotdash", colour = "#888888", linewidth = 0.35)
+    }
+    if (!is.null(seg_df) && nrow(seg_df) > 0L) {
+      p <- p + ggplot2::geom_segment(
+        data = seg_df,
+        ggplot2::aes(x = .data$X0, xend = .data$X1, y = .data$Estimate, yend = .data$Estimate),
+        colour = "#888888", linewidth = 0.45, inherit.aes = FALSE
+      )
+    }
+    df_post_lbl <- df[df$FitBasis == "Posterior (TAM)", , drop = FALSE]
+    p <- p +
+      ggplot2::geom_errorbar(
+        data = df_post_lbl,
+        ggplot2::aes(ymin = .data$Low, ymax = .data$High, colour = .data$FitBasis, linetype = .data$FitBasis),
+        width = 0.0, linewidth = 0.5, alpha = 0.75, na.rm = TRUE
+      ) +
+      ggplot2::geom_point(ggplot2::aes(colour = .data$FitBasis, shape = .data$FitBasis), size = 2.9) +
+      ggplot2::geom_text(
+        data = df_post_lbl,
+        ggplot2::aes(label = .data$Level),
+        nudge_y = 0.04 * if (nrow(df)) max(diff(range(df$Estimate)), 0.5) else 0.5,
+        size = 2.9, colour = "#222222", check_overlap = TRUE
+      ) +
+      ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Fit Basis") +
+      ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Fit Basis") +
+      ggplot2::scale_linetype_manual(values = ltypes, drop = FALSE, name = "Fit Basis") +
+      ggplot2::labs(x = if (length(statistics) == 1L) paste(statistics, "Mean-Square (MnSq)") else "Mean-Square (MnSq)",
+                    y = "Measure (Logits)") +
+      .mfrm_gg_theme(base_size = base_size)
+    if (fit_statistic == "both" && nrow(df)) {
+      p <- p + ggplot2::facet_grid(Facet ~ Statistic)
+    } else if (length(unique(df$Facet)) > 1L) {
+      p <- p + ggplot2::facet_wrap(~ Facet)
+    }
+    ref_note <- if (length(ref_list)) {
+      paste("Dot-dash lines mark secondary reference bounds:",
+            paste(vapply(ref_list, function(r) sprintf("[%.2f, %.2f]", r[1L], r[2L]), character(1)), collapse = ", "))
+    }
+    attr(p, "mfrm_notes") <- c(
+      sprintf("Dashed vertical lines mark primary MnSq bounds [%.2f, %.2f].", mnsq_range[1L], mnsq_range[2L]),
+      ref_note,
+      "Horizontal segments connect each element's point-estimate plug-in MnSq and MML posterior-integrated (TAM) MnSq."
+    )
+    return(p)
+  }
+
+  fm <- .mfrm_resolve_fit_method(facets_df, method_label, fit_method)
+  use_post <- identical(fm, "posterior")
   df <- do.call(rbind, lapply(statistics, function(statistic) {
-    vals <- facets_df[[paste0(statistic, "MnSq")]]
+    m_col <- paste0(if (use_post) "Post" else "", statistic, "MnSq")
+    z_col <- paste0(if (use_post) "Post" else "", statistic, "ZSTD")
+    vals <- facets_df[[m_col]]
+    zvals <- if (z_col %in% names(facets_df)) facets_df[[z_col]] else rep(NA_real_, nrow(facets_df))
     keep <- is.finite(facets_df$Estimate) & is.finite(vals)
     data.frame(facets_df[keep, , drop = FALSE],
-               FitMnSq = vals[keep], Statistic = rep(statistic, sum(keep)))
+               FitMnSq = vals[keep], FitZSTD = zvals[keep], Statistic = rep(statistic, sum(keep)))
   }))
   se_use <- if ("RealSE" %in% names(df)) df$RealSE else df$ModelSE
   df$Low <- df$Estimate - 1.96 * se_use
   df$High <- df$Estimate + 1.96 * se_use
-  df$FitBand <- ifelse(
-    df$FitMnSq > mnsq_range[2L], "Underfit (MnSq > Upper)",
-    ifelse(df$FitMnSq < mnsq_range[1L], "Overfit / Muted (MnSq < Lower)", "Acceptable")
-  )
-  bands <- c("Acceptable", "Overfit / Muted (MnSq < Lower)", "Underfit (MnSq > Upper)")
+
+  if (is.null(zstd_limit)) {
+    df$FitBand <- ifelse(
+      df$FitMnSq > mnsq_range[2L], "Above Upper Bound (MnSq > Upper)",
+      ifelse(df$FitMnSq < mnsq_range[1L], "Below Lower Bound (MnSq < Lower)", "Within Bounds")
+    )
+    bands <- c("Within Bounds", "Below Lower Bound (MnSq < Lower)", "Above Upper Bound (MnSq > Upper)")
+    leg_title <- "MnSq Band (No ZSTD Filter)"
+    shapes <- stats::setNames(c(16L, 15L, 17L), bands)
+    ltypes <- stats::setNames(c("solid", "dashed", "dotdash"), bands)
+  } else {
+    z_fin <- is.finite(df$FitZSTD)
+    z_pass <- z_fin & (abs(df$FitZSTD) >= zstd_limit)
+    out_mnsq <- df$FitMnSq < mnsq_range[1L] | df$FitMnSq > mnsq_range[2L]
+    df$FitBand <- ifelse(
+      df$FitMnSq > mnsq_range[2L] & z_pass, "Misfit (Unpredictable)",
+      ifelse(df$FitMnSq < mnsq_range[1L] & z_pass, "Below Lower Fit Bound",
+             ifelse(out_mnsq & !z_fin, "Outside MnSq (ZSTD Unavailable)",
+                    ifelse(out_mnsq, "Outside MnSq (|ZSTD| < Limit)", "Acceptable")))
+    )
+    if (any(!z_fin)) {
+      bands <- c("Acceptable", "Outside MnSq (|ZSTD| < Limit)", "Outside MnSq (ZSTD Unavailable)",
+                 "Below Lower Fit Bound", "Misfit (Unpredictable)")
+      shapes <- stats::setNames(c(16L, 1L, 3L, 15L, 17L), bands)
+      ltypes <- stats::setNames(c("solid", "dotted", "twodash", "dashed", "dotdash"), bands)
+    } else {
+      bands <- c("Acceptable", "Outside MnSq (|ZSTD| < Limit)", "Below Lower Fit Bound", "Misfit (Unpredictable)")
+      shapes <- stats::setNames(c(16L, 1L, 15L, 17L), bands)
+      ltypes <- stats::setNames(c("solid", "dotted", "dashed", "dotdash"), bands)
+    }
+    leg_title <- "Fit Screening (MnSq + ZSTD)"
+  }
   df$FitBand <- factor(df$FitBand, levels = bands)
-  cols <- stats::setNames(.mfrm_cvd_palette(3L, palette), bands)
-  shapes <- stats::setNames(c(16L, 15L, 17L), bands)
-  ltypes <- stats::setNames(c("solid", "dashed", "dotdash"), bands)
+  cols <- stats::setNames(.mfrm_cvd_palette(length(bands), palette), bands)
+
+  basis_tag <- if (use_post) "Posterior (TAM Basis)" else "Plug-in"
+  x_lbl <- if (length(statistics) == 1L) {
+    sprintf("%s Mean-Square (MnSq; %s)", statistics, basis_tag)
+  } else {
+    sprintf("Mean-Square (MnSq; %s)", basis_tag)
+  }
 
   p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$FitMnSq, y = .data$Estimate)) +
     ggplot2::geom_vline(xintercept = 1.0, linetype = "solid", colour = "#999999", linewidth = 0.35) +
     ggplot2::geom_vline(xintercept = mnsq_range, linetype = "dashed", colour = "#666666", linewidth = 0.4) +
-    ggplot2::geom_hline(yintercept = 0.0, linetype = "dotted", colour = "#888888", linewidth = 0.35) +
+    ggplot2::geom_hline(yintercept = 0.0, linetype = "dotted", colour = "#888888", linewidth = 0.35)
+  for (rb in ref_list) {
+    p <- p + ggplot2::geom_vline(xintercept = rb, linetype = "dotdash", colour = "#888888", linewidth = 0.35)
+  }
+  p <- p +
     ggplot2::geom_errorbar(
       ggplot2::aes(ymin = .data$Low, ymax = .data$High, colour = .data$FitBand, linetype = .data$FitBand),
-      width = 0.0, linewidth = 0.55, alpha = 0.8
+      width = 0.0, linewidth = 0.55, alpha = 0.8, na.rm = TRUE
     ) +
     ggplot2::geom_point(
       ggplot2::aes(colour = .data$FitBand, shape = .data$FitBand),
@@ -170,20 +327,233 @@
       nudge_y = 0.04 * if (nrow(df)) max(diff(range(df$Estimate)), 0.5) else 0.5,
       size = 2.9, colour = "#222222", check_overlap = TRUE
     ) +
-    ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Fit Screening") +
-    ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Fit Screening") +
-    ggplot2::scale_linetype_manual(values = ltypes, drop = FALSE, name = "Fit Screening") +
-    ggplot2::labs(x = if (length(statistics) == 1L) paste(statistics, "Mean-Square (MnSq)") else "Mean-Square (MnSq)",
-                  y = "Measure (Logits)") +
+    ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = leg_title) +
+    ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = leg_title) +
+    ggplot2::scale_linetype_manual(values = ltypes, drop = FALSE, name = leg_title) +
+    ggplot2::labs(x = x_lbl, y = "Measure (Logits)") +
     .mfrm_gg_theme(base_size = base_size)
   if (fit_statistic == "both" && nrow(df)) {
     p <- p + ggplot2::facet_grid(Facet ~ Statistic)
   } else if (length(unique(df$Facet)) > 1L) {
     p <- p + ggplot2::facet_wrap(~ Facet)
   }
+  ref_note <- if (length(ref_list)) {
+    paste("Dot-dash lines mark secondary reference bounds:",
+          paste(vapply(ref_list, function(r) sprintf("[%.2f, %.2f]", r[1L], r[2L]), character(1)), collapse = ", "))
+  }
+  z_note <- if (is.null(zstd_limit)) {
+    "Pathway bands classify by MnSq bounds alone; pass `zstd_limit = 2.0` (or use `plot(wf, type = 'raters')`) to apply the joint MnSq + ZSTD workflow rule."
+  } else {
+    sprintf("Joint screening rule requires MnSq outside [%.2f, %.2f] and |ZSTD| >= %.1f.", mnsq_range[1L], mnsq_range[2L], zstd_limit)
+  }
+  z_na_note <- if (!is.null(zstd_limit) && any(!is.finite(df$FitZSTD))) {
+    "Elements with unavailable ZSTD (NA) outside MnSq bounds are marked 'Outside MnSq (ZSTD Unavailable)' rather than satisfying the joint MnSq + ZSTD rule."
+  }
   attr(p, "mfrm_notes") <- c(
-    sprintf("Dashed vertical reference lines mark the displayed MnSq bounds [%.2f, %.2f].", mnsq_range[1L], mnsq_range[2L]),
-    "Error bars show normal 95% intervals when available. The selected fit statistic determines the horizontal position."
+    sprintf("Fit basis: %s. Dashed vertical reference lines mark MnSq bounds [%.2f, %.2f].", basis_tag, mnsq_range[1L], mnsq_range[2L]),
+    ref_note,
+    z_note,
+    z_na_note,
+    "Error bars show normal 95% Real-SE intervals (plug-in Infit basis) when available."
+  )
+  p
+}
+
+.mfrm_gg_fit_sensitivity <- function(facets_df, mnsq_range = c(0.70, 1.30), zstd_limit = 2.0,
+                                     fit_statistic = c("infit", "outfit"),
+                                     fit_method = c("auto", "posterior", "plugin", "both"),
+                                     half_widths = seq(0.15, 0.55, by = 0.01),
+                                     palette = "okabe_ito", base_size = 11,
+                                     method_label = NULL) {
+  fit_statistic <- match.arg(fit_statistic)
+  fit_method <- match.arg(fit_method)
+  mnsq_range <- .mfrm_validate_mnsq_range(mnsq_range)
+  if (!is.numeric(zstd_limit) || is.factor(zstd_limit) || length(zstd_limit) != 1L ||
+      !is.finite(zstd_limit) || zstd_limit < 0) {
+    stop("`zstd_limit` must be a single finite nonnegative number.", call. = FALSE)
+  }
+  if (!is.numeric(half_widths) || is.factor(half_widths) || length(half_widths) < 2L ||
+      any(!is.finite(half_widths)) || any(half_widths <= 0 | half_widths >= 1)) {
+    stop("`half_widths` must be finite numbers strictly between 0 and 1 (for symmetric bounds `[1 - d, 1 + d]`).",
+         call. = FALSE)
+  }
+  half_widths <- sort(unique(as.double(half_widths)))
+  stat_nm <- tools::toTitleCase(fit_statistic)
+  has_post <- (paste0("Post", stat_nm, "MnSq") %in% names(facets_df)) &&
+    any(is.finite(facets_df[[paste0("Post", stat_nm, "MnSq")]]))
+
+  bases <- if (identical(fit_method, "both")) {
+    if (!has_post) stop("`fit_method = 'both'` requires an MML calibration with posterior-integrated fit indices.", call. = FALSE)
+    c("Posterior (TAM)", "Plug-in")
+  } else if (identical(fit_method, "auto") && (is.null(method_label) || identical(method_label, "MML")) && has_post) {
+    c("Posterior (TAM)", "Plug-in")
+  } else {
+    fm <- .mfrm_resolve_fit_method(facets_df, method_label, fit_method)
+    if (identical(fm, "posterior")) "Posterior (TAM)" else "Plug-in"
+  }
+
+  rule_lvls <- c("Above Upper (MnSq + |ZSTD|)", "Below Lower (MnSq + |ZSTD|)", "Total Outside (MnSq only)")
+  rows <- list()
+  for (b_lbl in bases) {
+    use_p <- identical(b_lbl, "Posterior (TAM)")
+    m_vec <- facets_df[[paste0(if (use_p) "Post" else "", stat_nm, "MnSq")]]
+    z_col <- paste0(if (use_p) "Post" else "", stat_nm, "ZSTD")
+    z_vec <- if (z_col %in% names(facets_df)) facets_df[[z_col]] else rep(NA_real_, length(m_vec))
+    ok <- is.finite(m_vec)
+    m_v <- m_vec[ok]
+    z_v <- z_vec[ok]
+    z_cond <- ifelse(is.finite(z_v), abs(z_v) >= zstd_limit, NA)
+    n_tot <- length(m_v)
+    for (d in half_widths) {
+      lo <- 1.0 - d
+      hi <- 1.0 + d
+      n_hi_z <- sum((m_v > hi) & z_cond)
+      n_lo_z <- sum((m_v < lo) & z_cond)
+      n_any  <- sum(m_v < lo | m_v > hi)
+      n_hi_na <- sum((m_v > hi) & !is.finite(z_v))
+      n_lo_na <- sum((m_v < lo) & !is.finite(z_v))
+      rows[[length(rows) + 1L]] <- data.frame(
+        HalfWidth = rep(d, 3L),
+        LowerBound = rep(lo, 3L),
+        UpperBound = rep(hi, 3L),
+        FitBasis = rep(b_lbl, 3L),
+        RuleDirection = rule_lvls,
+        FlaggedCount = c(n_hi_z, n_lo_z, n_any),
+        UnresolvedZSTDCount = c(n_hi_na, n_lo_na, 0L),
+        TotalElements = rep(n_tot, 3L),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  sens_df <- do.call(rbind, rows)
+  sens_df$FitBasis <- factor(sens_df$FitBasis, levels = bases)
+  sens_df$RuleDirection <- factor(sens_df$RuleDirection, levels = rule_lvls)
+
+  anchors <- sens_df[round(sens_df$HalfWidth, 4) %in% round(c(0.20, 0.30, 0.40, 0.50), 4), , drop = FALSE]
+  cols <- stats::setNames(.mfrm_cvd_palette(3L, palette), rule_lvls)
+  ltypes <- stats::setNames(c("solid", "dashed", "dotdash"), rule_lvls)
+  shapes <- stats::setNames(c(17L, 15L, 16L), rule_lvls)
+  active_hw <- if (abs((mnsq_range[1L] + mnsq_range[2L]) / 2 - 1.0) < 1e-6) (mnsq_range[2L] - 1.0) else NULL
+
+  p <- ggplot2::ggplot(sens_df, ggplot2::aes(
+    x = .data$HalfWidth, y = .data$FlaggedCount,
+    colour = .data$RuleDirection, linetype = .data$RuleDirection
+  )) +
+    ggplot2::geom_vline(xintercept = c(0.20, 0.50), linetype = "dotted", colour = "#888888", linewidth = 0.35) +
+    ggplot2::geom_step(linewidth = 0.75, direction = "hv", na.rm = TRUE)
+  if (!is.null(active_hw)) {
+    p <- p + ggplot2::geom_vline(xintercept = active_hw, linetype = "dashed", colour = "#555555", linewidth = 0.45)
+  }
+  if (nrow(anchors) > 0L) {
+    p <- p + ggplot2::geom_point(
+      data = anchors,
+      ggplot2::aes(shape = .data$RuleDirection),
+      size = 2.4,
+      na.rm = TRUE
+    )
+  }
+  p <- p +
+    ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Screening Rule") +
+    ggplot2::scale_linetype_manual(values = ltypes, drop = FALSE, name = "Screening Rule") +
+    ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Screening Rule") +
+    ggplot2::scale_y_continuous(breaks = function(lim) unique(floor(pretty(c(0, max(1, lim[2L])))))) +
+    ggplot2::labs(
+      x = sprintf("Symmetric %s MnSq Half-Width d around 1.00 (Bounds [1 - d, 1 + d])", stat_nm),
+      y = "Flagged Element Count"
+    ) +
+    .mfrm_gg_theme(base_size = base_size)
+  if (length(bases) > 1L) {
+    p <- p + ggplot2::facet_wrap(~ FitBasis)
+  }
+  attr(p, "sensitivity_table") <- sens_df
+  attr(p, "mfrm_notes") <- c(
+    sprintf("Evaluates symmetric %s MnSq intervals [1 - d, 1 + d] with |ZSTD| >= %.1f.", stat_nm, zstd_limit),
+    "Reference half-widths mark d = 0.20 ([0.80, 1.20]), d = 0.30 ([0.70, 1.30]), and d = 0.50 ([0.50, 1.50]).",
+    if (any(sens_df$UnresolvedZSTDCount > 0L))
+      "Joint MnSq + |ZSTD| counts are NA where an element outside [1 - d, 1 + d] has unavailable ZSTD (see `UnresolvedZSTDCount` in `sensitivity_table`).",
+    "Select screening bounds from substantive stakes and rating design prior to inspection; do not tune thresholds post hoc to suppress flags."
+  )
+  p
+}
+
+.mfrm_gg_cut_sensitivity <- function(fit_obj, cut_scores = NULL, cut_grid = NULL,
+                                     palette = "okabe_ito", base_size = 11) {
+  rmin <- fit_obj$rating_min
+  rmax <- fit_obj$rating_max
+  span <- rmax - rmin
+  if (is.null(cut_grid)) {
+    lo <- rmin + 0.04 * span
+    hi <- rmax - 0.04 * span
+    cut_grid <- seq(lo, hi, length.out = 41L)
+    if (!is.null(cut_scores)) {
+      valid_cs <- as.double(cut_scores[is.finite(cut_scores) & cut_scores > rmin & cut_scores < rmax])
+      cut_grid <- sort(unique(c(cut_grid, valid_cs)))
+    }
+  } else {
+    if (!is.numeric(cut_grid) || is.factor(cut_grid) || length(cut_grid) < 1L || any(!is.finite(cut_grid))) {
+      stop("`cut_grid` must be a non-empty finite numeric vector of candidate Fair(M) cutoffs.", call. = FALSE)
+    }
+    cut_grid <- sort(unique(as.double(cut_grid)))
+  }
+  readiness <- summary(fit_obj)$readiness
+  dec <- as.data.frame(.tidymfrm_cut_decisions(fit_obj, cut_grid, readiness = readiness))
+
+  p1_lbl <- "1. Pass Rate (%)"
+  p2_lbl <- "2. Borderline Count (90% Interval Straddling Cut)"
+  s_lvls <- c("Pass Rate (Fair(M) >= Cut)", "Borderline (ModelSE)", "Borderline (RealSE)")
+  long_df <- rbind(
+    data.frame(Panel = p1_lbl, CutFairM = dec$CutFairM, Series = s_lvls[1L],
+               Value = dec$PassRatePct, stringsAsFactors = FALSE),
+    data.frame(Panel = p2_lbl, CutFairM = dec$CutFairM, Series = s_lvls[2L],
+               Value = as.double(dec$Borderline90_ModelSE), stringsAsFactors = FALSE),
+    data.frame(Panel = p2_lbl, CutFairM = dec$CutFairM, Series = s_lvls[3L],
+               Value = as.double(dec$Borderline90_RealSE), stringsAsFactors = FALSE)
+  )
+  long_df$Panel <- factor(long_df$Panel, levels = c(p1_lbl, p2_lbl))
+  long_df$Series <- factor(long_df$Series, levels = s_lvls)
+
+  cols <- stats::setNames(.mfrm_cvd_palette(3L, palette), s_lvls)
+  ltypes <- stats::setNames(c("solid", "dashed", "dotdash"), s_lvls)
+  shapes <- stats::setNames(c(16L, 17L, 15L), s_lvls)
+
+  mark_idx <- unique(round(seq(1, nrow(dec), length.out = min(7L, nrow(dec)))))
+  mark_cuts <- dec$CutFairM[mark_idx]
+  pts_df <- long_df[long_df$CutFairM %in% mark_cuts & is.finite(long_df$Value), , drop = FALSE]
+
+  p <- ggplot2::ggplot(long_df, ggplot2::aes(
+    x = .data$CutFairM, y = .data$Value,
+    colour = .data$Series, linetype = .data$Series
+  )) +
+    ggplot2::geom_line(linewidth = 0.8, na.rm = TRUE)
+  if (nrow(pts_df) > 0L) {
+    p <- p + ggplot2::geom_point(
+      data = pts_df,
+      ggplot2::aes(shape = .data$Series),
+      size = 2.3, na.rm = TRUE
+    )
+  }
+  if (!is.null(cut_scores) && any(is.finite(cut_scores))) {
+    p <- p + ggplot2::geom_vline(
+      xintercept = as.double(cut_scores[is.finite(cut_scores)]),
+      linetype = "dashed", colour = "#555555", linewidth = 0.45
+    )
+  }
+  p <- p +
+    ggplot2::facet_wrap(~ Panel, ncol = 1L, scales = "free_y") +
+    ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Decision Metric") +
+    ggplot2::scale_linetype_manual(values = ltypes, drop = FALSE, name = "Decision Metric") +
+    ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Decision Metric") +
+    ggplot2::labs(x = "Candidate Fair(M) Cutoff (Rubric Scale)", y = "Percentage / Examinee Count") +
+    .mfrm_gg_theme(base_size = base_size)
+
+  attr(p, "cut_table") <- dec
+  attr(p, "mfrm_notes") <- c(
+    "Pass rate is descriptive (Fair(M) >= Cut). Borderline counts tally examinees with 0.05 < P(theta > theta_cut) < 0.95 under conditional normal ModelSE vs RealSE.",
+    if (!is.null(cut_scores) && any(is.finite(cut_scores)))
+      sprintf("Vertical dashed lines mark declared Fair(M) cutoffs: %s.",
+              paste(format(cut_scores[is.finite(cut_scores)], trim = TRUE), collapse = ", ")),
+    if (!readiness$ready)
+      paste("Borderline interval counts withheld:", paste(readiness$reason_codes, collapse = "; "))
   )
   p
 }
@@ -438,11 +808,13 @@
 #' @return A `ggplot` object with interpretation notes in `attr(p, "mfrm_notes")`.
 #' @export
 plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_curves", "persons", "raters",
-    "person_fit", "residual_qq", "slopes", "qc"), palette = c("okabe_ito", "viridis", "monochrome"), facet = NULL,
+    "person_fit", "residual_qq", "slopes", "qc", "fit_sensitivity", "cut_sensitivity"),
+    palette = c("okabe_ito", "viridis", "monochrome"), facet = NULL,
     base_size = 11, ..., fit_statistic = c("infit", "outfit", "both")) {
     .mfrm_validate_fit(x)
     type <- match.arg(type)
     palette <- match.arg(palette)
+    dots <- list(...)
     interval_ready <- TRUE
     interval_notes <- character()
     if (type %in% c("pathway", "raters", "persons", "slopes")) {
@@ -467,6 +839,11 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
     }
     if (type %in% c("pathway", "raters")) {
         fc <- x$facets
+        if ("MLEEstimate" %in% names(fc)) {
+            fc$ModelSE <- fc$RealSE <- NA_real_
+            if (interval_ready)
+                interval_notes <- c(interval_notes, "Intervals unavailable: empirical_bayes_facet_shrinkage.")
+        }
         if (identical(type, "raters") && is.null(facet)) {
             hit <- grep("rater|judge|examiner|marker|grader", unique(fc$Facet), ignore.case = TRUE, value = TRUE)
             facet <- if (length(hit) > 0L)
@@ -475,7 +852,43 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
         }
         if (!is.null(facet))
             fc <- fc[fc$Facet %in% facet, , drop = FALSE]
-        return(with_interval_notes(.mfrm_gg_pathway(fc, palette = palette, base_size = base_size, fit_statistic = match.arg(fit_statistic))))
+        return(with_interval_notes(.mfrm_gg_pathway(
+            fc,
+            mnsq_range = dots$mnsq_range %||% c(0.70, 1.30),
+            palette = palette,
+            base_size = base_size,
+            fit_statistic = match.arg(fit_statistic),
+            fit_method = dots$fit_method %||% "auto",
+            zstd_limit = dots$zstd_limit,
+            reference_bands = dots$reference_bands,
+            method_label = x$method
+        )))
+    }
+    if (identical(type, "fit_sensitivity")) {
+        fc <- x$facets
+        if (!is.null(facet))
+            fc <- fc[fc$Facet %in% facet, , drop = FALSE]
+        fs_arg <- if (missing(fit_statistic)) "infit" else match.arg(fit_statistic[1L], c("infit", "outfit"))
+        return(.mfrm_gg_fit_sensitivity(
+            fc,
+            mnsq_range = dots$mnsq_range %||% c(0.70, 1.30),
+            zstd_limit = dots$zstd_limit %||% 2.0,
+            fit_statistic = fs_arg,
+            fit_method = dots$fit_method %||% "auto",
+            half_widths = dots$half_widths %||% seq(0.15, 0.55, by = 0.01),
+            palette = palette,
+            base_size = base_size,
+            method_label = x$method
+        ))
+    }
+    if (identical(type, "cut_sensitivity")) {
+        return(.mfrm_gg_cut_sensitivity(
+            x,
+            cut_scores = dots$cut_scores,
+            cut_grid = dots$cut_grid,
+            palette = palette,
+            base_size = base_size
+        ))
     }
     if (type %in% c("steps", "category_curves")) {
         return(.mfrm_gg_ccc(x$step_cumulative, x$steps, x$rating_min, x$encoding$step_cat_min, x$encoding$step_cat_max,
@@ -510,6 +923,12 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
         `Infit MnSq > 1.30` = 17L), drop = FALSE, name = "Person Fit") + ggplot2::scale_linetype_manual(values = c(`Infit MnSq <= 1.30` = "solid",
         `Infit MnSq > 1.30` = "dashed"), drop = FALSE, name = "Person Fit") + ggplot2::labs(x = "Person Ability (Logits; 95% Real-SE CI)",
         y = "Fair Average Score Fair(M)") + .mfrm_gg_theme(base_size = base_size)
+    if (!is.null(dots$cut_scores) && any(is.finite(dots$cut_scores))) {
+        p <- p + ggplot2::geom_hline(
+            yintercept = as.double(dots$cut_scores[is.finite(dots$cut_scores)]),
+            linetype = "dashed", colour = "#555555", linewidth = 0.45
+        )
+    }
     attr(p, "mfrm_notes") <- "Person fit status is encoded via colour, point shape, and interval linetype."
     with_interval_notes(p)
 }
@@ -523,9 +942,10 @@ plot.mfrm_diagnostics <- function(x,
                                   facet = NULL,
                                   palette = c("okabe_ito", "viridis", "monochrome"),
                                   base_size = 11,
-                                  ..., type = c("pathway", "residual_pca")) {
+                                  ..., type = c("pathway", "residual_pca", "fit_sensitivity")) {
   palette <- match.arg(palette)
   type <- match.arg(type)
+  dots <- list(...)
   if (type == "residual_pca") {
     if (length(facet) > 1L) stop("Choose one facet for the residual PCA plot.", call. = FALSE)
     result <- if (is.null(facet)) x$residual_pca_overall else x$residual_pca_by_facet[[facet]]
@@ -551,12 +971,41 @@ plot.mfrm_diagnostics <- function(x,
   readiness <- .mfrm_readiness(x$fit)
   ms <- as.data.frame(x$measures)
   if ("Infit" %in% names(ms) && !"InfitMnSq" %in% names(ms)) ms$InfitMnSq <- ms$Infit
+  if ("Outfit" %in% names(ms) && !"OutfitMnSq" %in% names(ms)) ms$OutfitMnSq <- ms$Outfit
+  if ("PostInfit" %in% names(ms) && !"PostInfitMnSq" %in% names(ms)) ms$PostInfitMnSq <- ms$PostInfit
+  if ("PostOutfit" %in% names(ms) && !"PostOutfitMnSq" %in% names(ms)) ms$PostOutfitMnSq <- ms$PostOutfit
   ms <- ms[ms$Facet != "Person", , drop = FALSE]
   if (!is.null(facet)) ms <- ms[ms$Facet %in% facet, , drop = FALSE]
-  if (!readiness$ready) ms$ModelSE <- ms$RealSE <- NA_real_
-  p <- .mfrm_gg_pathway(ms, palette = palette, base_size = base_size)
+  if (identical(type, "fit_sensitivity")) {
+    return(.mfrm_gg_fit_sensitivity(
+      ms,
+      mnsq_range = dots$mnsq_range %||% x$mnsq_range %||% c(0.70, 1.30),
+      zstd_limit = dots$zstd_limit %||% 2.0,
+      fit_statistic = dots$fit_statistic %||% "infit",
+      fit_method = dots$fit_method %||% x$fit_method %||% "auto",
+      half_widths = dots$half_widths %||% seq(0.15, 0.55, by = 0.01),
+      palette = palette,
+      base_size = base_size,
+      method_label = x$fit$method
+    ))
+  }
+  eb_shrunk <- "MLEEstimate" %in% names(x$fit$facets)
+  if (!readiness$ready || eb_shrunk) ms$ModelSE <- ms$RealSE <- NA_real_
+  p <- .mfrm_gg_pathway(
+    ms,
+    mnsq_range = dots$mnsq_range %||% x$mnsq_range %||% c(0.70, 1.30),
+    palette = palette,
+    base_size = base_size,
+    fit_statistic = dots$fit_statistic %||% "infit",
+    fit_method = dots$fit_method %||% x$fit_method %||% "auto",
+    zstd_limit = dots$zstd_limit,
+    reference_bands = dots$reference_bands,
+    method_label = x$fit$method
+  )
   if (!readiness$ready) attr(p, "mfrm_notes") <- c(attr(p, "mfrm_notes"),
     paste("Intervals unavailable:", paste(readiness$reason_codes, collapse = "; ")))
+  else if (eb_shrunk) attr(p, "mfrm_notes") <- c(attr(p, "mfrm_notes"),
+    "Intervals unavailable: empirical_bayes_facet_shrinkage.")
   p
 }
 
@@ -811,6 +1260,60 @@ plot.mfrm_drift <- function(x,
                             ...) {
   type <- match.arg(type)
   palette <- match.arg(palette)
+  x <- .drift_refresh_object(x)
+  ready <- isTRUE(x$checks$NumericalReady) && isTRUE(x$checks$InformationPositive)
+  if (identical(type, "contrasts")) {
+    ci <- confint.mfrm_drift(x, parm = "contrasts")
+    sev_post <- as.data.frame(x, component = "severity")
+    sev_post <- sev_post[sev_post$WaveIndex > 1L, , drop = FALSE]
+    raters <- unique(as.character(ci$Rater))
+    times <- unique(as.character(ci$Time))
+    base_lbl <- if (nrow(ci) > 0L) ci$Baseline[1L] else "Baseline"
+    ci$RaterF <- factor(ci$Rater, levels = raters)
+    ci$TimeF <- factor(ci$Time, levels = times)
+    ci$FlaggedDrift <- sev_post$FlaggedDrift
+    cols <- stats::setNames(.mfrm_cvd_palette(length(raters), palette), raters)
+    shapes <- stats::setNames(.mfrm_cvd_shapes(length(raters)), raters)
+    ltypes <- stats::setNames(.mfrm_cvd_linetypes(length(raters)), raters)
+    dodge <- ggplot2::position_dodge(width = 0.35)
+    p <- ggplot2::ggplot(
+      ci,
+      ggplot2::aes(x = .data$TimeF, y = .data$Estimate, group = .data$RaterF,
+                   colour = .data$RaterF, linetype = .data$RaterF, shape = .data$RaterF)
+    ) +
+      ggplot2::geom_hline(yintercept = 0, linetype = "dotted", colour = "#666666")
+    if (any(is.finite(ci$Lower) & is.finite(ci$Upper))) {
+      p <- p + ggplot2::geom_errorbar(
+        ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper),
+        width = 0.0, linewidth = 0.6, position = dodge, na.rm = TRUE
+      )
+    }
+    if (length(times) >= 2L) {
+      p <- p + ggplot2::geom_line(linewidth = 0.75, position = dodge)
+    }
+    p <- p +
+      ggplot2::geom_point(size = 2.6, position = dodge) +
+      ggplot2::scale_colour_manual(values = cols, name = "Rater") +
+      ggplot2::scale_linetype_manual(values = ltypes, name = "Rater") +
+      ggplot2::scale_shape_manual(values = shapes, name = "Rater") +
+      ggplot2::labs(x = sprintf("Occasion / Wave (vs. %s)", base_lbl),
+                    y = sprintf("Severity Change from %s (Logits)", base_lbl)) +
+      .mfrm_gg_theme(base_size = base_size)
+    has_bars <- any(is.finite(ci$Lower) & is.finite(ci$Upper))
+    attr(p, "mfrm_notes") <- c(
+      sprintf("Contrasts show rater severity changes relative to baseline wave '%s'.", base_lbl),
+      if (!ready) {
+        "Numerical readiness check failed; contrast intervals are withheld."
+      } else if (has_bars) {
+        "Error bars show 95% total-SE intervals."
+      } else {
+        "Total standard errors are unavailable; contrast intervals are withheld."
+      },
+      if (identical(x$settings$drift_mode, "static")) "Static drift mode constrains all wave contrasts to zero."
+    )
+    return(p)
+  }
+
   sev <- as.data.frame(x, component = "severity")
   r_col <- intersect(c("Rater", "rater"), names(sev))[1L]
   t_col <- intersect(c("Time", "Wave", "time"), names(sev))[1L]
@@ -840,7 +1343,10 @@ plot.mfrm_drift <- function(x,
     ggplot2::scale_shape_manual(values = shapes, name = "Rater") +
     ggplot2::labs(x = "Occasion / Wave", y = "Dynamic Rater Severity (Logits)") +
     .mfrm_gg_theme(base_size = base_size)
-  attr(p, "mfrm_notes") <- "Each rater trajectory is encoded simultaneously by colour, linetype, and marker shape."
+  attr(p, "mfrm_notes") <- c(
+    "Each rater trajectory is encoded simultaneously by colour, linetype, and marker shape.",
+    if (!ready) "Numerical readiness check failed; inspect checks before interpreting trajectories."
+  )
   p
 }
 

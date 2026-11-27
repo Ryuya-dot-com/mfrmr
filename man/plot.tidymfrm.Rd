@@ -8,7 +8,7 @@
   x,
   type = c("wright", "raters", "steps", "category_curves", "dstudy", "persons",
     "person_fit", "residual_qq", "slopes", "drift", "qc", "dashboard", "dstudy_frontier",
-    "gstudy", "pathway"),
+    "gstudy", "pathway", "fit_sensitivity", "cut_sensitivity"),
   palette = c("okabe_ito", "viridis", "monochrome"),
   base_size = 11,
   draw = TRUE,
@@ -22,9 +22,11 @@
 \item{type}{Plot type:
 \itemize{
 \item \code{"pathway"}: Facet measures against Infit or Outfit. Pass
-\code{fit_statistic = "both"} for two panels and \code{facet = "Rater"} to select raters.
+\code{fit_statistic = "both"} for two panels, \code{fit_method = "both"} on MML fits to connect plug-in and posterior (\code{TAM::msq.itemfit}) MnSq per element, \code{reference_bands = list(c(0.50, 1.50))} for secondary reference lines, and \code{facet = "Rater"} to select raters.
 \item \code{"wright"}: Multi-facet Wright map aligning person distribution, facet locations, and step thresholds.
 \item \code{"raters"}: Rater severity vs \verb{Infit MnSq} diagnostic map with 95\% \verb{Real SE} intervals.
+\item \code{"fit_sensitivity"}: Flagged-element counts across symmetric \code{[1 - d, 1 + d]} \code{MnSq} bounds (comparing \code{MnSq + |ZSTD|} vs \code{MnSq}-only rules, and posterior vs plug-in bases on MML fits).
+\item \code{"cut_sensitivity"}: Candidate pass rate (\code{Fair(M) >= Cut}) and 90\% borderline examinee counts (\code{ModelSE} vs \code{RealSE}) across candidate \code{Fair(M)} cutoffs.
 \item \code{"steps"} / \code{"category_curves"}: Category characteristic curves (CCCs) and Andrich step thresholds.
 \item \code{"dstudy"}: D-Study generalizability (\eqn{G}) and dependability (\eqn{\Phi}{Phi}) curves across sample sizes.
 \item \code{"dstudy_frontier"}: Best point projection achievable at or below each evaluated rating count, with separate G and Phi targets.

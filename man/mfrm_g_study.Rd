@@ -53,6 +53,18 @@ controls their use in projected point estimates.
 For \code{urgenova}, zero total variance or negative universe/projected error
 variance gives an unavailable G/Phi (\code{NA}), with the reason in
 \code{GStatus}/\code{PhiStatus}; see \code{\link{mfrm_d_study}}.
+When within-cell replicates or unequal allocations are present,
+\code{g_study_summary} and \code{univariate} weight each non-person variance
+component by the mean across persons of \eqn{\sum_c (n_{p,j,c}/N_p)^2}, where
+\eqn{n_{p,j,c}} is the number of person \eqn{p}'s \eqn{N_p} observed ratings
+sharing level \eqn{c} of component \eqn{j} (and \eqn{1/N_p} for the independent
+within-cell replicate residual), corresponding to each person's equal-weight
+average of all observed ratings; \code{d_study} evaluates future balanced
+candidate designs with one rating per planned cell
+(\code{TotalRatingsPerPerson = prod(facets)}). Reloading saved Henderson
+results refreshes these observed multipliers from stored \code{data}, or
+marks observed \code{G}/\code{Phi} and their intervals unavailable if \code{data}
+was removed.
 
 The \code{urgenova} sampling covariance uses the Gaussian quadratic-form identity
 \eqn{\operatorname{Cov}(y'Ay,y'By)=2\operatorname{tr}(AVBV)} with the actual
@@ -61,7 +73,9 @@ assignment pattern, including imbalance and replication. The working covariance
 zeroed for this calculation). This is a plug-in covariance, not an exact
 finite-sample distribution or a model-free uncertainty estimate.
 \code{confint()} uses Satterthwaite chi-square approximations for positive
-components and logit delta intervals for G/Phi; boundary coefficients may have
+components and logit delta intervals for G/Phi (matching \code{truncate_negative}:
+clamped components have zero derivative when \code{TRUE}, while all finite
+components contribute when \code{FALSE}); boundary coefficients may have
 unavailable intervals (\code{NA}). The approximation is particularly limited
 near zero components and in sparse designs. As a conservative reporting guard,
 positive components with Satterthwaite degrees of freedom below 1 have both

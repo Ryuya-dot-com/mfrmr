@@ -17,8 +17,8 @@ anchor_to_baseline(
   \item{person}{Character string naming the person identifier column in \code{new_data}.}
   \item{facets}{Character vector naming non-person facet columns in \code{new_data}.}
   \item{score}{Character string naming the numeric score column in \code{new_data}.}
-  \item{anchor_facets}{Optional subset of \code{facets} to anchor to \code{baseline_fit} (defaults to all common non-person facets).}
-  \item{include_person}{Logical; whether to anchor common persons as well (default \code{FALSE}).}
+  \item{anchor_facets}{Optional subset of \code{facets} to anchor to \code{baseline_fit} (defaults to all common non-person facets). Facet sign orientation (\code{positive_facets}) is inherited automatically from \code{baseline_fit} for common facets; conflicting explicit sign overrides are rejected.}
+  \item{include_person}{Logical; retained for signature compatibility and must be \code{FALSE}. Person-ability anchoring is not supported in \code{anchor_to_baseline()}; link calibrations through shared non-person \code{facets}.}
   \item{weight}{Optional observation weight column name in \code{new_data}.}
   \item{model}{Optional model family override; defaults to \code{baseline_fit}'s model.}
   \item{method}{Optional estimation method override; defaults to \code{baseline_fit}'s method.}

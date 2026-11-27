@@ -23,7 +23,7 @@ step_mfrm_measure(
   facet_formulas = NULL,
   facet_data = NULL,
   quad_points = 31L,
-  mml_integration = c("fixed", "adaptive"),
+  mml_integration = c("auto", "fixed", "adaptive"),
   xtreme = 0.3,
   warn_connectivity = TRUE,
   bootstrap = 0L,
@@ -68,7 +68,7 @@ For a GMFRM with common steps on a common rubric, use \code{"Common"}.}
 
 \item{quad_points}{Quadrature points for \code{MML} (default \code{31L}).}
 
-\item{mml_integration}{\code{"fixed"} or \code{"adaptive"}.}
+\item{mml_integration}{\code{"auto"} (default for MML), \code{"fixed"}, or \code{"adaptive"}. Automatic integration compares two orders, including structural covariance and SE stability; it is not a bound on integration error or coverage.}
 
 \item{xtreme}{Extreme-score adjustment for \code{JML} (default \code{0.3} for FACETS compatibility).}
 
@@ -76,7 +76,7 @@ For a GMFRM with common steps on a common rubric, use \code{"Common"}.}
 estimation if disconnected rating subsets or empty interior categories are detected.}
 
 \item{bootstrap}{Number of conditional parametric bootstrap replications
-(\code{0L} to skip). The calibrated response probabilities provide the draws,
+(\code{0L} to skip, or a finite integer of at least \code{2L}). The calibrated response probabilities provide the draws,
 and each draw is refitted with the same model and estimation settings.
 The table gives the requested and usable refit counts per facet level.
 Bootstrap SEs and percentile intervals require at least two usable refits.}

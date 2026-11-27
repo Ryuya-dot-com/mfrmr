@@ -16,6 +16,7 @@
     FacetL2Penalty = control$facet_l2_pen %||% NA_real_,
     SlopeL2Penalty = control$slope_l2_pen %||% NA_real_,
     Population = if (fit$method == "MML") fit$population$mode %||% NA_character_ else NA_character_,
+    PopulationSD = if (fit$method == "MML") fit$population$sigma %||% NA_real_ else NA_real_,
     QuadraturePoints = if (fit$method == "MML") control$quad_points %||% NA_integer_ else NA_integer_,
     AdaptiveQuadrature = if (fit$method == "MML") control$adaptive_quad %||% NA else NA,
     StepFacet = enc$step_facet %||% "Common",
@@ -25,10 +26,19 @@
     RatingRows = fit$n_obs, OmittedRatingRows = nrow(wf$data) - fit$n_obs,
     Converged = isTRUE(fit$converged), InferenceStatus = .mfrm_readiness(fit)$status
   )
+  extra_notes <- c(
+    "Inference readiness checks numerical convergence, quadrature stability, and design rank/boundaries; it does not verify fixed population SDs, external anchor accuracy, or local independence (halo).",
+    if (identical(fit$method, "MML") && identical(fit$score_method, "EAP"))
+      "Under MML with EAP plug-in person scores, Infit/Outfit MnSq are shrunken below 1.0 and can produce negative ZSTD values in larger samples; evaluate MnSq magnitude alongside ZSTD.",
+    if (!is.null(fit$facets$MLEEstimate))
+      "Facet point estimates use empirical Bayes shrinkage. Infit, Outfit, separation and model covariance use the original calibration. Shrunk SEs are conditional on the fitted shrinkage model.",
+    "Person EAP reliability decomposes posterior variance, whereas facet separation reliability uses error-corrected measure variance and Strata = (4 * RealSeparation + 1) / 3 uses RealSE."
+  )
   list(calibration = fitting,
        notes = c(paste("Estimator:", fit$method, "| Person scoring:", fit$score_method, "|", bias),
                  method_note,
-                 "Optimizer convergence and inference readiness are reported separately. Person scoring and calibration bias correction refer to different parameters."))
+                 "Optimizer convergence and inference readiness are reported separately. Person scoring and calibration bias correction refer to different parameters.",
+                 extra_notes))
 }
 
 .mfrm_displacement_report <- function(fit) {
@@ -94,23 +104,49 @@
   anchors
 }
 
+.mfrm_workflow_report_agreement <- function(wf) {
+  fit <- wf$fit
+  if (is.null(fit)) {
+    return(list(
+      agreement = NULL,
+      agreement_reason = "No calibration attached.",
+      agreement_basis = "equal_unit_gwet_workflow_retained_v2"
+    ))
+  }
+  sp <- wf$spec
+  context <- unique(c(setdiff(sp$facets, sp$rater_facet), sp$occasion))
+  fit_ag <- fit
+  if (is.data.frame(wf$data) && all(c(sp$person, sp$facets, sp$score, fit$encoding$weight_col) %in% names(wf$data))) {
+    wf_keep <- tryCatch(.mfrm_rating_rows(wf$data, sp$person, sp$facets, sp$score, fit$encoding$weight_col),
+                        error = function(e) NULL)
+    if (!is.null(wf_keep) && sum(wf_keep) == fit$encoding$n_obs) {
+      fit_ag$encoding$retained_data <- wf$data[wf_keep, , drop = FALSE]
+    }
+  }
+  agreement <- tryCatch(
+    interrater_agreement(fit_ag, rater = sp$rater_facet, context_facets = context, model_expected = TRUE),
+    error = identity
+  )
+  list(
+    agreement = if (!inherits(agreement, "error")) agreement,
+    agreement_reason = if (inherits(agreement, "error")) conditionMessage(agreement),
+    agreement_basis = "equal_unit_gwet_workflow_retained_v2"
+  )
+}
+
 .mfrm_diagnostic_report_statistics <- function(wf) {
   fit <- wf$fit
   if (is.null(fit)) return(NULL)
-  sp <- wf$spec
-  context <- unique(c(setdiff(sp$facets, sp$rater_facet), sp$occasion))
-  agreement <- tryCatch(
-    interrater_agreement(fit, rater = sp$rater_facet, context_facets = context, model_expected = TRUE),
-    error = identity
-  )
+  ag <- .mfrm_workflow_report_agreement(wf)
   checked <- .tidymfrm_check_diagnostics(wf)
   reliability <- checked$diagnostics$report_statistics$reliability
   if (is.null(reliability)) reliability <- diagnose_mfrm(fit)$reliability
   if (NROW(reliability))
     reliability$HomogeneityBasis <- "ModelSE diagonal; no covariance adjustment"
   list(reliability = reliability,
-       agreement = if (!inherits(agreement, "error")) agreement,
-       agreement_reason = if (inherits(agreement, "error")) conditionMessage(agreement),
+       agreement = ag$agreement,
+       agreement_reason = ag$agreement_reason,
+       agreement_basis = ag$agreement_basis,
        displacement = .mfrm_displacement_report(fit))
 }
 
@@ -127,12 +163,16 @@
                Estimate = x[idx], MinEigenvalue = min_eigen(x),
                CovarianceStatus = if (valid(x)) "positive_semidefinite" else "invalid_covariance")
   }))
-  observed_n <- g$obs_n_per_facet
-  scales <- vapply(g$non_person_subsets, function(i) 1 / prod(observed_n[i]), numeric(1))
+  scales <- .mfrm_henderson_obs_scales(g)
   w <- g$weights
   effective <- do.call(rbind, lapply(c("Universe score", "Relative error", "Absolute error"), function(target) {
     i <- switch(target, "Universe score" = 1L, "Relative error" = which(g$variance_components$ContainsPerson)[-1L],
                 "Absolute error" = seq_along(comp)[-1L])
+    if (any(!is.finite(scales[i]))) {
+      return(data.frame(Target = target, Score = g$scores, NominalWeight = w,
+                        EffectiveWeight = rep(NA_real_, length(w)), TargetVariance = NA_real_,
+                        Status = "unavailable_observed_denominators"))
+    }
     v <- Reduce(`+`, Map(function(x, s) x * s, comp[i], scales[i]), init = matrix(0, length(w), length(w)))
     denominator <- drop(crossprod(w, v %*% w))
     status <- if (any(g$variance_components$Truncated[i])) "scalar_component_truncated" else
@@ -151,7 +191,16 @@
   fit <- wf$fit
   dg <- wf$diagnostics
   stat <- dg$report_statistics
-  if (is.null(stat) && !is.null(dg)) stat <- .mfrm_diagnostic_report_statistics(wf)
+  if (!is.null(dg)) {
+    if (is.null(stat) || is.null(stat$reliability)) {
+      stat <- .mfrm_diagnostic_report_statistics(wf)
+    } else if (!identical(stat$agreement_basis, "equal_unit_gwet_workflow_retained_v2")) {
+      ag <- .mfrm_workflow_report_agreement(wf)
+      stat["agreement"] <- list(ag$agreement)
+      stat["agreement_reason"] <- list(ag$agreement_reason)
+      stat$agreement_basis <- ag$agreement_basis
+    }
+  }
   extreme <- if (!is.null(fit)) {
     flag <- fit$person$ExtremeFlag
     n <- sum(!is.na(flag))
@@ -165,6 +214,8 @@
     fair_average_table(fit, reference_plan = reference_plan, fair_se = TRUE, ci_level = fair_level)
   }
   c(list("Separation, strata, and fixed-effect homogeneity" = stat$reliability,
+         "Fixed anchor application" = fit$encoding$anchor_application$individual,
+         "Group anchor application" = fit$encoding$anchor_application$group,
          "Observed inter-rater agreement" = stat$agreement$summary,
          "Expected agreement and model-based kappa" = stat$agreement$model_expected,
          "Agreement availability" = if (length(stat$agreement_reason)) data.frame(Reason = stat$agreement_reason),

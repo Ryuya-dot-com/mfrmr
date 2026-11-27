@@ -20,10 +20,10 @@ extern "C" SEXP _mfrmr_mfrm_cpp_fast_fit_spec(SEXP ds, SEXP ctrl_r) {
   END_CPP11
 }
 // fast_engine.cpp
-writable::list mfrm_cpp_fast_wle(int n_person, int n_cat, integers person0, integers score0, doubles weight, doubles base_eta_obs, doubles_matrix<> step_cum_mat, integers step_group0, integers step_cat_min, integers step_cat_max);
-extern "C" SEXP _mfrmr_mfrm_cpp_fast_wle(SEXP n_person, SEXP n_cat, SEXP person0, SEXP score0, SEXP weight, SEXP base_eta_obs, SEXP step_cum_mat, SEXP step_group0, SEXP step_cat_min, SEXP step_cat_max) {
+writable::list mfrm_cpp_fast_wle(int n_person, int n_cat, integers person0, integers score0, doubles weight, doubles base_eta_obs, doubles_matrix<> step_cum_mat, integers step_group0, integers step_cat_min, integers step_cat_max, doubles alpha_obs, int slope_formula);
+extern "C" SEXP _mfrmr_mfrm_cpp_fast_wle(SEXP n_person, SEXP n_cat, SEXP person0, SEXP score0, SEXP weight, SEXP base_eta_obs, SEXP step_cum_mat, SEXP step_group0, SEXP step_cat_min, SEXP step_cat_max, SEXP alpha_obs, SEXP slope_formula) {
   BEGIN_CPP11
-    return cpp11::as_sexp(mfrm_cpp_fast_wle(cpp11::as_cpp<cpp11::decay_t<int>>(n_person), cpp11::as_cpp<cpp11::decay_t<int>>(n_cat), cpp11::as_cpp<cpp11::decay_t<integers>>(person0), cpp11::as_cpp<cpp11::decay_t<integers>>(score0), cpp11::as_cpp<cpp11::decay_t<doubles>>(weight), cpp11::as_cpp<cpp11::decay_t<doubles>>(base_eta_obs), cpp11::as_cpp<cpp11::decay_t<doubles_matrix<>>>(step_cum_mat), cpp11::as_cpp<cpp11::decay_t<integers>>(step_group0), cpp11::as_cpp<cpp11::decay_t<integers>>(step_cat_min), cpp11::as_cpp<cpp11::decay_t<integers>>(step_cat_max)));
+    return cpp11::as_sexp(mfrm_cpp_fast_wle(cpp11::as_cpp<cpp11::decay_t<int>>(n_person), cpp11::as_cpp<cpp11::decay_t<int>>(n_cat), cpp11::as_cpp<cpp11::decay_t<integers>>(person0), cpp11::as_cpp<cpp11::decay_t<integers>>(score0), cpp11::as_cpp<cpp11::decay_t<doubles>>(weight), cpp11::as_cpp<cpp11::decay_t<doubles>>(base_eta_obs), cpp11::as_cpp<cpp11::decay_t<doubles_matrix<>>>(step_cum_mat), cpp11::as_cpp<cpp11::decay_t<integers>>(step_group0), cpp11::as_cpp<cpp11::decay_t<integers>>(step_cat_min), cpp11::as_cpp<cpp11::decay_t<integers>>(step_cat_max), cpp11::as_cpp<cpp11::decay_t<doubles>>(alpha_obs), cpp11::as_cpp<cpp11::decay_t<int>>(slope_formula)));
   END_CPP11
 }
 // fast_engine.cpp
@@ -196,7 +196,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_mfrmr_mfrm_cpp_fast_bias_pairwise",             (DL_FUNC) &_mfrmr_mfrm_cpp_fast_bias_pairwise,              9},
     {"_mfrmr_mfrm_cpp_fast_connectivity_spec",         (DL_FUNC) &_mfrmr_mfrm_cpp_fast_connectivity_spec,          1},
     {"_mfrmr_mfrm_cpp_fast_fit_spec",                  (DL_FUNC) &_mfrmr_mfrm_cpp_fast_fit_spec,                   2},
-    {"_mfrmr_mfrm_cpp_fast_wle",                       (DL_FUNC) &_mfrmr_mfrm_cpp_fast_wle,                       10},
+    {"_mfrmr_mfrm_cpp_fast_wle",                       (DL_FUNC) &_mfrmr_mfrm_cpp_fast_wle,                       12},
     {"_mfrmr_mfrm_cpp_gpcm_logprob_bundle",            (DL_FUNC) &_mfrmr_mfrm_cpp_gpcm_logprob_bundle,             9},
     {"_mfrmr_mfrm_cpp_indexed_sum",                    (DL_FUNC) &_mfrmr_mfrm_cpp_indexed_sum,                     4},
     {"_mfrmr_mfrm_cpp_jml_eval_bundle",                (DL_FUNC) &_mfrmr_mfrm_cpp_jml_eval_bundle,                12},

@@ -8,10 +8,21 @@
   if (length(hit) >= 1L) hit[1L] else facets[1L]
 }
 
+.tidymfrm_obs_col_name <- function(obs, key) {
+  mc <- attr(obs, "metric_cols", exact = TRUE)
+  if (!is.null(mc) && key %in% names(mc)) unname(mc[[key]]) else key
+}
+
+.tidymfrm_obs_col <- function(obs, key) {
+  obs[[.tidymfrm_obs_col_name(obs, key)]]
+}
+
 .tidymfrm_observation_residuals <- function(data, person, facets, score, fit) {
-  raw_y <- as.numeric(data[[score]])
-  keep <- is.finite(raw_y) & !is.na(data[[person]])
-  for (fc in facets) keep <- keep & !is.na(data[[fc]])
+  weight <- fit$encoding$weight_col
+  if (!is.null(weight) && !weight %in% names(data)) {
+    stop("Supply all rating columns used for the fitted calibration.", call. = FALSE)
+  }
+  keep <- .mfrm_rating_rows(data, person, facets, score, weight)
   d <- data[keep, , drop = FALSE]
 
   exp_y <- as.numeric(stats::fitted(fit, type = "response"))
@@ -23,15 +34,22 @@
   resid <- obs_orig - exp_y
   mod_sd <- ifelse(is.finite(std_res) & abs(std_res) > 1e-12, abs(resid / std_res), NA_real_)
 
-  out <- tibble::as_tibble(d[, c(person, facets, score), drop = FALSE])
-  out$.row_id <- which(keep)
-  out$Observed <- obs_orig
-  out$Expected <- exp_y
-  out$Residual <- resid
-  out$ModelSD <- mod_sd
-  out$StdResidual <- std_res
-  out$ObsProb <- prob_obs
-  out$UnexpectedFlag <- is.finite(std_res) & (abs(std_res) >= 2.0)
+  out <- tibble::as_tibble(d[, unique(c(person, facets, score)), drop = FALSE])
+  raw_metrics <- list(
+    .row_id = which(keep),
+    Observed = obs_orig,
+    Expected = exp_y,
+    Residual = resid,
+    ModelSD = mod_sd,
+    StdResidual = std_res,
+    ObsProb = prob_obs,
+    UnexpectedFlag = is.finite(std_res) & (abs(std_res) >= 2.0)
+  )
+  m_nms <- tail(make.unique(c(names(out), names(raw_metrics))), length(raw_metrics))
+  for (i in seq_along(raw_metrics)) {
+    out[[m_nms[i]]] <- raw_metrics[[i]]
+  }
+  attr(out, "metric_cols") <- stats::setNames(m_nms, names(raw_metrics))
   out
 }
 
@@ -94,10 +112,17 @@ mfrm_workflow <- function(data,
         (!is.null(rating_max) && rating_max != fit$rating_max)) {
       stop("Rating bounds must match the fitted calibration.", call. = FALSE)
     }
-    columns <- c(person, facets, score)
-    complete <- is.finite(as.numeric(data[[score]])) & stats::complete.cases(data[columns])
+    weight <- enc$weight_col
+    columns <- c(person, facets, score, weight)
+    if (length(setdiff(columns, names(data))))
+      stop("Supply all rating columns used for the fitted calibration.", call. = FALSE)
+    complete <- .mfrm_rating_rows(data, person, facets, score, weight)
     same <- vapply(columns, function(column) {
-      identical(as.character(data[[column]][complete]), as.character(enc$retained_data[[column]]))
+      if (column %in% c(score, weight)) {
+        identical(as.double(data[[column]][complete]), as.double(enc$retained_data[[column]]))
+      } else {
+        identical(as.character(data[[column]][complete]), as.character(enc$retained_data[[column]]))
+      }
     }, logical(1))
     if (!all(same)) stop("Supply the same retained ratings in their original order.", call. = FALSE)
     rating_min <- fit$rating_min
@@ -137,6 +162,7 @@ mfrm_workflow <- function(data,
       fit = fit,
       anchor_drift = anchor_drift,
       drift = NULL,
+      drift_reason = NULL,
       method_comparison = NULL,
       bootstrap = NULL,
       gtheory = NULL,
@@ -178,7 +204,7 @@ mfrm_workflow <- function(data,
 #' @param category_support Optional per-level category support bounds (`data.frame`).
 #' @param facet_formulas,facet_data Optional explanatory facet covariate formulas and data.
 #' @param quad_points Quadrature points for `MML` (default `31L`).
-#' @param mml_integration `"fixed"` or `"adaptive"`.
+#' @param mml_integration `"auto"` (MML default), `"fixed"`, or `"adaptive"`. Automatic refinement compares structural estimates, predictions, SEs and covariance; see [fit_mfrm()].
 #' @param xtreme Extreme-score adjustment for `JML` (default `0.3` for FACETS compatibility).
 #' @param warn_connectivity Logical; if `TRUE` (default), emits a `warning()` before
 #'   estimation if disconnected rating subsets or empty interior categories are detected.
@@ -213,13 +239,20 @@ step_mfrm_measure <- function(wf,
                               facet_formulas = NULL,
                               facet_data = NULL,
                               quad_points = 31L,
-                              mml_integration = c("fixed", "adaptive"),
+                              mml_integration = c("auto", "fixed", "adaptive"),
                               xtreme = 0.3,
                               warn_connectivity = TRUE,
                               bootstrap = 0L,
                               threads = 1L,
                               gpcm_mml_identification = NULL) {
   if (!inherits(wf, "tidymfrm")) stop("`wf` must be a `tidymfrm` object.", call. = FALSE)
+  if (!is.numeric(bootstrap) || is.complex(bootstrap) || !is.null(dim(bootstrap)) ||
+      length(bootstrap) != 1L || !is.finite(bootstrap) ||
+      bootstrap != floor(bootstrap) || bootstrap < 0 || bootstrap == 1 ||
+      bootstrap > .Machine$integer.max) {
+    stop("`bootstrap` must be `0` (to skip) or a finite integer of at least `2`.", call. = FALSE)
+  }
+  bootstrap <- as.integer(bootstrap)
   t0 <- proc.time()[[3L]]
   model <- .mfrm_model_code(model)
   method <- match.arg(method[1L], c("MML", "JML", "JML_jeffreys", "CML"))
@@ -253,7 +286,7 @@ step_mfrm_measure <- function(wf,
     spec = model_spec,
     control = list(
       quad_points = quad_points,
-      mml_integration = mml_integration,
+      mml_integration = if (estimator == "MML") mml_integration else "fixed",
       xtreme = if (identical(estimator, "JML")) xtreme else 0.0,
       slope_prior_sd = slope_prior_sd
     )
@@ -262,7 +295,7 @@ step_mfrm_measure <- function(wf,
   wf$fit <- fit
   wf$connectivity <- c(.mfrm_connectivity_summary(fit$encoding), wf$connectivity["rater_linkage"])
   wf$connectivity_calibrated <- TRUE
-  wf[c("anchor_drift", "drift", "method_comparison", "diagnostics")] <- list(NULL)
+  wf[c("anchor_drift", "drift", "drift_reason", "method_comparison", "diagnostics")] <- list(NULL)
   wf$spec$model <- model
   wf$spec$method <- method
   wf$spec$step_facet <- step_facet
@@ -274,18 +307,51 @@ step_mfrm_measure <- function(wf,
     if (!occ_col %in% names(wf$data)) {
       stop("`occasion` column '", occ_col, "' not found in `data`.", call. = FALSE)
     }
-    other_f <- setdiff(sp$facets, c(sp$rater_facet, occ_col))
-    wf$drift <- fit_mfrm_drift(
-      data = wf$data,
-      person = sp$person,
-      rater = sp$rater_facet,
-      time = occ_col,
-      score = sp$score,
-      facets = other_f,
-      model = if (identical(model, "RSM")) "RSM" else "PCM",
-      quad_points = 81L,
-      missing = "omit"
-    )
+    enc_fit <- fit$encoding
+    has_restricted_support <- any(enc_fit$step_cat_min > 0L) ||
+      any(enc_fit$step_cat_max < enc_fit$n_cat - 1L)
+    non_rater_steps <- identical(enc_fit$model_code, 1L) && !identical(enc_fit$step_facet, sp$rater_facet)
+    if (!is.null(step_constraints) || has_restricted_support) {
+      wf["drift"] <- list(NULL)
+      wf["drift_reason"] <- list(
+        "Dynamic drift modeling is withheld when custom `step_constraints` or restricted `category_support` bounds are active."
+      )
+    } else if (identical(model, "PCM") && non_rater_steps) {
+      wf["drift"] <- list(NULL)
+      wf["drift_reason"] <- list(sprintf(
+        "Dynamic drift modeling is withheld because `fit_mfrm_drift()` supports shared ('RSM') or rater-specific ('%s') step thresholds, whereas the measurement PCM uses '%s'-specific thresholds.",
+        sp$rater_facet, enc_fit$step_facet
+      ))
+    } else {
+      other_f <- setdiff(sp$facets, c(sp$rater_facet, occ_col))
+      drift_model <- if (identical(enc_fit$model_code, 0L)) "RSM" else "PCM"
+      wf[["drift"]] <- fit_mfrm_drift(
+        data = wf$data,
+        person = sp$person,
+        rater = sp$rater_facet,
+        time = occ_col,
+        score = sp$score,
+        facets = other_f,
+        score_levels = seq.int(fit$rating_min, fit$rating_max),
+        model = drift_model,
+        quad_points = 81L,
+        missing = "omit"
+      )
+      if (identical(model, "GPCM")) {
+        sl_lbl <- paste(enc_fit$slope_facets, collapse = "/")
+        wf["drift_reason"] <- list(if (non_rater_steps) {
+          sprintf(
+            "Companion Markov drift audit uses unit-slope PCM with '%s'-specific step thresholds (measurement GMFRM uses '%s'-specific thresholds and '%s' discrimination).",
+            sp$rater_facet, enc_fit$step_facet, sl_lbl
+          )
+        } else {
+          sprintf(
+            "Companion Markov drift audit uses unit-slope %s (measurement GMFRM estimates '%s' discrimination).",
+            drift_model, sl_lbl
+          )
+        })
+      }
+    }
   }
 
   if (!is.null(compare_methods) && length(compare_methods) > 0L) {
@@ -343,7 +409,7 @@ step_mfrm_measure <- function(wf,
           population_formula = population_formula, person_data = person_data,
           step_constraints = step_constraints, category_support = category_support,
           facet_formulas = facet_formulas, facet_data = facet_data, slope_prior_sd = slope_prior_sd,
-          quad_points = quad_points, mml_integration = mml_integration,
+          quad_points = quad_points, mml_integration = if (method == "MML") mml_integration else "fixed",
           xtreme = if (identical(method, "JML")) xtreme else 0.0, threads = threads
         )
         n_levels <- nrow(fit$facets)
@@ -466,6 +532,61 @@ step_mfrm_gtheory <- function(wf,
   wf
 }
 
+.mfrm_classify_raters <- function(rf, fit_method_resolved, mnsq_range, zstd_limit,
+                                  ready = TRUE, inference_reason = "") {
+  n <- nrow(rf)
+  if (n == 0L) {
+    rf$FitBasis <- character(0)
+    rf$DiagnosticFlag <- character(0)
+    rf$RecommendedAction <- character(0)
+    return(rf)
+  }
+  use_post <- identical(fit_method_resolved, "posterior") &&
+    ("PostInfitMnSq" %in% names(rf)) && any(is.finite(rf$PostInfitMnSq))
+  fm_eff <- if (use_post) "posterior" else "plugin"
+  rf$FitBasis <- rep(fm_eff, n)
+  if (!isTRUE(ready)) {
+    rf$DiagnosticFlag <- rep("Review required", n)
+    rf$RecommendedAction <- rep(paste("Review calibration:", inference_reason), n)
+    return(rf)
+  }
+  sev_sd <- if (n >= 2L) stats::sd(rf$Estimate, na.rm = TRUE) else 0.0
+  flag <- rep("Acceptable", n)
+  action <- rep("Maintain current rubric calibration.", n)
+  for (i in seq_len(n)) {
+    inf_m <- if (use_post) rf$PostInfitMnSq[i] else rf$InfitMnSq[i]
+    inf_z <- if (use_post && "PostInfitZSTD" %in% names(rf)) rf$PostInfitZSTD[i] else
+      if (!use_post && "InfitZSTD" %in% names(rf)) rf$InfitZSTD[i] else NA_real_
+    est <- rf$Estimate[i]
+    r_sign <- if ("Sign" %in% names(rf) && is.finite(rf$Sign[i])) rf$Sign[i] else -1.0
+    sev_oriented <- if (r_sign > 0) -est else est
+    outside_hi <- is.finite(inf_m) && inf_m > mnsq_range[2L]
+    outside_lo <- is.finite(inf_m) && inf_m < mnsq_range[1L]
+    z_fin <- is.finite(inf_z)
+    z_met <- z_fin && (abs(inf_z) >= zstd_limit)
+    if (outside_hi && z_met) {
+      flag[i] <- "Misfit (Unpredictable)"
+      action[i] <- "Inspect unexpected rating rows for rubric drift or idiosyncratic criteria."
+    } else if (outside_lo && z_met) {
+      flag[i] <- "Below Lower Fit Bound"
+      action[i] <- "Inspect category-usage frequencies and paired-criterion residuals; low Infit does not by itself establish central tendency or halo."
+    } else if ((outside_hi || outside_lo) && !z_fin) {
+      flag[i] <- "Outside MnSq (ZSTD Unavailable)"
+      action[i] <- "Infit MnSq lies outside screening bounds while ZSTD is unavailable; inspect unexpected ratings and category usage (joint MnSq + ZSTD screen not evaluable)."
+    } else if (is.finite(sev_oriented) && sev_sd > 0 && abs(sev_oriented) > max(1.0, 2.0 * sev_sd)) {
+      flag[i] <- if (sev_oriented > 0) "Markedly Severe" else "Markedly Lenient"
+      action[i] <- "Model adjusts additive severity via Fair(M); discuss anchor exemplars in training."
+    }
+  }
+  if ("ScorePattern" %in% names(rf)) {
+    endpoint <- !is.na(rf$ScorePattern) & nzchar(rf$ScorePattern)
+    action[endpoint] <- "Check the raw score records and rubric use for the observed endpoint concentration."
+  }
+  rf$DiagnosticFlag <- flag
+  rf$RecommendedAction <- action
+  rf
+}
+
 #' Step 3: Diagnose Raters, Fair(M), Real SE, Bias (RajuSA-Welch), and DFF
 #'
 #' Computes rater diagnostic flags (`Infit`/`Outfit` `MnSq` and `ZSTD`, `Fair(M)`,
@@ -476,6 +597,10 @@ step_mfrm_gtheory <- function(wf,
 #' @param wf A `tidymfrm` workflow object with a fitted `$fit`.
 #' @param mnsq_range Acceptable `Infit MnSq` interval for rater screening (default `c(0.70, 1.30)`).
 #' @param zstd_limit Absolute `ZSTD` screening threshold (default `2.0`).
+#' @param fit_method Fit-statistic basis used for rater screening: `"auto"` (default;
+#'   uses posterior-integrated `PostInfitMnSq`/`PostInfitZSTD` matching `TAM::msq.itemfit`
+#'   for `MML`, and point-estimate plug-in `InfitMnSq`/`InfitZSTD` for `JML`/`CML`),
+#'   `"posterior"`, or `"plugin"`. `RealSE` always uses plug-in `InfitMnSq`.
 #' @param bias_df_method Degrees-of-freedom convention for 2-way pairwise bias
 #'   screening: `"facets"` (FACETS 4.5.3 `RajuSA-Welch` / von Davier 2025) or `"classical"`.
 #' @param dff_group Optional person-group column name in `data` for parallel C++
@@ -489,6 +614,8 @@ step_mfrm_gtheory <- function(wf,
 #'   mixtures imply different thresholds; `CutLogitMin`/`CutLogitMax` give their range.
 #' @details Rater screens and intervals are withheld when calibration is not
 #'   numerically ready; `Review required` is distinct from `Acceptable`.
+#'   Lower-tail flags (`Below Lower Fit Bound`) prompt inspecting category-usage
+#'   frequencies and paired-criterion residuals rather than asserting central tendency.
 #'   Cutoff sensitivity uses a normal approximation conditional on the fitted
 #'   calibration, not a confidence statement about true pass status. It does not
 #'   include calibration uncertainty or guarantee coverage under misspecification.
@@ -513,44 +640,44 @@ step_mfrm_diagnose <- function(wf,
                                dff_group = NULL,
                                dff_method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic"),
                                cut_scores = NULL,
-                               threads = 1L) {
+                               threads = 1L,
+                               fit_method = c("auto", "posterior", "plugin")) {
   if (!inherits(wf, "tidymfrm") || is.null(wf$fit)) {
     stop("Run `step_mfrm_measure()` before `step_mfrm_diagnose()`.", call. = FALSE)
   }
   t0 <- proc.time()[[3L]]
+  mnsq_range <- .mfrm_validate_mnsq_range(mnsq_range)
+  if (!is.numeric(zstd_limit) || is.factor(zstd_limit) || length(zstd_limit) != 1L ||
+      !is.finite(zstd_limit) || zstd_limit < 0) {
+    stop("`zstd_limit` must be a single finite nonnegative number.", call. = FALSE)
+  }
+  zstd_limit <- as.double(zstd_limit)
   bias_df_method <- match.arg(bias_df_method)
   dff_method <- match.arg(dff_method)
+  fit_method <- match.arg(fit_method)
   sp <- wf$spec
   fit <- wf$fit
 
   rf <- fit$facets[fit$facets$Facet == sp$rater_facet, , drop = FALSE]
-  sev_sd <- if (nrow(rf) >= 2L) stats::sd(rf$Estimate, na.rm = TRUE) else 0.0
-
-  flag <- rep("Acceptable", nrow(rf))
-  action <- rep("Maintain current rubric calibration.", nrow(rf))
-  for (i in seq_len(nrow(rf))) {
-    inf_m <- rf$InfitMnSq[i]
-    inf_z <- rf$InfitZSTD[i]
-    est <- rf$Estimate[i]
-    if (is.finite(inf_m) && inf_m > mnsq_range[2L] && (!is.finite(inf_z) || abs(inf_z) >= zstd_limit)) {
-      flag[i] <- "Misfit (Unpredictable)"
-      action[i] <- "Inspect unexpected rating rows for rubric drift or idiosyncratic criteria."
-    } else if (is.finite(inf_m) && inf_m < mnsq_range[1L] && (!is.finite(inf_z) || abs(inf_z) >= zstd_limit)) {
-      flag[i] <- "Muted / Centrality"
-      action[i] <- "Review potential central-tendency or halo restriction across criteria."
-    } else if (is.finite(est) && sev_sd > 0 && abs(est) > max(1.0, 2.0 * sev_sd)) {
-      flag[i] <- if (est > 0) "Markedly Severe" else "Markedly Lenient"
-      action[i] <- "Model adjusts additive severity via Fair(M); discuss anchor exemplars in training."
-    }
-  }
-  rf$DiagnosticFlag <- flag
-  rf$RecommendedAction <- action
+  resolved_fit_method <- .mfrm_resolve_fit_method(rf, fit$method, fit_method)
+  r_chk <- summary(fit)$readiness
+  rf <- .mfrm_classify_raters(
+    rf,
+    fit_method_resolved = resolved_fit_method,
+    mnsq_range = mnsq_range,
+    zstd_limit = zstd_limit,
+    ready = r_chk$ready,
+    inference_reason = paste(r_chk$reason_codes, collapse = "; ")
+  )
   raters_tbl <- tibble::as_tibble(rf)
 
   obs_res <- .tidymfrm_observation_residuals(wf$data, sp$person, sp$facets, sp$score, fit)
-  unexp <- obs_res[obs_res$UnexpectedFlag, , drop = FALSE]
+  u_flag <- .tidymfrm_obs_col(obs_res, "UnexpectedFlag")
+  unexp <- obs_res[u_flag, , drop = FALSE]
+  attr(unexp, "metric_cols") <- attr(obs_res, "metric_cols", exact = TRUE)
   if (nrow(unexp) > 0L) {
-    unexp <- unexp[order(-abs(unexp$StdResidual)), , drop = FALSE]
+    unexp <- unexp[order(-abs(.tidymfrm_obs_col(unexp, "StdResidual"))), , drop = FALSE]
+    attr(unexp, "metric_cols") <- attr(obs_res, "metric_cols", exact = TRUE)
   }
 
   bias_res <- NULL
@@ -565,11 +692,17 @@ step_mfrm_diagnose <- function(wf,
 
   dff_tbl <- NULL
   if (!is.null(dff_group)) {
+    wf_keep <- .mfrm_rating_rows(wf$data, sp$person, sp$facets, sp$score, fit$encoding$weight_col)
+    dff_data <- if (sum(wf_keep) == fit$encoding$n_obs) {
+      wf$data[wf_keep, , drop = FALSE]
+    } else {
+      fit$encoding$retained_data
+    }
     dff_obj <- analyze_dff(
       fit = fit,
       facet = sp$rater_facet,
       group = dff_group,
-      data = fit$encoding$retained_data,
+      data = dff_data,
       method = dff_method,
       df_method = bias_df_method,
       min_obs = 2L,
@@ -591,6 +724,7 @@ step_mfrm_diagnose <- function(wf,
 
   wf$diagnostics <- list(
     fit_basis = .tidymfrm_diagnostic_fit_basis(fit),
+    fit_method = resolved_fit_method,
     report_statistics = .mfrm_diagnostic_report_statistics(wf),
     raters = raters_tbl,
     observations = obs_res,
@@ -598,6 +732,7 @@ step_mfrm_diagnose <- function(wf,
     bias = bias_res,
     bias_reason = bias_reason,
     dff = dff_tbl,
+    split_dff_audited = !is.null(dff_tbl) && dff_method %in% c("mml_lrt", "cml_lrt"),
     decisions = decisions_tbl,
     step_disordered = disordered,
     mnsq_range = mnsq_range,
@@ -676,7 +811,7 @@ mfrm_analysis <- function(data,
                      facet_formulas = NULL,
                      facet_data = NULL,
                      quad_points = 31L,
-                     mml_integration = c("fixed", "adaptive"),
+                     mml_integration = c("auto", "fixed", "adaptive"),
                      xtreme = 0.3,
                      warn_connectivity = TRUE,
                      nesting = NULL,
@@ -687,6 +822,7 @@ mfrm_analysis <- function(data,
                      target_phi = 0.80,
                      mnsq_range = c(0.70, 1.30),
                      zstd_limit = 2.0,
+                     fit_method = c("auto", "posterior", "plugin"),
                      bias_df_method = c("facets", "classical"),
                      dff_group = NULL,
                      dff_method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic"),
@@ -762,7 +898,8 @@ mfrm_analysis <- function(data,
     dff_group = dff_group,
     dff_method = dff_method,
     cut_scores = cut_scores,
-    threads = threads
+    threads = threads,
+    fit_method = fit_method
   )
   wf
 }
@@ -874,7 +1011,8 @@ summary.tidymfrm <- function(object, ..., reference_plan = NULL, fair_level = 0.
     measurement_facets = if (!is.null(object$fit)) tibble::as_tibble(object$fit$facets) else NULL,
     measurement_steps = if (!is.null(object$fit)) tibble::as_tibble(object$fit$steps) else NULL,
     measurement_slopes = if (!is.null(object$fit) && !is.null(object$fit$slopes)) tibble::as_tibble(object$fit$slopes) else NULL,
-    drift = if (!is.null(object$drift)) tibble::as_tibble(as.data.frame(object$drift, component = "severity")) else NULL,
+    drift = if (!is.null(object[["drift"]])) tibble::as_tibble(as.data.frame(object[["drift"]], component = "severity")) else NULL,
+    drift_reason = object[["drift_reason"]],
     explanatory = if (!is.null(object$fit) && !is.null(object$fit$explanatory)) tibble::as_tibble(object$fit$explanatory) else NULL,
     method_comparison = object$method_comparison,
     bootstrap = object$bootstrap,

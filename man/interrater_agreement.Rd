@@ -16,10 +16,14 @@ interrater_agreement(
   \item{data}{A \code{data.frame} or fitted \code{mfrm_fit} object of observed ratings.}
   \item{person}{Character string naming the person identifier column.}
   \item{rater}{Character string naming the rater identifier column.}
-  \item{score}{Character string naming the numeric rating column.}
+  \item{score}{Character string naming the plain numeric rating column (factors or character labels are not coerced).}
   \item{context_facets}{Optional character vector of additional facets identifying rating units.}
   \item{unit}{Optional character vector specifying the full unit identifier columns (e.g., \code{c("Person", "Task")}), overriding \code{person} and \code{context_facets}.}
-  \item{categories}{Optional numeric vector of declared rubric score categories (e.g., \code{0:3}).}
+  \item{categories}{Optional plain numeric vector of declared rubric score categories
+    (e.g., \code{0:3}). For a fitted calibration the default is its full declared
+    rubric, including unobserved categories. Observed scores outside declared
+    \code{categories} raise an error, and \code{model_expected = TRUE} requires
+    \code{categories} to match the fitted integer rubric.}
   \item{metric}{Agreement family: \code{"all"}, \code{"exact"}, \code{"kappa"}, \code{"gwet_ac2"}, \code{"krippendorff_alpha"}, or \code{"icc"}.}
   \item{model_expected}{Logical. For a unified-engine fit, also compute observed and expected rates and model-based exact kappa on the same usable pairs.}
   \item{weights}{Weighting scheme: \code{"quadratic"}, \code{"linear"}, or \code{"unweighted"}.}
@@ -33,6 +37,15 @@ conditional on each fitted person's primary score and independent ratings.
 Complete unit-rater pairs with valid probabilities contribute equally. The model
 table records pair counts and availability. The ordinary weighted kappa uses
 marginal category frequencies.
+
+Gwet's observed agreement averages within-unit agreement over units with
+two or more ratings. Expected agreement averages the category proportions
+over all rated units. Singletons therefore contribute to expected agreement.
+Linear and quadratic agreement weights normalize category differences by the
+declared category span \code{max(categories) - min(categories)} whenever two or
+more categories are present. Exact and adjacent agreement summaries average over
+co-rating pairs, while the rater-pair table reports pairs sharing at least two
+rated units.
 
 Each unit-rater combination must have at most one observed rating. Duplicate
 combinations are rejected to prevent row-order-dependent overwriting. For repeated

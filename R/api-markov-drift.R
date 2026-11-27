@@ -489,7 +489,7 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
     }
     tabs <- .drift_build_tables(dat = dat, layout = layout, quad = quad, inner = inner, est = est, model = model,
         drift_mode = drift_mode, step_mode = step_mode, logistic_scale = logistic_scale, drift_threshold = drift_threshold,
-        flag_se_ratio = flag_se_ratio)
+        flag_se_ratio = flag_se_ratio, numerical_ready = numerical_ready, info_ready = info_ready)
     unobs_rc <- if (identical(model, "PCM"))
         sum(dat$rc_counts == 0L)
     else sum(colSums(dat$rc_counts) == 0L)
@@ -502,6 +502,9 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
             0L || dat$wave_components > 1L, UnobservedRaterWaveCells = as.integer(unobs_rt), UnobservedStepCells = as.integer(unobs_rc),
         stringsAsFactors = FALSE)
     elapsed_sec <- as.numeric((proc.time() - t_start)[3L])
+    flagged_count <- if (isTRUE(numerical_ready) && isTRUE(info_ready))
+        as.integer(sum(tabs$rater_drift_table$Flagged))
+    else NA_integer_
     model_summary <- data.frame(Model = model, DriftMode = drift_mode, EBMethod = if (drift_mode %in%
         c("markov_hetero", "markov_homo"))
         eb_method
@@ -509,7 +512,7 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
         NCategories = dat$K, NFixedFacets = length(dat$active_facets), LogisticScale = logistic_scale,
         PersonSD = person_sd, MML_LogLik = inner$ll, LaplaceLogPost = est$laplace_obj, NominalParameters = as.integer(layout$n_free +
             tabs$n_hyper), EffectiveDF = tabs$eff_df, EffectiveAIC = -2 * inner$ll + 2 * tabs$eff_df,
-        EAPReliability = tabs$eap_rel, FlaggedRaters = sum(tabs$rater_drift_table$Flagged), ElapsedSec = elapsed_sec,
+        EAPReliability = tabs$eap_rel, FlaggedRaters = flagged_count, ElapsedSec = elapsed_sec,
         stringsAsFactors = FALSE)
     xi_hat <- inner$xi
     V_total <- est$V_total
@@ -520,7 +523,7 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
     dimnames(V_total) <- list(coord_names, coord_names)
     if (!all(is.na(V_s)))
         dimnames(V_s) <- list(dat$levels$rater, dat$levels$rater)
-    structure(list(model_summary = model_summary, severity_table = tabs$severity_table, rater_drift_table = tabs$rater_drift_table,
+    out_obj <- structure(list(model_summary = model_summary, severity_table = tabs$severity_table, rater_drift_table = tabs$rater_drift_table,
         step_table = tabs$step_table, facet_table = tabs$facet_table, person_table = tabs$person_table,
         checks = checks, matrices = tabs$matrices, coefficients = xi_hat, vcov_conditional = inner$V_xi,
         vcov_total = V_total, vcov_hyper = V_s, posterior = list(quad_nodes = quad$nodes, quad_weights = quad$weights,
@@ -529,7 +532,8 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
             n_omitted = dat$N_omitted), settings = list(model = model, drift_mode = drift_mode, eb_method = eb_method,
             mu_sigma = mu_sigma, delta_sigma = delta_sigma, beta1_sd = beta1_sd, step_sd = step_sd, person_sd = person_sd,
             logistic_scale = logistic_scale, quad_points = quad_points, maxit = maxit, tol = tol, missing = missing,
-            drift_threshold = drift_threshold, flag_se_ratio = flag_se_ratio)), class = "mfrm_drift")
+            drift_threshold = drift_threshold, flag_se_ratio = flag_se_ratio), hyper_se_version = 2L), class = "mfrm_drift")
+    .drift_refresh_object(out_obj)
 }
 
 .drift_estimate_outer <- function(dat, quad, layout, drift_mode, eb_method, mu_sigma, delta_sigma, beta1_sd,
@@ -669,7 +673,7 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
         d2Phi_dxi_ds[idx, r] <- 2 * exp(-2 * s_vec[r]) * as.numeric(DtD %*% b_r)
     }
     J_xi_s <- inner$V_xi %*% d2Phi_dxi_ds
-    H_s_exact <- matrix(0, R, R)
+    H_s_lik <- matrix(0, R, R)
     for (r1 in seq_len(R)) {
         idx1 <- (r1 - 1L) * Tn + seq_len(Tn)
         A1 <- exp(-2 * s_vec[r1]) * DtD
@@ -680,13 +684,14 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
             tr_term <- 2 * sum((A1 %*% V12) * (V12 %*% A2))
             val <- -as.numeric(crossprod(d2Phi_dxi_ds[, r1], J_xi_s[, r2])) - tr_term
             if (r1 == r2) {
-                val <- val + 2 * S_r[r1] * exp(-2 * s_vec[r1]) + 1/(delta_sigma^2)
+                val <- val + 2 * S_r[r1] * exp(-2 * s_vec[r1])
             }
-            H_s_exact[r1, r2] <- val
-            H_s_exact[r2, r1] <- val
+            H_s_lik[r1, r2] <- val
+            H_s_lik[r2, r1] <- val
         }
     }
     if (identical(drift_mode, "markov_hetero")) {
+        H_s_exact <- H_s_lik + diag(1/(delta_sigma^2), R)
         eig_hs <- eigen(H_s_exact, symmetric = TRUE)
         hyper_positive <- all(is.finite(eig_hs$values)) && min(eig_hs$values) > 0
         vals_pos <- pmax(eig_hs$values, 0.25/(delta_sigma^2))
@@ -697,7 +702,7 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
         occam_hyper <- 0.5 * log_det_Vs - R * log(delta_sigma)
     }
     else {
-        h_1_raw <- sum(H_s_exact)
+        h_1_raw <- sum(H_s_lik) + 1/(delta_sigma^2)
         hyper_positive <- is.finite(h_1_raw) && h_1_raw > 0
         h_1 <- max(h_1_raw, 0.25/(delta_sigma^2))
         V_s <- matrix(1/h_1, R, R)
@@ -716,7 +721,7 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
 }
 
 .drift_build_tables <- function(dat, layout, quad, inner, est, model, drift_mode, step_mode, logistic_scale,
-    drift_threshold, flag_se_ratio) {
+    drift_threshold, flag_se_ratio, numerical_ready = TRUE, info_ready = TRUE) {
     R <- dat$R
     Tn <- dat$T
     K <- dat$K
@@ -774,10 +779,20 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
                 }
             }
         }
-        z_chg <- ifelse(chg_se > 0, abs(chg)/chg_se, 0)
-        flagged_wave <- (seq_len(Tn) > 1L) & (abs(chg) >= drift_threshold) & (if (flag_se_ratio > 0)
-            z_chg >= flag_se_ratio
-        else TRUE)
+        ready_flags <- isTRUE(numerical_ready) && isTRUE(info_ready)
+        z_chg <- if (!ready_flags) {
+            rep(NA_real_, Tn)
+        } else {
+            ifelse(chg_se > 0, abs(chg)/chg_se, 0)
+        }
+        flagged_wave <- if (!ready_flags) {
+            rep(NA, Tn)
+        } else if (identical(layout$time_mode, "static")) {
+            rep(FALSE, Tn)
+        } else {
+            (seq_len(Tn) > 1L) & is.finite(chg) & (abs(chg) > 0) & (abs(chg) >= drift_threshold) &
+                (if (flag_se_ratio > 0) is.finite(z_chg) & (z_chg >= flag_se_ratio) else TRUE)
+        }
         n_rt <- as.integer(dat$rt_counts[r, ])
         sev_rows[[r]] <- data.frame(Rater = rep(rater_levels[r], Tn), Time = time_levels, WaveIndex = seq_len(Tn),
             NObs = n_rt, Observed = n_rt > 0L, Estimate = as.numeric(b_r), ConditionalSE = as.numeric(se_beta_cond[r,
@@ -787,8 +802,10 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
         rater_rows[[r]] <- data.frame(Rater = rater_levels[r], NObs = sum(n_rt), ActiveWaves = sum(n_rt >
             0L), LogSigma = est$log_sigma_hat[r], LogSigmaSE = log_sigma_se[r], DriftSD_MAP = est$sigma_map[r],
             DriftSD_EAP = est$sigma_eap[r], BaselineSeverity = b_r[1L], FinalSeverity = b_r[Tn], NetDrift = chg[Tn],
-            NetDriftSE = chg_se[Tn], MaxAbsChange = max(abs(chg)), MaxAbsZ = max(z_chg), TrajectoryRange = diff(range(b_r)),
-            Flagged = any(flagged_wave), stringsAsFactors = FALSE)
+            NetDriftSE = chg_se[Tn], MaxAbsChange = max(abs(chg)),
+            MaxAbsZ = if (ready_flags) max(z_chg) else NA_real_,
+            TrajectoryRange = diff(range(b_r)),
+            Flagged = if (ready_flags) any(flagged_wave) else NA, stringsAsFactors = FALSE)
     }
     severity_table <- do.call(rbind, sev_rows)
     rownames(severity_table) <- NULL
@@ -955,8 +972,241 @@ fit_mfrm_drift <- function(data, person, rater, time, score, facets = character(
     list(plugin = plug, post_expected = post_exp)
 }
 
+.drift_recompute_homo_hyper <- function(x) {
+    xi <- x$coefficients
+    V_xi <- x$vcov_conditional
+    rd <- x$rater_drift_table
+    st <- x$severity_table
+    r_lv <- x$input$levels$rater
+    t_lv <- x$input$levels$time
+    delta_sigma <- x$settings$delta_sigma
+    R <- length(r_lv)
+    Tn <- length(t_lv)
+    ok <- is.numeric(xi) && length(xi) >= R * Tn && all(is.finite(xi)) &&
+        is.matrix(V_xi) && nrow(V_xi) == length(xi) && ncol(V_xi) == length(xi) && all(is.finite(V_xi)) &&
+        is.data.frame(rd) && nrow(rd) == R && all(is.finite(rd$LogSigma)) &&
+        is.numeric(delta_sigma) && length(delta_sigma) == 1L && is.finite(delta_sigma) && delta_sigma > 0 &&
+        R >= 1L && Tn >= 2L
+    if (!ok) {
+        x$hyper_se_unavailable <- TRUE
+        return(x)
+    }
+    D1 <- matrix(0, nrow = Tn - 1L, ncol = Tn)
+    for (t in seq_len(Tn - 1L)) {
+        D1[t, t] <- -1
+        D1[t, t + 1L] <- 1
+    }
+    DtD <- crossprod(D1)
+    s_vec <- as.double(rd$LogSigma)
+    d2Phi_dxi_ds <- matrix(0, nrow = length(xi), ncol = R)
+    S_r <- numeric(R)
+    for (r in seq_len(R)) {
+        idx <- (r - 1L) * Tn + seq_len(Tn)
+        b_r <- xi[idx]
+        V_rr <- V_xi[idx, idx, drop = FALSE]
+        S_r[r] <- sum(diff(b_r)^2) + sum(DtD * V_rr)
+        d2Phi_dxi_ds[idx, r] <- 2 * exp(-2 * s_vec[r]) * as.numeric(DtD %*% b_r)
+    }
+    J_xi_s <- V_xi %*% d2Phi_dxi_ds
+    H_s_lik <- matrix(0, R, R)
+    for (r1 in seq_len(R)) {
+        idx1 <- (r1 - 1L) * Tn + seq_len(Tn)
+        A1 <- exp(-2 * s_vec[r1]) * DtD
+        for (r2 in r1:R) {
+            idx2 <- (r2 - 1L) * Tn + seq_len(Tn)
+            A2 <- exp(-2 * s_vec[r2]) * DtD
+            V12 <- V_xi[idx1, idx2, drop = FALSE]
+            tr_term <- 2 * sum((A1 %*% V12) * (V12 %*% A2))
+            val <- -as.numeric(crossprod(d2Phi_dxi_ds[, r1], J_xi_s[, r2])) - tr_term
+            if (r1 == r2) val <- val + 2 * S_r[r1] * exp(-2 * s_vec[r1])
+            H_s_lik[r1, r2] <- val
+            H_s_lik[r2, r1] <- val
+        }
+    }
+    h_1_raw <- sum(H_s_lik) + 1 / (delta_sigma^2)
+    hyper_positive <- is.finite(h_1_raw) && h_1_raw > 0
+    h_1 <- max(h_1_raw, 0.25 / (delta_sigma^2))
+    old_v_hyper <- if (is.matrix(x$vcov_hyper) && length(x$vcov_hyper) >= 1L) x$vcov_hyper[1L, 1L] else NA_real_
+    V_s <- matrix(1 / h_1, R, R, dimnames = list(r_lv, r_lv))
+    V_total <- V_xi + J_xi_s %*% V_s %*% t(J_xi_s)
+    V_total <- 0.5 * (V_total + t(V_total))
+    dimnames(V_total) <- dimnames(V_xi)
+
+    x$checks$HyperCurvaturePositive <- hyper_positive
+    x$vcov_hyper <- V_s
+    x$vcov_total <- V_total
+    if (is.data.frame(x$model_summary) && is.finite(old_v_hyper) && old_v_hyper > 0) {
+        old_df_h <- max(0, 1 - old_v_hyper / (delta_sigma^2))
+        new_df_h <- max(0, 1 - (1 / h_1) / (delta_sigma^2))
+        x$model_summary$EffectiveDF <- x$model_summary$EffectiveDF - old_df_h + new_df_h
+        x$model_summary$EffectiveAIC <- -2 * x$model_summary$MML_LogLik + 2 * x$model_summary$EffectiveDF
+        x$model_summary$LaplaceLogPost <- x$model_summary$LaplaceLogPost - 0.5 * log(old_v_hyper) - 0.5 * log(h_1)
+    }
+
+    se_tot_all <- sqrt(pmax(diag(V_total), 0))
+    n_beta <- R * Tn
+    se_beta_tot <- matrix(se_tot_all[seq_len(n_beta)], nrow = R, ncol = Tn, byrow = TRUE, dimnames = list(r_lv, t_lv))
+    if (is.list(x$matrices)) x$matrices$se_beta_total <- se_beta_tot
+
+    rd$LogSigmaSE <- rep(sqrt(1 / h_1), R)
+    rd$DriftSD_EAP <- exp(s_vec + 0.5 / h_1)
+    if (is.data.frame(st) && nrow(st) == n_beta) {
+        for (r in seq_len(R)) {
+            rows_r <- (r - 1L) * Tn + seq_len(Tn)
+            Vr_tot <- V_total[rows_r, rows_r, drop = FALSE]
+            chg_r <- st$ChangeFromBaseline[rows_r]
+            chg_se <- numeric(Tn)
+            for (t in seq.int(2L, Tn)) {
+                chg_se[t] <- sqrt(max(Vr_tot[t, t] + Vr_tot[1L, 1L] - 2 * Vr_tot[t, 1L], 0))
+            }
+            z_chg <- ifelse(chg_se > 0, abs(chg_r) / chg_se, 0)
+            st$TotalSE[rows_r] <- se_beta_tot[r, ]
+            st$ChangeSE[rows_r] <- chg_se
+            st$AbsZ[rows_r] <- z_chg
+            rd$NetDriftSE[r] <- chg_se[Tn]
+            rd$MaxAbsZ[r] <- max(z_chg)
+        }
+    }
+
+    off_f <- n_beta
+    if (is.data.frame(x$facet_table) && nrow(x$facet_table) > 0L && length(x$input$active_facets) > 0L) {
+        for (fc in x$input$active_facets) {
+            B <- x$input$facet_basis[[fc]]
+            if (is.matrix(B)) {
+                idx_free <- off_f + seq_len(ncol(B))
+                off_f <- off_f + ncol(B)
+                V_fc_tot <- B %*% V_total[idx_free, idx_free, drop = FALSE] %*% t(B)
+                x$facet_table$TotalSE[x$facet_table$Facet == fc] <- sqrt(pmax(diag(V_fc_tot), 0))
+            }
+        }
+    }
+    K <- length(x$input$score_levels)
+    n_u <- K - 2L
+    if (is.data.frame(x$step_table) && nrow(x$step_table) > 0L && n_u > 0L && off_f < length(xi)) {
+        B_step <- rbind(diag(n_u), rep(-1, n_u))
+        if (identical(x$settings$model, "PCM")) {
+            se_d_tot <- matrix(0, nrow = R, ncol = K - 1L, dimnames = list(r_lv, paste0("Step_", seq.int(2L, K))))
+            for (r in seq_len(R)) {
+                idx_u <- off_f + (r - 1L) * n_u + seq_len(n_u)
+                Vt_u <- B_step %*% V_total[idx_u, idx_u, drop = FALSE] %*% t(B_step)
+                se_r <- sqrt(pmax(diag(Vt_u), 0))
+                se_d_tot[r, ] <- se_r
+                x$step_table$TotalSE[(r - 1L) * (K - 1L) + seq_len(K - 1L)] <- se_r
+            }
+            if (is.list(x$matrices)) x$matrices$se_d_total <- se_d_tot
+        } else {
+            idx_u <- off_f + seq_len(n_u)
+            Vt_u <- B_step %*% V_total[idx_u, idx_u, drop = FALSE] %*% t(B_step)
+            se_sh <- sqrt(pmax(diag(Vt_u), 0))
+            x$step_table$TotalSE <- se_sh
+            if (is.list(x$matrices)) {
+                x$matrices$se_d_total <- matrix(se_sh, nrow = R, ncol = K - 1L, byrow = TRUE,
+                                                dimnames = list(r_lv, paste0("Step_", seq.int(2L, K))))
+            }
+        }
+    }
+
+    x$severity_table <- st
+    x$rater_drift_table <- rd
+    x$hyper_se_version <- 2L
+    x$hyper_se_unavailable <- FALSE
+    x
+}
+
+.drift_refresh_object <- function(x) {
+    d_mode <- x$settings$drift_mode %||% x$model_summary$DriftMode
+    if (identical(d_mode, "markov_homo") && !identical(x$hyper_se_version, 2L)) {
+        x <- .drift_recompute_homo_hyper(x)
+    }
+    ready <- isTRUE(x$checks$NumericalReady) && isTRUE(x$checks$InformationPositive)
+    need_hyper <- d_mode %in% c("markov_hetero", "markov_homo")
+    hyper_ok <- !need_hyper || (isTRUE(x$checks$HyperCurvaturePositive) && !isTRUE(x$hyper_se_unavailable))
+    is_static <- identical(d_mode, "static")
+    st <- x$severity_table
+    rd <- x$rater_drift_table
+    sp <- x$step_table
+    ft <- x$facet_table
+
+    if (!ready) {
+        if (is.data.frame(st)) {
+            for (nm in intersect(c("ConditionalSE", "TotalSE", "ChangeConditionalSE", "ChangeSE", "AbsZ"), names(st))) {
+                st[[nm]] <- rep(NA_real_, nrow(st))
+            }
+            st$FlaggedDrift <- rep(NA, nrow(st))
+        }
+        if (is.data.frame(rd)) {
+            for (nm in intersect(c("LogSigmaSE", "NetDriftSE", "MaxAbsZ"), names(rd))) {
+                rd[[nm]] <- rep(NA_real_, nrow(rd))
+            }
+            rd$Flagged <- rep(NA, nrow(rd))
+        }
+        if (is.data.frame(sp)) {
+            for (nm in intersect(c("ConditionalSE", "TotalSE"), names(sp))) sp[[nm]] <- rep(NA_real_, nrow(sp))
+        }
+        if (is.data.frame(ft) && nrow(ft) > 0L) {
+            for (nm in intersect(c("ConditionalSE", "TotalSE"), names(ft))) ft[[nm]] <- rep(NA_real_, nrow(ft))
+        }
+        if (is.data.frame(x$model_summary)) {
+            x$model_summary$FlaggedRaters <- NA_integer_
+        }
+    } else if (!hyper_ok) {
+        if (is.data.frame(st)) {
+            for (nm in intersect(c("TotalSE", "ChangeSE", "AbsZ"), names(st))) {
+                st[[nm]] <- rep(NA_real_, nrow(st))
+            }
+            st$FlaggedDrift <- rep(NA, nrow(st))
+        }
+        if (is.data.frame(rd)) {
+            for (nm in intersect(c("LogSigmaSE", "DriftSD_EAP", "NetDriftSE", "MaxAbsZ"), names(rd))) {
+                rd[[nm]] <- rep(NA_real_, nrow(rd))
+            }
+            rd$Flagged <- rep(NA, nrow(rd))
+        }
+        if (is.data.frame(sp) && "TotalSE" %in% names(sp)) sp$TotalSE <- rep(NA_real_, nrow(sp))
+        if (is.data.frame(ft) && nrow(ft) > 0L && "TotalSE" %in% names(ft)) ft$TotalSE <- rep(NA_real_, nrow(ft))
+        if (is.data.frame(x$model_summary)) {
+            x$model_summary$FlaggedRaters <- NA_integer_
+        }
+    } else if (is_static) {
+        if (is.data.frame(st)) {
+            st$FlaggedDrift <- rep(FALSE, nrow(st))
+        }
+        if (is.data.frame(rd)) {
+            rd$Flagged <- rep(FALSE, nrow(rd))
+        }
+        if (is.data.frame(x$model_summary)) {
+            x$model_summary$FlaggedRaters <- 0L
+        }
+    } else if (is.data.frame(st) && is.data.frame(rd)) {
+        d_thr <- x$settings$drift_threshold %||% 0.3
+        z_thr <- x$settings$flag_se_ratio %||% 2
+        chg <- st$ChangeFromBaseline
+        z_v <- st$AbsZ
+        st$FlaggedDrift <- as.logical(
+            (st$WaveIndex > 1L) & is.finite(chg) & (abs(chg) > 0) & (abs(chg) >= d_thr) &
+                (if (z_thr > 0) is.finite(z_v) & (z_v >= z_thr) else TRUE)
+        )
+        by_r <- split(st$FlaggedDrift, factor(st$Rater, levels = rd$Rater))
+        rd$Flagged <- vapply(by_r, function(v) any(v %in% TRUE), logical(1))
+        if (is.data.frame(x$model_summary)) {
+            x$model_summary$FlaggedRaters <- as.integer(sum(rd$Flagged))
+        }
+    }
+    x$severity_table <- st
+    x$rater_drift_table <- rd
+    x$step_table <- sp
+    x$facet_table <- ft
+    x
+}
+
 print.mfrm_drift <- function(x, digits = 3, ...) {
+    x <- .drift_refresh_object(x)
     ms <- x$model_summary
+    flag_txt <- if (is.na(ms$FlaggedRaters)) {
+        "unavailable (not ready)"
+    } else {
+        sprintf("%d/%d", ms$FlaggedRaters, ms$NRaters)
+    }
     cat("Markov Rater-Severity Drift MFRM (`mfrm_drift`)\n")
     cat(sprintf("  Model: %s | Drift mode: %s | Scale D = %s | Quad points: %d\n", ms$Model, ms$DriftMode,
         format(ms$LogisticScale, digits = 3), x$checks$QuadraturePoints))
@@ -964,14 +1214,14 @@ print.mfrm_drift <- function(x, digits = 3, ...) {
         ms$NObs, ms$NPersons, ms$NRaters, ms$NWaves, ms$NCategories, min(x$input$score_levels), max(x$input$score_levels)))
     cat(sprintf("  Fit : MML logLik = %.*f | Laplace logPost = %.*f | Eff.df = %.2f | EAP rel = %.*f\n",
         digits, ms$MML_LogLik, digits, ms$LaplaceLogPost, ms$EffectiveDF, digits, ms$EAPReliability))
-    cat(sprintf("  Checks: NumericalReady = %s | QuadratureStable = %s | BridgePersons = %d | Flagged raters = %d/%d\n",
-        x$checks$NumericalReady, x$checks$QuadratureStable, x$checks$BridgePersons, ms$FlaggedRaters,
-        ms$NRaters))
+    cat(sprintf("  Checks: NumericalReady = %s | QuadratureStable = %s | BridgePersons = %d | Flagged raters = %s\n",
+        x$checks$NumericalReady, x$checks$QuadratureStable, x$checks$BridgePersons, flag_txt))
     invisible(x)
 }
 
 summary.mfrm_drift <- function(object, level = 0.95, se_type = c("total", "conditional"), ...) {
     rlang::check_dots_empty()
+    object <- .drift_refresh_object(object)
     se_type <- match.arg(se_type)
     if (!is.numeric(level) || length(level) != 1L || !is.finite(level) || level <= 0 || level >= 1) {
         stop("`level` must be a single number strictly between 0 and 1.", call. = FALSE)
@@ -984,6 +1234,16 @@ summary.mfrm_drift <- function(object, level = 0.95, se_type = c("total", "condi
         NULL
     }
     notes <- character()
+    if (!isTRUE(object$checks$NumericalReady) || !isTRUE(object$checks$InformationPositive)) {
+        notes <- c(notes, "Numerical readiness check failed; standard errors, drift flags, and confidence intervals are withheld (`NA`).")
+    } else if (isTRUE(object$hyper_se_unavailable)) {
+        notes <- c(notes, "Saved `markov_homo` hyperparameter covariance predates the prior-precision fix and could not be reconstructed; rerun `fit_mfrm_drift()` for total SEs and intervals.")
+    } else if (object$settings$drift_mode %in% c("markov_hetero", "markov_homo") && !isTRUE(object$checks$HyperCurvaturePositive)) {
+        notes <- c(notes, "Hyperparameter curvature is non-positive; total SEs, drift flags, and drift-SD intervals are withheld (`NA`).")
+    }
+    if (identical(object$settings$drift_mode, "static")) {
+        notes <- c(notes, "Static drift mode constrains rater severity to be time-invariant across waves; drift flags are identically FALSE.")
+    }
     if (isTRUE(object$checks$StationaryCohortRequired)) {
         notes <- c(notes, "Cross-wave identification: waves are not fully linked by common bridge persons; common wave severity shifts rely on a stationary N(0, person_sd^2) cohort distribution.")
     }
@@ -1038,6 +1298,7 @@ print.summary.mfrm_drift <- function(x, digits = 3, ...) {
 coef.mfrm_drift <- function(object, parm = c("severity", "drift_sd", "contrasts", "steps", "facets",
     "all"), ...) {
     rlang::check_dots_empty()
+    object <- .drift_refresh_object(object)
     parm <- match.arg(parm)
     switch(parm, severity = {
         st <- object$severity_table
@@ -1061,13 +1322,27 @@ coef.mfrm_drift <- function(object, parm = c("severity", "drift_sd", "contrasts"
 
 vcov.mfrm_drift <- function(object, se_type = c("total", "conditional", "hyper"), ...) {
     rlang::check_dots_empty()
+    object <- .drift_refresh_object(object)
     se_type <- match.arg(se_type)
-    switch(se_type, total = object$vcov_total, conditional = object$vcov_conditional, hyper = object$vcov_hyper)
+    ready <- isTRUE(object$checks$NumericalReady) && isTRUE(object$checks$InformationPositive)
+    d_mode <- object$settings$drift_mode %||% object$model_summary$DriftMode
+    need_hyper <- d_mode %in% c("markov_hetero", "markov_homo")
+    hyper_ok <- !need_hyper || (isTRUE(object$checks$HyperCurvaturePositive) && !isTRUE(object$hyper_se_unavailable))
+    na_like <- function(m) {
+        if (!is.matrix(m)) return(m)
+        matrix(NA_real_, nrow = nrow(m), ncol = ncol(m), dimnames = dimnames(m))
+    }
+    switch(se_type,
+        total = if (ready && hyper_ok) object$vcov_total else na_like(object$vcov_total),
+        conditional = if (ready) object$vcov_conditional else na_like(object$vcov_conditional),
+        hyper = if (need_hyper && ready && hyper_ok) object$vcov_hyper else na_like(object$vcov_hyper)
+    )
 }
 
 confint.mfrm_drift <- function(object, parm = c("severity", "contrasts", "drift_sd", "steps", "facets"),
     level = 0.95, se_type = c("total", "conditional"), ...) {
     rlang::check_dots_empty()
+    object <- .drift_refresh_object(object)
     parm <- match.arg(parm)
     se_type <- match.arg(se_type)
     if (!is.numeric(level) || length(level) != 1L || !is.finite(level) || level <= 0 || level >= 1) {
@@ -1304,6 +1579,7 @@ predict.mfrm_drift <- function(object, newdata = NULL, type = c("fair_score", "e
 as.data.frame.mfrm_drift <- function(x, row.names = NULL, optional = FALSE, component = c("severity",
     "rater_drift", "steps", "facets", "persons", "summary"), ...) {
     rlang::check_dots_empty()
+    x <- .drift_refresh_object(x)
     component <- match.arg(component)
     switch(component, severity = x$severity_table, rater_drift = x$rater_drift_table, steps = x$step_table,
         facets = x$facet_table, persons = x$person_table, summary = x$model_summary)

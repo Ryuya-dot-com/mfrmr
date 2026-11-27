@@ -1,0 +1,2 @@
+all: $(SHLIB)
+fast_engine.o: fast_engine.cpp fast_engine.h fast_solvers.h

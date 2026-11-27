@@ -2,6 +2,7 @@
 #define MFRMR_FAST_SOLVERS_H
 
 #include "fast_engine.h"
+#include <exception>
 
 namespace mfrm_fast {
 
@@ -61,6 +62,7 @@ inline LbfgsResult minimize_lbfgs(const std::vector<double>& x0,
 
   std::vector<double> q(static_cast<size_t>(n)), dir(static_cast<size_t>(n));
   std::vector<double> x_cand(static_cast<size_t>(n)), g_cand(static_cast<size_t>(n));
+  bool just_reset = false;
 
   for (int iter = 1; iter <= max_iter; ++iter) {
     res.iterations = iter;
@@ -78,7 +80,7 @@ inline LbfgsResult minimize_lbfgs(const std::vector<double>& x0,
     if (k_hist > 0) {
       double ys = dot(y_hist.back(), s_hist.back());
       double yy = dot(y_hist.back(), y_hist.back());
-      if (ys > 1e-16 && yy > 1e-16) gamma = ys / yy;
+      if (ys > 1e-30 && yy > 1e-30) gamma = ys / yy;
     } else {
       double gnorm = std::sqrt(dot(res.g, res.g));
       if (gnorm > 1.0) gamma = 1.0 / gnorm;
@@ -99,31 +101,71 @@ inline LbfgsResult minimize_lbfgs(const std::vector<double>& x0,
       double gnorm = std::max(1.0, std::sqrt(dot(res.g, res.g)));
       for (int j = 0; j < n; ++j) dir[static_cast<size_t>(j)] = -res.g[static_cast<size_t>(j)] / gnorm;
       dg = dot(dir, res.g);
+      just_reset = true;
     }
 
     double max_step = 0.0;
     for (double v : dir) max_step = std::max(max_step, std::abs(v));
+    if (!std::isfinite(max_step) || max_step <= 0.0) break;
     double step_scale = (max_step > 4.0) ? (4.0 / max_step) : 1.0;
+    const double x_scale = std::max(1.0, max_abs(res.x));
+    const double gmax_cur = max_abs(res.g);
+    const double gnorm2_cur = dot(res.g, res.g);
+    const double eps_f = 1e-12 * (1.0 + std::abs(res.f));
 
     bool accepted = false;
     double f_cand = kNaN;
     for (int ls = 0; ls < 30; ++ls) {
+      if (step_scale * max_step <= 1e-14 * x_scale) break;
       for (int j = 0; j < n; ++j) {
         x_cand[static_cast<size_t>(j)] = res.x[static_cast<size_t>(j)] + step_scale * dir[static_cast<size_t>(j)];
       }
       f_cand = eval_fg(x_cand, g_cand);
-      if (std::isfinite(f_cand) && f_cand <= res.f + 1e-4 * step_scale * dg) {
+      if (std::isfinite(f_cand)) {
         bool g_ok = true;
         for (double gv : g_cand) if (!std::isfinite(gv)) { g_ok = false; break; }
-        if (g_ok) { accepted = true; break; }
+        if (g_ok) {
+          const double armijo_rhs = res.f + 1e-4 * step_scale * dg;
+          if (f_cand <= armijo_rhs && (f_cand < res.f || max_abs(g_cand) < gmax_cur)) {
+            accepted = true;
+            break;
+          }
+          // Hager-Zhang (2005) Approximate Wolfe in floating-point ULP roundoff regime
+          if (gmax_cur <= 1e-3 && f_cand <= res.f + eps_f) {
+            double dg_cand = dot(dir, g_cand);
+            double gnorm2_cand = dot(g_cand, g_cand);
+            if (dg_cand >= 0.9 * dg && dg_cand <= -0.5 * dg && gnorm2_cand < 0.999999 * gnorm2_cur) {
+              accepted = true;
+              break;
+            }
+          }
+        }
       }
-      step_scale *= 0.5;
+      double next_scale = 0.5 * step_scale;
+      if (std::isfinite(f_cand)) {
+        double denom = 2.0 * (f_cand - res.f - step_scale * dg);
+        if (denom > 1e-16 && std::isfinite(denom)) {
+          double q_scale = (-dg * step_scale * step_scale) / denom;
+          if (std::isfinite(q_scale)) {
+            next_scale = std::max(0.1 * step_scale, std::min(0.5 * step_scale, q_scale));
+          }
+        }
+      } else {
+        next_scale = 0.25 * step_scale;
+      }
+      step_scale = next_scale;
     }
 
     if (!accepted) {
-      if (max_abs(res.g) <= std::max(grad_tol * 100.0, 1e-5)) res.converged = true;
+      if (k_hist > 0 && !just_reset && gmax_cur > std::max(grad_tol * 100.0, 1e-5)) {
+        s_hist.clear(); y_hist.clear(); rho_hist.clear();
+        just_reset = true;
+        continue;
+      }
+      if (gmax_cur <= std::max(grad_tol * 100.0, 1e-5)) res.converged = true;
       break;
     }
+    just_reset = false;
 
     std::vector<double> s_vec(static_cast<size_t>(n)), y_vec(static_cast<size_t>(n));
     double max_dx = 0.0;
@@ -133,7 +175,9 @@ inline LbfgsResult minimize_lbfgs(const std::vector<double>& x0,
       max_dx = std::max(max_dx, std::abs(s_vec[static_cast<size_t>(j)]));
     }
     double ys = dot(y_vec, s_vec);
-    if (ys > 1e-14) {
+    double ss = dot(s_vec, s_vec);
+    double yy = dot(y_vec, y_vec);
+    if (ys > 1e-30 && ss > 0.0 && yy > 0.0 && ys > 1e-12 * std::sqrt(ss * yy)) {
       if (static_cast<int>(s_hist.size()) >= history_m) {
         s_hist.erase(s_hist.begin());
         y_hist.erase(y_hist.begin());
@@ -1421,11 +1465,116 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
   for (int g = 0; g < smap.n_step_groups; ++g) {
     max_group_sc = std::max(max_group_sc, static_cast<int>(smap.group_step_cols[static_cast<size_t>(g)].size()));
   }
+  const int stride_sc = std::max(1, max_group_sc);
+  int max_person_obs = 0;
+  for (int p = 0; p < P; ++p) {
+    max_person_obs = std::max(max_person_obs, spec.p_row_ptr[static_cast<size_t>(p) + 1] - spec.p_row_ptr[static_cast<size_t>(p)]);
+  }
+
+  // Group persons by identical population design rows and factor unique (pop_group, facet_cell, step_group)
+  // cells for exact O(M_cells * Q) quadrature evaluation under fixed Gauss-Hermite integration.
+  std::vector<int> person_pop_grp(static_cast<size_t>(P), 0);
+  std::vector<int> pop_grp_rep;
+  if (spec.pop_mode == 0 || dX == 0) {
+    pop_grp_rep.push_back(0);
+  } else {
+    std::map<std::vector<double>, int> pmap;
+    std::vector<double> prow(static_cast<size_t>(dX));
+    for (int p = 0; p < P; ++p) {
+      for (int c = 0; c < dX; ++c) prow[static_cast<size_t>(c)] = spec.pop_X[static_cast<size_t>(p) * dX + c];
+      auto it = pmap.find(prow);
+      if (it != pmap.end()) {
+        person_pop_grp[static_cast<size_t>(p)] = it->second;
+      } else {
+        int gid = static_cast<int>(pop_grp_rep.size());
+        pmap[prow] = gid;
+        person_pop_grp[static_cast<size_t>(p)] = gid;
+        pop_grp_rep.push_back(p);
+      }
+    }
+  }
+  const int G_pop = static_cast<int>(pop_grp_rep.size());
+
+  struct MmlQuadCell {
+    int rep_obs = 0;
+    int pop_grp = 0;
+    int sg = 0;
+    int ag = 0;
+    int bg = 0;
+  };
+  std::vector<MmlQuadCell> mml_cells;
+  std::vector<int> obs_cell_id(static_cast<size_t>(spec.n_obs), -1);
+  {
+    std::map<std::vector<int>, int> cmap;
+    std::vector<int> key(static_cast<size_t>(F) + 2);
+    for (int p = 0; p < P; ++p) {
+      int beg = spec.p_row_ptr[static_cast<size_t>(p)];
+      int end = spec.p_row_ptr[static_cast<size_t>(p) + 1];
+      int pg = person_pop_grp[static_cast<size_t>(p)];
+      for (int idx = beg; idx < end; ++idx) {
+        int i = spec.p_obs_idx[static_cast<size_t>(idx)];
+        if (spec.weight[static_cast<size_t>(i)] <= 0.0) continue;
+        key[0] = pg;
+        for (int f = 0; f < F; ++f) key[static_cast<size_t>(f) + 1] = spec.facet_flat[static_cast<size_t>(i) * F + f];
+        key[static_cast<size_t>(F) + 1] = spec.step_group[static_cast<size_t>(i)];
+        auto it = cmap.find(key);
+        if (it != cmap.end()) {
+          obs_cell_id[static_cast<size_t>(i)] = it->second;
+        } else {
+          int cid = static_cast<int>(mml_cells.size());
+          cmap[key] = cid;
+          obs_cell_id[static_cast<size_t>(i)] = cid;
+          MmlQuadCell mc;
+          mc.rep_obs = i;
+          mc.pop_grp = pg;
+          mc.sg = spec.step_group[static_cast<size_t>(i)];
+          mc.ag = smap.cat_min[static_cast<size_t>(mc.sg)];
+          mc.bg = smap.cat_max[static_cast<size_t>(mc.sg)];
+          mml_cells.push_back(mc);
+        }
+      }
+    }
+  }
+  const int M_cells = static_cast<int>(mml_cells.size());
+  const bool can_use_cell_table = (M_cells > 0 && M_cells * 2 <= spec.n_obs);
+
+  std::vector<double> cell_obs_wy;
+  std::vector<double> cell_obs_cat_w;
+  if (can_use_cell_table) {
+    cell_obs_wy.assign(static_cast<size_t>(M_cells), 0.0);
+    cell_obs_cat_w.assign(static_cast<size_t>(M_cells) * C, 0.0);
+    for (int p = 0; p < P; ++p) {
+      int beg = spec.p_row_ptr[static_cast<size_t>(p)];
+      int end = spec.p_row_ptr[static_cast<size_t>(p) + 1];
+      for (int idx = beg; idx < end; ++idx) {
+        int i = spec.p_obs_idx[static_cast<size_t>(idx)];
+        double w = spec.weight[static_cast<size_t>(i)];
+        if (w <= 0.0) continue;
+        int cid = obs_cell_id[static_cast<size_t>(i)];
+        int y = spec.score[static_cast<size_t>(i)];
+        cell_obs_wy[static_cast<size_t>(cid)] += w * static_cast<double>(y);
+        if (y >= 0 && y < C) cell_obs_cat_w[static_cast<size_t>(cid) * C + y] += w;
+      }
+    }
+  }
 
   std::vector<std::vector<double>> beta, log_slope_est, slope_est;
   std::vector<double> tau_mat, step_cum_mat, alpha_obs(static_cast<size_t>(spec.n_obs), 1.0);
   std::vector<double> base_eta_obs(static_cast<size_t>(spec.n_obs), 0.0);
   std::vector<double> mu_p(static_cast<size_t>(P), 0.0);
+
+  // Hoisted scratch buffers across evaluations (eliminating per-person heap allocations)
+  std::vector<double> cell_probs(can_use_cell_table ? (static_cast<size_t>(M_cells) * C * Q) : 0, 0.0);
+  std::vector<double> cell_log_p(can_use_cell_table ? (static_cast<size_t>(M_cells) * C * Q) : 0, -kInf);
+  std::vector<double> cell_mean(can_use_cell_table ? (static_cast<size_t>(M_cells) * Q) : 0, 0.0);
+  std::vector<double> cell_e_sc((can_use_cell_table && has_slopes && sform == 0) ? (static_cast<size_t>(M_cells) * Q) : 0, 0.0);
+  std::vector<double> cell_step_ea;
+  std::vector<double> cell_w_post(can_use_cell_table ? (static_cast<size_t>(M_cells) * Q) : 0, 0.0);
+  std::vector<double> cell_wy_post((can_use_cell_table && has_slopes) ? (static_cast<size_t>(M_cells) * Q) : 0, 0.0);
+  std::vector<double> grp_th_q(can_use_cell_table ? (static_cast<size_t>(G_pop) * Q) : 0, 0.0);
+  std::vector<double> work_cached_mean(static_cast<size_t>(std::max(1, max_person_obs)) * Q, 0.0);
+  std::vector<double> work_cached_step_ea(static_cast<size_t>(std::max(1, max_person_obs)) * Q * stride_sc, 0.0);
+  std::vector<double> work_cached_logslope_g(has_slopes ? (static_cast<size_t>(std::max(1, max_person_obs)) * Q) : 0, 0.0);
 
   bool adaptive_active = false;
   std::vector<double> adap_mode(static_cast<size_t>(P), 0.0);
@@ -1449,7 +1598,9 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
     }
   };
 
+  bool adaptive_basis_valid = true;
   auto refresh_adaptive_basis = [&](const std::vector<double>& phi) {
+    adaptive_basis_valid = false;
     double sigma = 1.0;
     unpack_pop(phi, sigma);
     if (!std::isfinite(sigma) || sigma <= 0.0) return;
@@ -1474,7 +1625,16 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
         adap_scale[static_cast<size_t>(p)] = sigma;
         continue;
       }
-      for (int it = 0; it < 20; ++it) {
+      double lo = th, hi = th;
+      for (int idx = beg; idx < end; ++idx) {
+        int i = spec.p_obs_idx[static_cast<size_t>(idx)];
+        int sg = spec.step_group[static_cast<size_t>(i)];
+        double wa = spec.weight[static_cast<size_t>(i)] * alpha_obs[static_cast<size_t>(i)] / inv_sig2;
+        lo += wa * (spec.score[static_cast<size_t>(i)] - smap.cat_max[static_cast<size_t>(sg)]);
+        hi += wa * (spec.score[static_cast<size_t>(i)] - smap.cat_min[static_cast<size_t>(sg)]);
+      }
+      bool mode_converged = false;
+      for (int it = 0; it < 120; ++it) {
         double g = -(th - mu_p[static_cast<size_t>(p)]) * inv_sig2;
         double h = inv_sig2;
         for (int idx = beg; idx < end; ++idx) {
@@ -1491,10 +1651,20 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
           g += w * al * (static_cast<double>(spec.score[static_cast<size_t>(i)]) - cm.mean);
           h += w * al * al * cm.var;
         }
-        double step = std::max(-2.0, std::min(2.0, g / std::max(h, 1e-8)));
-        th += step;
-        if (std::abs(step) < 1e-10) break;
+        if (!std::isfinite(g) || !std::isfinite(h) || h <= 0) return;
+        if (std::abs(g / h) < 1e-13 && std::abs(g) < 1e-11) {
+          mode_converged = true; break;
+        }
+        if (g > 0) lo = th; else hi = th;
+        double next = th + g / h;
+        if (!std::isfinite(next) || next <= lo || next >= hi) next = 0.5 * (lo + hi);
+        double step = next - th;
+        th = next;
+        if (std::abs(step) < 1e-14 && hi - lo < 1e-12) {
+          mode_converged = true; break;
+        }
       }
+      if (!mode_converged) return;
       double h = inv_sig2;
       for (int idx = beg; idx < end; ++idx) {
         int i = spec.p_obs_idx[static_cast<size_t>(idx)];
@@ -1509,8 +1679,10 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
         h += w * al * al * cm.var;
       }
       adap_mode[static_cast<size_t>(p)] = th;
-      adap_scale[static_cast<size_t>(p)] = 1.0 / std::sqrt(std::max(h, 1e-8));
+      if (!std::isfinite(h) || h <= 0) return;
+      adap_scale[static_cast<size_t>(p)] = 1.0 / std::sqrt(h);
     }
+    adaptive_basis_valid = true;
   };
 
   auto eval_mml_core = [&](const std::vector<double>& phi,
@@ -1519,6 +1691,16 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
                            std::vector<double>* eap_out,
                            std::vector<double>* psd_out) -> double {
     grad.assign(static_cast<size_t>(dim), 0.0);
+    if (adaptive_active) {
+      refresh_adaptive_basis(phi);
+      if (!adaptive_basis_valid) {
+        std::fill(grad.begin(), grad.end(), kNaN);
+        if (person_scores_out) person_scores_out->assign(static_cast<size_t>(P) * dim, kNaN);
+        if (eap_out) eap_out->assign(static_cast<size_t>(P), kNaN);
+        if (psd_out) psd_out->assign(static_cast<size_t>(P), kNaN);
+        return kInf;
+      }
+    }
     if (person_scores_out) person_scores_out->assign(static_cast<size_t>(P) * dim, 0.0);
     double sigma = 1.0;
     unpack_pop(phi, sigma);
@@ -1535,15 +1717,363 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
       base_eta_obs[static_cast<size_t>(i)] = e;
     }
 
-    std::vector<double> probs(static_cast<size_t>(C)), step_ea_acc(static_cast<size_t>(std::max(1, max_group_sc)));
+    std::vector<double> probs(static_cast<size_t>(C)), step_ea_acc(static_cast<size_t>(stride_sc));
     std::vector<double> log_post(static_cast<size_t>(Q)), W_q(static_cast<size_t>(Q)), th_q(static_cast<size_t>(Q));
     std::vector<double> dlogL_dth(static_cast<size_t>(Q), 0.0);
     std::vector<double> p_grad_local(static_cast<size_t>(dim), 0.0);
+    std::vector<double> dG_dphi(adaptive_active ? static_cast<size_t>(dim) : 0, 0.0);
+    std::vector<double> dh_dphi(adaptive_active ? static_cast<size_t>(dim) : 0, 0.0);
     double total_nll = 0.0;
     double inv_sig2 = 1.0 / (sigma * sigma);
 
     if (eap_out) eap_out->assign(static_cast<size_t>(P), kNaN);
     if (psd_out) psd_out->assign(static_cast<size_t>(P), kNaN);
+
+    const bool use_cells_now = (!adaptive_active && can_use_cell_table);
+    if (use_cells_now) {
+      for (int g = 0; g < G_pop; ++g) {
+        double mg = (P > 0) ? mu_p[static_cast<size_t>(pop_grp_rep[static_cast<size_t>(g)])] : 0.0;
+        double* g_th = grp_th_q.data() + static_cast<size_t>(g) * Q;
+        for (int q = 0; q < Q; ++q) g_th[q] = mg + sigma * z_nodes[static_cast<size_t>(q)];
+      }
+      if (person_scores_out && qs > 0) {
+        cell_step_ea.assign(static_cast<size_t>(M_cells) * stride_sc * Q, 0.0);
+      }
+      double u_buf[64];
+      std::vector<double> u_heap;
+      double* u_k = (C <= 64) ? u_buf : (u_heap.resize(static_cast<size_t>(C)), u_heap.data());
+
+      for (int cid = 0; cid < M_cells; ++cid) {
+        const MmlQuadCell& mc = mml_cells[static_cast<size_t>(cid)];
+        const int i_rep = mc.rep_obs;
+        const int sg = mc.sg, ag = mc.ag, bg = mc.bg;
+        const double* sc = step_cum_mat.data() + static_cast<size_t>(sg) * C;
+        const double be = base_eta_obs[static_cast<size_t>(i_rep)];
+        const double al = alpha_obs[static_cast<size_t>(i_rep)];
+        const double* g_th = grp_th_q.data() + static_cast<size_t>(mc.pop_grp) * Q;
+        const auto& scols = smap.group_step_cols[static_cast<size_t>(sg)];
+        const int n_sc = static_cast<int>(scols.size());
+
+        for (int k = 0; k < ag; ++k) {
+          std::fill_n(cell_probs.data() + (static_cast<size_t>(cid) * C + k) * Q, Q, 0.0);
+          std::fill_n(cell_log_p.data() + (static_cast<size_t>(cid) * C + k) * Q, Q, -kInf);
+        }
+        for (int k = bg + 1; k < C; ++k) {
+          std::fill_n(cell_probs.data() + (static_cast<size_t>(cid) * C + k) * Q, Q, 0.0);
+          std::fill_n(cell_log_p.data() + (static_cast<size_t>(cid) * C + k) * Q, Q, -kInf);
+        }
+
+        for (int q = 0; q < Q; ++q) {
+          const double tq = g_th[q];
+          double max_lp = -kInf;
+          for (int k = ag; k <= bg; ++k) {
+            double sck = sc[k];
+            if (!std::isfinite(sck)) {
+              u_k[k] = -kInf;
+            } else {
+              double lp = (!has_slopes)
+                              ? (static_cast<double>(k - ag) * (tq + be) - sck)
+                              : ((sform == 1)
+                                     ? (static_cast<double>(k - ag) * (al * tq + be) - sck)
+                                     : (al * (static_cast<double>(k - ag) * (tq + be) - sck)));
+              u_k[k] = lp;
+              if (lp > max_lp) max_lp = lp;
+            }
+          }
+          if (!std::isfinite(max_lp)) {
+            for (int k = ag; k <= bg; ++k) {
+              cell_probs[(static_cast<size_t>(cid) * C + k) * Q + q] = 0.0;
+              cell_log_p[(static_cast<size_t>(cid) * C + k) * Q + q] = -kInf;
+            }
+            cell_mean[static_cast<size_t>(cid) * Q + q] = 0.0;
+            if (has_slopes && sform == 0) cell_e_sc[static_cast<size_t>(cid) * Q + q] = 0.0;
+            continue;
+          }
+          double sum_exp = 0.0;
+          for (int k = ag; k <= bg; ++k) {
+            if (std::isfinite(u_k[k])) {
+              probs[static_cast<size_t>(k)] = std::exp(u_k[k] - max_lp);
+              sum_exp += probs[static_cast<size_t>(k)];
+            } else {
+              probs[static_cast<size_t>(k)] = 0.0;
+            }
+          }
+          const double log_z = max_lp + std::log(sum_exp);
+          const double inv_sum = 1.0 / sum_exp;
+          double mu_c = 0.0;
+          for (int k = ag; k <= bg; ++k) {
+            double pk = probs[static_cast<size_t>(k)] * inv_sum;
+            probs[static_cast<size_t>(k)] = pk;
+            cell_probs[(static_cast<size_t>(cid) * C + k) * Q + q] = pk;
+            cell_log_p[(static_cast<size_t>(cid) * C + k) * Q + q] =
+                std::isfinite(u_k[k]) ? (u_k[k] - log_z) : -kInf;
+            mu_c += static_cast<double>(k) * pk;
+          }
+          cell_mean[static_cast<size_t>(cid) * Q + q] = mu_c;
+          if (has_slopes && sform == 0) {
+            double esc = 0.0;
+            for (int k = ag; k <= bg; ++k) {
+              if (probs[static_cast<size_t>(k)] > 0.0 && std::isfinite(sc[k])) {
+                esc += probs[static_cast<size_t>(k)] * sc[k];
+              }
+            }
+            cell_e_sc[static_cast<size_t>(cid) * Q + q] = esc;
+          }
+          if (person_scores_out && n_sc > 0) {
+            for (int m_idx = 0; m_idx < n_sc; ++m_idx) {
+              int c_loc = scols[static_cast<size_t>(m_idx)];
+              double ea = 0.0;
+              for (int k = ag; k <= bg; ++k) {
+                ea += probs[static_cast<size_t>(k)] * smap.cum_B[(static_cast<size_t>(sg) * C + k) * qs + c_loc];
+              }
+              cell_step_ea[(static_cast<size_t>(cid) * stride_sc + m_idx) * Q + q] = ea;
+            }
+          }
+        }
+      }
+      if (!person_scores_out) {
+        std::fill(cell_w_post.begin(), cell_w_post.end(), 0.0);
+        if (has_slopes) std::fill(cell_wy_post.begin(), cell_wy_post.end(), 0.0);
+      }
+
+      for (int p = 0; p < P; ++p) {
+        int beg = spec.p_row_ptr[static_cast<size_t>(p)];
+        int end = spec.p_row_ptr[static_cast<size_t>(p) + 1];
+        if (beg == end) {
+          if (eap_out) (*eap_out)[static_cast<size_t>(p)] = mu_p[static_cast<size_t>(p)];
+          if (psd_out) (*psd_out)[static_cast<size_t>(p)] = sigma;
+          continue;
+        }
+        const double* g_th = grp_th_q.data() + static_cast<size_t>(person_pop_grp[static_cast<size_t>(p)]) * Q;
+        std::copy_n(log_w_nodes.data(), Q, log_post.data());
+        if (spec.pop_mode == 1) std::fill(dlogL_dth.begin(), dlogL_dth.end(), 0.0);
+
+        const int m_obs_p = end - beg;
+        for (int loc = 0; loc < m_obs_p; ++loc) {
+          int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
+          double w = spec.weight[static_cast<size_t>(i)];
+          if (w <= 0.0) continue;
+          int cid = obs_cell_id[static_cast<size_t>(i)];
+          int y = spec.score[static_cast<size_t>(i)];
+          int ag = mml_cells[static_cast<size_t>(cid)].ag;
+          int bg = mml_cells[static_cast<size_t>(cid)].bg;
+          if (y < ag || y > bg) return kInf;
+          const double* lp_cq = cell_log_p.data() + (static_cast<size_t>(cid) * C + y) * Q;
+          if (spec.pop_mode == 1) {
+            const double* mu_cq = cell_mean.data() + static_cast<size_t>(cid) * Q;
+            const double wa = w * alpha_obs[static_cast<size_t>(i)];
+            const double yd = static_cast<double>(y);
+            for (int q = 0; q < Q; ++q) {
+              log_post[static_cast<size_t>(q)] += w * lp_cq[q];
+              dlogL_dth[static_cast<size_t>(q)] += wa * (yd - mu_cq[q]);
+            }
+          } else {
+            for (int q = 0; q < Q; ++q) {
+              log_post[static_cast<size_t>(q)] += w * lp_cq[q];
+            }
+          }
+        }
+
+        double max_lp = log_post[0];
+        for (int q = 1; q < Q; ++q) if (log_post[static_cast<size_t>(q)] > max_lp) max_lp = log_post[static_cast<size_t>(q)];
+        if (!std::isfinite(max_lp)) return kInf;
+        double sum_exp = 0.0;
+        for (int q = 0; q < Q; ++q) {
+          W_q[static_cast<size_t>(q)] = std::exp(log_post[static_cast<size_t>(q)] - max_lp);
+          sum_exp += W_q[static_cast<size_t>(q)];
+        }
+        total_nll -= (max_lp + std::log(sum_exp));
+        const double inv_sum = 1.0 / sum_exp;
+        double eap = 0.0;
+        for (int q = 0; q < Q; ++q) {
+          W_q[static_cast<size_t>(q)] *= inv_sum;
+          eap += W_q[static_cast<size_t>(q)] * g_th[q];
+        }
+        if (eap_out) (*eap_out)[static_cast<size_t>(p)] = eap;
+        if (psd_out) {
+          double pvar = 0.0;
+          for (int q = 0; q < Q; ++q) {
+            double dt = g_th[q] - eap;
+            pvar += W_q[static_cast<size_t>(q)] * dt * dt;
+          }
+          (*psd_out)[static_cast<size_t>(p)] = std::sqrt(std::max(0.0, pvar));
+        }
+
+        if (!person_scores_out) {
+          if (n_xi > 0) {
+            for (int loc = 0; loc < m_obs_p; ++loc) {
+              int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
+              double w = spec.weight[static_cast<size_t>(i)];
+              if (w <= 0.0) continue;
+              int cid = obs_cell_id[static_cast<size_t>(i)];
+              double* cw = cell_w_post.data() + static_cast<size_t>(cid) * Q;
+              for (int q = 0; q < Q; ++q) cw[q] += w * W_q[static_cast<size_t>(q)];
+              if (has_slopes) {
+                double wy = w * static_cast<double>(spec.score[static_cast<size_t>(i)]);
+                double* cwy = cell_wy_post.data() + static_cast<size_t>(cid) * Q;
+                for (int q = 0; q < Q; ++q) cwy[q] += wy * W_q[static_cast<size_t>(q)];
+              }
+            }
+          }
+          if (spec.pop_mode == 1) {
+            double g_mu = 0.0, g_logsig = 0.0;
+            for (int q = 0; q < Q; ++q) {
+              double wq = W_q[static_cast<size_t>(q)];
+              g_mu -= wq * dlogL_dth[static_cast<size_t>(q)];
+              g_logsig -= wq * dlogL_dth[static_cast<size_t>(q)] * (sigma * z_nodes[static_cast<size_t>(q)]);
+            }
+            for (int c = 0; c < dX; ++c) {
+              grad[static_cast<size_t>(n_xi + c)] += g_mu * spec.pop_X[static_cast<size_t>(p) * dX + c];
+            }
+            grad[static_cast<size_t>(n_xi + dX)] += g_logsig;
+          }
+        } else {
+          std::fill(p_grad_local.begin(), p_grad_local.end(), 0.0);
+          if (n_xi > 0) {
+            for (int loc = 0; loc < m_obs_p; ++loc) {
+              int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
+              double w = spec.weight[static_cast<size_t>(i)];
+              if (w <= 0.0) continue;
+              int cid = obs_cell_id[static_cast<size_t>(i)];
+              int sg = spec.step_group[static_cast<size_t>(i)];
+              int y = spec.score[static_cast<size_t>(i)];
+              const auto& scols = smap.group_step_cols[static_cast<size_t>(sg)];
+              const int n_sc = static_cast<int>(scols.size());
+              double al = alpha_obs[static_cast<size_t>(i)];
+              double eff_sc = (!has_slopes || sform == 1) ? 1.0 : al;
+
+              double exp_mean = 0.0;
+              const double* cm_row = cell_mean.data() + static_cast<size_t>(cid) * Q;
+              for (int q = 0; q < Q; ++q) exp_mean += W_q[static_cast<size_t>(q)] * cm_row[q];
+              double g_eta = w * eff_sc * (exp_mean - static_cast<double>(y));
+              for (int ptr = obs_f_ptr[static_cast<size_t>(i)]; ptr < obs_f_ptr[static_cast<size_t>(i) + 1]; ++ptr) {
+                p_grad_local[static_cast<size_t>(obs_f_cols[static_cast<size_t>(ptr)])] +=
+                    g_eta * obs_f_vals[static_cast<size_t>(ptr)];
+              }
+              for (int m_idx = 0; m_idx < n_sc; ++m_idx) {
+                int c_loc = scols[static_cast<size_t>(m_idx)];
+                const double* ea_row = cell_step_ea.data() + (static_cast<size_t>(cid) * stride_sc + m_idx) * Q;
+                double ea_acc = 0.0;
+                for (int q = 0; q < Q; ++q) ea_acc += W_q[static_cast<size_t>(q)] * ea_row[q];
+                double a_obs = smap.cum_B[(static_cast<size_t>(sg) * C + y) * qs + c_loc];
+                p_grad_local[static_cast<size_t>(smap.step_xi_start + c_loc)] +=
+                    w * eff_sc * (a_obs - ea_acc);
+              }
+              if (has_slopes) {
+                double g_ls = 0.0;
+                double yd = static_cast<double>(y);
+                if (sform == 1) {
+                  for (int q = 0; q < Q; ++q) {
+                    g_ls += W_q[static_cast<size_t>(q)] * (al * g_th[q] * (cm_row[q] - yd));
+                  }
+                } else {
+                  const double be = base_eta_obs[static_cast<size_t>(i)];
+                  const double sc_y = step_cum_mat[static_cast<size_t>(sg) * C + y];
+                  const double* esc_row = cell_e_sc.data() + static_cast<size_t>(cid) * Q;
+                  for (int q = 0; q < Q; ++q) {
+                    g_ls += W_q[static_cast<size_t>(q)] *
+                            (al * ((cm_row[q] - yd) * (g_th[q] + be) + (sc_y - esc_row[q])));
+                  }
+                }
+                g_ls *= w;
+                for (int ptr = obs_s_ptr[static_cast<size_t>(i)]; ptr < obs_s_ptr[static_cast<size_t>(i) + 1]; ++ptr) {
+                  p_grad_local[static_cast<size_t>(obs_s_cols[static_cast<size_t>(ptr)])] +=
+                      g_ls * obs_s_vals[static_cast<size_t>(ptr)];
+                }
+              }
+            }
+          }
+          if (spec.pop_mode == 1) {
+            double g_mu = 0.0, g_logsig = 0.0;
+            for (int q = 0; q < Q; ++q) {
+              double wq = W_q[static_cast<size_t>(q)];
+              g_mu -= wq * dlogL_dth[static_cast<size_t>(q)];
+              g_logsig -= wq * dlogL_dth[static_cast<size_t>(q)] * (sigma * z_nodes[static_cast<size_t>(q)]);
+            }
+            for (int c = 0; c < dX; ++c) {
+              p_grad_local[static_cast<size_t>(n_xi + c)] = g_mu * spec.pop_X[static_cast<size_t>(p) * dX + c];
+            }
+            p_grad_local[static_cast<size_t>(n_xi + dX)] = g_logsig;
+          }
+          for (int j = 0; j < dim; ++j) {
+            grad[static_cast<size_t>(j)] += p_grad_local[static_cast<size_t>(j)];
+            (*person_scores_out)[static_cast<size_t>(p) * dim + j] = p_grad_local[static_cast<size_t>(j)];
+          }
+        }
+      }
+
+      if (!person_scores_out && n_xi > 0) {
+        for (int cid = 0; cid < M_cells; ++cid) {
+          const MmlQuadCell& mc = mml_cells[static_cast<size_t>(cid)];
+          const int i_rep = mc.rep_obs;
+          const int sg = mc.sg, ag = mc.ag, bg = mc.bg;
+          const double al = alpha_obs[static_cast<size_t>(i_rep)];
+          const double eff_sc = (!has_slopes || sform == 1) ? 1.0 : al;
+          const double* cw = cell_w_post.data() + static_cast<size_t>(cid) * Q;
+          const double* cm_row = cell_mean.data() + static_cast<size_t>(cid) * Q;
+
+          double sum_w_mean = 0.0;
+          for (int q = 0; q < Q; ++q) sum_w_mean += cw[q] * cm_row[q];
+          const double g_eta_c = eff_sc * (sum_w_mean - cell_obs_wy[static_cast<size_t>(cid)]);
+          for (int ptr = obs_f_ptr[static_cast<size_t>(i_rep)]; ptr < obs_f_ptr[static_cast<size_t>(i_rep) + 1]; ++ptr) {
+            grad[static_cast<size_t>(obs_f_cols[static_cast<size_t>(ptr)])] +=
+                g_eta_c * obs_f_vals[static_cast<size_t>(ptr)];
+          }
+
+          const auto& scols = smap.group_step_cols[static_cast<size_t>(sg)];
+          const int n_sc = static_cast<int>(scols.size());
+          if (n_sc > 0) {
+            for (int k = ag; k <= bg; ++k) {
+              const double* pk_row = cell_probs.data() + (static_cast<size_t>(cid) * C + k) * Q;
+              double exp_nk = 0.0;
+              for (int q = 0; q < Q; ++q) exp_nk += cw[q] * pk_row[q];
+              const double diff_nk = eff_sc * (cell_obs_cat_w[static_cast<size_t>(cid) * C + k] - exp_nk);
+              for (int m_idx = 0; m_idx < n_sc; ++m_idx) {
+                int c_loc = scols[static_cast<size_t>(m_idx)];
+                grad[static_cast<size_t>(smap.step_xi_start + c_loc)] +=
+                    diff_nk * smap.cum_B[(static_cast<size_t>(sg) * C + k) * qs + c_loc];
+              }
+            }
+          }
+
+          if (has_slopes) {
+            const double* g_th = grp_th_q.data() + static_cast<size_t>(mc.pop_grp) * Q;
+            const double* cwy = cell_wy_post.data() + static_cast<size_t>(cid) * Q;
+            double g_ls_c = 0.0;
+            if (sform == 1) {
+              for (int q = 0; q < Q; ++q) {
+                g_ls_c += g_th[q] * (cw[q] * cm_row[q] - cwy[q]);
+              }
+              g_ls_c *= al;
+            } else {
+              const double be = base_eta_obs[static_cast<size_t>(i_rep)];
+              const double* sc = step_cum_mat.data() + static_cast<size_t>(sg) * C;
+              const double* esc_row = cell_e_sc.data() + static_cast<size_t>(cid) * Q;
+              double obs_sc_sum = 0.0;
+              for (int k = ag; k <= bg; ++k) {
+                double n_ck = cell_obs_cat_w[static_cast<size_t>(cid) * C + k];
+                if (n_ck > 0.0 && std::isfinite(sc[k])) obs_sc_sum += n_ck * sc[k];
+              }
+              double exp_sc_sum = 0.0;
+              for (int q = 0; q < Q; ++q) {
+                g_ls_c += (g_th[q] + be) * (cw[q] * cm_row[q] - cwy[q]);
+                exp_sc_sum += cw[q] * esc_row[q];
+              }
+              g_ls_c = al * (g_ls_c + (obs_sc_sum - exp_sc_sum));
+            }
+            for (int ptr = obs_s_ptr[static_cast<size_t>(i_rep)]; ptr < obs_s_ptr[static_cast<size_t>(i_rep) + 1]; ++ptr) {
+              grad[static_cast<size_t>(obs_s_cols[static_cast<size_t>(ptr)])] +=
+                  g_ls_c * obs_s_vals[static_cast<size_t>(ptr)];
+            }
+          }
+        }
+      }
+
+      if (ctrl.facet_l2_pen > 0.0 || ctrl.slope_l2_pen > 0.0) {
+        total_nll += add_structural_l2_penalties(spec, smap, ctrl, beta, log_slope_est, grad);
+      }
+      return total_nll;
+    }
 
     for (int p = 0; p < P; ++p) {
       int beg = spec.p_row_ptr[static_cast<size_t>(p)];
@@ -1573,10 +2103,9 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
       }
 
       const int m_obs_p = end - beg;
-      const int stride_sc = std::max(1, max_group_sc);
-      std::vector<double> cached_mean(static_cast<size_t>(m_obs_p) * Q);
-      std::vector<double> cached_step_ea(static_cast<size_t>(m_obs_p) * Q * stride_sc, 0.0);
-      std::vector<double> cached_logslope_g(has_slopes ? (static_cast<size_t>(m_obs_p) * Q) : 0, 0.0);
+      double* cached_mean = work_cached_mean.data();
+      double* cached_step_ea = work_cached_step_ea.data();
+      double* cached_logslope_g = has_slopes ? work_cached_logslope_g.data() : nullptr;
 
       for (int loc = 0; loc < m_obs_p; ++loc) {
         int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
@@ -1614,7 +2143,7 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
             }
           }
           if (n_sc > 0) {
-            double* ea_ptr = cached_step_ea.data() + (static_cast<size_t>(loc) * Q + q) * stride_sc;
+            double* ea_ptr = cached_step_ea + (static_cast<size_t>(loc) * Q + q) * stride_sc;
             for (int m_idx = 0; m_idx < n_sc; ++m_idx) {
               int c_loc = scols[static_cast<size_t>(m_idx)];
               double ea = 0.0;
@@ -1668,14 +2197,14 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
           double eff_sc = (!has_slopes || sform == 1) ? 1.0 : al;
 
           double exp_mean = 0.0;
-          const double* cm_row = cached_mean.data() + static_cast<size_t>(loc) * Q;
+          const double* cm_row = cached_mean + static_cast<size_t>(loc) * Q;
           for (int q = 0; q < Q; ++q) exp_mean += W_q[static_cast<size_t>(q)] * cm_row[q];
 
           if (n_sc > 0) {
             std::fill(step_ea_acc.begin(), step_ea_acc.begin() + n_sc, 0.0);
             for (int q = 0; q < Q; ++q) {
               double wq = W_q[static_cast<size_t>(q)];
-              const double* ea_ptr = cached_step_ea.data() + (static_cast<size_t>(loc) * Q + q) * stride_sc;
+              const double* ea_ptr = cached_step_ea + (static_cast<size_t>(loc) * Q + q) * stride_sc;
               for (int m_idx = 0; m_idx < n_sc; ++m_idx) step_ea_acc[static_cast<size_t>(m_idx)] += wq * ea_ptr[m_idx];
             }
           }
@@ -1692,7 +2221,7 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
           }
           if (has_slopes) {
             double g_ls = 0.0;
-            const double* ls_row = cached_logslope_g.data() + static_cast<size_t>(loc) * Q;
+            const double* ls_row = cached_logslope_g + static_cast<size_t>(loc) * Q;
             for (int q = 0; q < Q; ++q) g_ls += W_q[static_cast<size_t>(q)] * ls_row[q];
             g_ls *= w;
             for (int ptr = obs_s_ptr[static_cast<size_t>(i)]; ptr < obs_s_ptr[static_cast<size_t>(i) + 1]; ++ptr) {
@@ -1731,6 +2260,110 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
         }
       }
 
+      if (adaptive_active && dim > 0) {
+        const double mode_p = adap_mode[static_cast<size_t>(p)];
+        const double scale_p = adap_scale[static_cast<size_t>(p)];
+        const double hp = 1.0 / (scale_p * scale_p);
+        double sum_w_gth = 0.0, sum_w_dgth = 0.0;
+        for (int q = 0; q < Q; ++q) {
+          double g_th_q = dlogL_dth[static_cast<size_t>(q)] - (th_q[static_cast<size_t>(q)] - mp) * inv_sig2;
+          double wq = W_q[static_cast<size_t>(q)];
+          sum_w_gth += wq * g_th_q;
+          sum_w_dgth += wq * (th_q[static_cast<size_t>(q)] - mode_p) * g_th_q;
+        }
+        const double c_m = -sum_w_gth;
+        const double c_ls = -(1.0 + sum_w_dgth);
+        if (std::abs(c_m) > 1e-16 || std::abs(c_ls) > 1e-16) {
+          std::fill(dG_dphi.begin(), dG_dphi.end(), 0.0);
+          std::fill(dh_dphi.begin(), dh_dphi.end(), 0.0);
+          double dh_dtheta = 0.0;
+          for (int loc = 0; loc < m_obs_p; ++loc) {
+            int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
+            double w = spec.weight[static_cast<size_t>(i)];
+            if (w <= 0.0) continue;
+            int sg = spec.step_group[static_cast<size_t>(i)];
+            int ag = smap.cat_min[static_cast<size_t>(sg)], bg = smap.cat_max[static_cast<size_t>(sg)];
+            int y = spec.score[static_cast<size_t>(i)];
+            const double* sc = step_cum_mat.data() + static_cast<size_t>(sg) * C;
+            double be = base_eta_obs[static_cast<size_t>(i)];
+            double al = alpha_obs[static_cast<size_t>(i)];
+            double eff_sc = (!has_slopes || sform == 1) ? 1.0 : al;
+            CatMoments cm0 = eval_gpcm_probs_and_moments(mode_p, be, al, sform, sc, C, y, probs.data(), ag, bg);
+            double mu3 = 0.0;
+            for (int k = ag; k <= bg; ++k) {
+              double dk = static_cast<double>(k) - cm0.mean;
+              mu3 += dk * dk * dk * probs[static_cast<size_t>(k)];
+            }
+            dh_dtheta += w * al * al * al * mu3;
+
+            double dG_db = -w * al * eff_sc * cm0.var;
+            double dh_db = w * al * al * eff_sc * mu3;
+            for (int ptr = obs_f_ptr[static_cast<size_t>(i)]; ptr < obs_f_ptr[static_cast<size_t>(i) + 1]; ++ptr) {
+              int col = obs_f_cols[static_cast<size_t>(ptr)];
+              double vf = obs_f_vals[static_cast<size_t>(ptr)];
+              dG_dphi[static_cast<size_t>(col)] += dG_db * vf;
+              dh_dphi[static_cast<size_t>(col)] += dh_db * vf;
+            }
+
+            const auto& scols = smap.group_step_cols[static_cast<size_t>(sg)];
+            const int n_sc = static_cast<int>(scols.size());
+            for (int m_idx = 0; m_idx < n_sc; ++m_idx) {
+              int c_loc = scols[static_cast<size_t>(m_idx)];
+              double c1 = 0.0, c2 = 0.0;
+              for (int k = ag; k <= bg; ++k) {
+                double pk = probs[static_cast<size_t>(k)];
+                if (pk <= 0.0) continue;
+                double dk = static_cast<double>(k) - cm0.mean;
+                double ak = smap.cum_B[(static_cast<size_t>(sg) * C + k) * qs + c_loc];
+                c1 += pk * dk * ak;
+                c2 += pk * (dk * dk - cm0.var) * ak;
+              }
+              int scol = smap.step_xi_start + c_loc;
+              dG_dphi[static_cast<size_t>(scol)] += w * al * eff_sc * c1;
+              dh_dphi[static_cast<size_t>(scol)] -= w * al * al * eff_sc * c2;
+            }
+
+            if (has_slopes) {
+              double C1 = 0.0, C2 = 0.0;
+              if (sform == 1) {
+                C1 = al * mode_p * cm0.var;
+                C2 = al * mode_p * mu3;
+              } else {
+                for (int k = ag; k <= bg; ++k) {
+                  double pk = probs[static_cast<size_t>(k)];
+                  if (pk <= 0.0 || !std::isfinite(sc[k])) continue;
+                  double dk = static_cast<double>(k) - cm0.mean;
+                  double zk = al * (static_cast<double>(k - ag) * (mode_p + be) - sc[k]);
+                  C1 += pk * dk * zk;
+                  C2 += pk * (dk * dk - cm0.var) * zk;
+                }
+              }
+              double dG_dls = w * al * (static_cast<double>(y) - cm0.mean - C1);
+              double dh_dls = w * al * al * (2.0 * cm0.var + C2);
+              for (int ptr = obs_s_ptr[static_cast<size_t>(i)]; ptr < obs_s_ptr[static_cast<size_t>(i) + 1]; ++ptr) {
+                int scol = obs_s_cols[static_cast<size_t>(ptr)];
+                double vs = obs_s_vals[static_cast<size_t>(ptr)];
+                dG_dphi[static_cast<size_t>(scol)] += dG_dls * vs;
+                dh_dphi[static_cast<size_t>(scol)] += dh_dls * vs;
+              }
+            }
+          }
+          if (spec.pop_mode == 1) {
+            for (int c = 0; c < dX; ++c) {
+              dG_dphi[static_cast<size_t>(n_xi + c)] += inv_sig2 * spec.pop_X[static_cast<size_t>(p) * dX + c];
+            }
+            dG_dphi[static_cast<size_t>(n_xi + dX)] += 2.0 * (mode_p - mp) * inv_sig2;
+            dh_dphi[static_cast<size_t>(n_xi + dX)] -= 2.0 * inv_sig2;
+          }
+          const double inv_hp = 1.0 / hp;
+          for (int j = 0; j < dim; ++j) {
+            double dm_j = inv_hp * dG_dphi[static_cast<size_t>(j)];
+            double dls_j = -0.5 * inv_hp * (dh_dtheta * dm_j + dh_dphi[static_cast<size_t>(j)]);
+            p_grad_local[static_cast<size_t>(j)] += c_m * dm_j + c_ls * dls_j;
+          }
+        }
+      }
+
       for (int j = 0; j < dim; ++j) {
         grad[static_cast<size_t>(j)] += p_grad_local[static_cast<size_t>(j)];
         if (person_scores_out) {
@@ -1745,30 +2378,43 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
     return total_nll;
   };
 
+  const bool has_warm = (static_cast<int>(ctrl.warm_init.size()) == dim);
   std::vector<double> phi0(static_cast<size_t>(dim), 0.0);
-  if (static_cast<int>(ctrl.warm_init.size()) == dim) {
+  if (has_warm) {
     phi0 = ctrl.warm_init;
   }
   auto fg_wrap = [&](const std::vector<double>& x, std::vector<double>& g) {
     return eval_mml_core(x, g, nullptr, nullptr, nullptr);
   };
-  LbfgsResult opt = minimize_lbfgs(phi0, fg_wrap, std::min(ctrl.maxit, 250), 1e-8, 1e-13, 14);
-  std::vector<double> phi = opt.x;
-  int total_iters = opt.iterations;
 
-  if (ctrl.adaptive_quad) {
+  std::vector<double> phi = phi0;
+  int total_iters = 0;
+  if (!ctrl.adaptive_quad) {
+    LbfgsResult opt = minimize_lbfgs(phi0, fg_wrap, ctrl.maxit, 1e-9, 1e-13, 14);
+    phi = opt.x;
+    total_iters = opt.iterations;
+  } else {
+    if (!has_warm) {
+      LbfgsResult warm = minimize_lbfgs(phi0, fg_wrap, std::min(ctrl.maxit, 50), 1e-6, 1e-11, 10);
+      bool warm_ok = std::isfinite(warm.f);
+      if (warm_ok) {
+        for (double v : warm.x) if (!std::isfinite(v)) warm_ok = false;
+      }
+      if (warm_ok) {
+        refresh_adaptive_basis(warm.x);
+        if (adaptive_basis_valid) {
+          phi = warm.x;
+          total_iters += warm.iterations;
+        }
+      }
+    }
     adaptive_active = true;
-    for (int cyc = 0; cyc < 5; ++cyc) {
-      std::vector<double> prev_phi = phi;
-      refresh_adaptive_basis(phi);
-      LbfgsResult sub = minimize_lbfgs(phi, fg_wrap, 80, 1e-8, 1e-13, 12);
+    int rem_it = std::max(0, ctrl.maxit - total_iters);
+    if (rem_it > 0) {
+      LbfgsResult sub = minimize_lbfgs(phi, fg_wrap, rem_it, 1e-9, 1e-13, 16);
       phi = sub.x;
       total_iters += sub.iterations;
-      double mdiff = 0.0;
-      for (int j = 0; j < dim; ++j) mdiff = std::max(mdiff, std::abs(phi[static_cast<size_t>(j)] - prev_phi[static_cast<size_t>(j)]));
-      if (mdiff < 1e-7) break;
     }
-    refresh_adaptive_basis(phi);
   }
 
   auto compute_hessian_and_scores = [&](const std::vector<double>& x_at,
@@ -1776,110 +2422,29 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
                                         std::vector<double>& H_out,
                                         std::vector<double>& S_person_out,
                                         double& nll_at) {
-    if (ctrl.adaptive_quad) refresh_adaptive_basis(x_at);
     nll_at = eval_mml_core(x_at, g_at, &S_person_out, &out.person_eap, &out.person_psd);
     H_out.assign(static_cast<size_t>(dim) * dim, 0.0);
-    if (dim == 0) return;
+    if (dim == 0 || !std::isfinite(nll_at)) return;
 
     const double eps = 1e-5;
     std::vector<double> xp = x_at, xm = x_at, gp, gm;
-    if (!ctrl.adaptive_quad) {
-      for (int j = 0; j < dim; ++j) {
-        double h = eps * std::max(1.0, std::abs(x_at[static_cast<size_t>(j)]));
-        xp[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)] + h;
-        xm[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)] - h;
-        eval_mml_core(xp, gp, nullptr, nullptr, nullptr);
-        eval_mml_core(xm, gm, nullptr, nullptr, nullptr);
-        for (int k = 0; k < dim; ++k) {
-          H_out[static_cast<size_t>(j) * dim + k] = (gp[static_cast<size_t>(k)] - gm[static_cast<size_t>(k)]) / (2.0 * h);
-        }
-        xp[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)];
-        xm[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)];
+    for (int j = 0; j < dim; ++j) {
+      double h = eps * std::max(1.0, std::abs(x_at[static_cast<size_t>(j)]));
+      xp[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)] + h;
+      xm[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)] - h;
+      double fp = eval_mml_core(xp, gp, nullptr, nullptr, nullptr);
+      double fm = eval_mml_core(xm, gm, nullptr, nullptr, nullptr);
+      if (!std::isfinite(fp) || !std::isfinite(fm)) {
+        std::fill(H_out.begin(), H_out.end(), kNaN);
+        break;
       }
-    } else {
-      S_person_out.assign(static_cast<size_t>(P) * dim, 0.0);
-      auto eval_adap_nll_per_person = [&](const std::vector<double>& xv, std::vector<double>& p_nll) -> double {
-        refresh_adaptive_basis(xv);
-        double sigma = 1.0;
-        unpack_pop(xv, sigma);
-        if (!std::isfinite(sigma) || sigma <= 1e-8) return kInf;
-        smap.expand(spec, xv.data(), beta, tau_mat, step_cum_mat);
-        if (!smap.expand_slopes(spec, xv.data(), log_slope_est, slope_est, alpha_obs)) return kInf;
-        for (int i = 0; i < spec.n_obs; ++i) {
-          double e = 0.0;
-          for (int f = 0; f < F; ++f) {
-            int l = spec.facet_flat[static_cast<size_t>(i) * F + f];
-            e += spec.facet_signs[static_cast<size_t>(f)] * beta[static_cast<size_t>(f)][static_cast<size_t>(l)];
-          }
-          base_eta_obs[static_cast<size_t>(i)] = e;
-        }
-        p_nll.assign(static_cast<size_t>(P), 0.0);
-        std::vector<double> probs(static_cast<size_t>(C)), lp(static_cast<size_t>(Q));
-        double inv_s2 = 1.0 / (sigma * sigma), tot = 0.0;
-        for (int p = 0; p < P; ++p) {
-          int beg = spec.p_row_ptr[static_cast<size_t>(p)], end = spec.p_row_ptr[static_cast<size_t>(p) + 1];
-          if (beg == end) continue;
-          double mp = mu_p[static_cast<size_t>(p)], sp = adap_scale[static_cast<size_t>(p)], md = adap_mode[static_cast<size_t>(p)];
-          for (int q = 0; q < Q; ++q) {
-            double z = z_nodes[static_cast<size_t>(q)];
-            double tq = md + sp * z, df = tq - mp;
-            lp[static_cast<size_t>(q)] = log_w_nodes[static_cast<size_t>(q)] + 0.5 * z * z + std::log(sp / sigma) - 0.5 * df * df * inv_s2;
-            for (int idx = beg; idx < end; ++idx) {
-              int i = spec.p_obs_idx[static_cast<size_t>(idx)];
-              double w = spec.weight[static_cast<size_t>(i)];
-              if (w <= 0.0) continue;
-              int sg = spec.step_group[static_cast<size_t>(i)];
-              lp[static_cast<size_t>(q)] += w * eval_gpcm_probs_and_moments(
-                  tq, base_eta_obs[static_cast<size_t>(i)], alpha_obs[static_cast<size_t>(i)], sform,
-                  step_cum_mat.data() + static_cast<size_t>(sg) * C, C, spec.score[static_cast<size_t>(i)], probs.data(),
-                  smap.cat_min[static_cast<size_t>(sg)], smap.cat_max[static_cast<size_t>(sg)]).log_py;
-            }
-          }
-          double mx = *std::max_element(lp.begin(), lp.end()), se = 0.0;
-          for (int q = 0; q < Q; ++q) se += std::exp(lp[static_cast<size_t>(q)] - mx);
-          p_nll[static_cast<size_t>(p)] = -(mx + std::log(se));
-          tot += p_nll[static_cast<size_t>(p)];
-        }
-        if (ctrl.facet_l2_pen > 0.0 || ctrl.slope_l2_pen > 0.0) {
-          std::vector<double> dummy_g;
-          tot += add_structural_l2_penalties(spec, smap, ctrl, beta, log_slope_est, dummy_g);
-        }
-        return tot;
-      };
-      std::vector<double> pnll0, pnll_p, pnll_m;
-      nll_at = eval_adap_nll_per_person(x_at, pnll0);
-      g_at.assign(static_cast<size_t>(dim), 0.0);
-      const double h_fd = 1e-4;
-      for (int j = 0; j < dim; ++j) {
-        double h = h_fd * std::max(1.0, std::abs(x_at[static_cast<size_t>(j)]));
-        xp[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)] + h;
-        xm[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)] - h;
-        double fp = eval_adap_nll_per_person(xp, pnll_p);
-        double fm = eval_adap_nll_per_person(xm, pnll_m);
-        g_at[static_cast<size_t>(j)] = (fp - fm) / (2.0 * h);
-        H_out[static_cast<size_t>(j) * dim + j] = (fp - 2.0 * nll_at + fm) / (h * h);
-        for (int p = 0; p < P; ++p) {
-          S_person_out[static_cast<size_t>(p) * dim + j] = (pnll_p[static_cast<size_t>(p)] - pnll_m[static_cast<size_t>(p)]) / (2.0 * h);
-        }
-        xp[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)];
-        xm[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)];
+      for (int k = 0; k < dim; ++k) {
+        H_out[static_cast<size_t>(j) * dim + k] = (gp[static_cast<size_t>(k)] - gm[static_cast<size_t>(k)]) / (2.0 * h);
       }
-      for (int j = 0; j < dim; ++j) {
-        double hj = h_fd * std::max(1.0, std::abs(x_at[static_cast<size_t>(j)]));
-        for (int k = j + 1; k < dim; ++k) {
-          double hk = h_fd * std::max(1.0, std::abs(x_at[static_cast<size_t>(k)]));
-          std::vector<double> xpp = x_at, xpm = x_at, xmp = x_at, xmm = x_at, tmp;
-          xpp[static_cast<size_t>(j)] += hj; xpp[static_cast<size_t>(k)] += hk;
-          xpm[static_cast<size_t>(j)] += hj; xpm[static_cast<size_t>(k)] -= hk;
-          xmp[static_cast<size_t>(j)] -= hj; xmp[static_cast<size_t>(k)] += hk;
-          xmm[static_cast<size_t>(j)] -= hj; xmm[static_cast<size_t>(k)] -= hk;
-          double v = (eval_adap_nll_per_person(xpp, tmp) - eval_adap_nll_per_person(xpm, tmp) -
-                      eval_adap_nll_per_person(xmp, tmp) + eval_adap_nll_per_person(xmm, tmp)) / (4.0 * hj * hk);
-          H_out[static_cast<size_t>(j) * dim + k] = v;
-          H_out[static_cast<size_t>(k) * dim + j] = v;
-        }
-      }
-      refresh_adaptive_basis(x_at);
+      xp[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)];
+      xm[static_cast<size_t>(j)] = x_at[static_cast<size_t>(j)];
+    }
+    if (ctrl.adaptive_quad) {
       std::vector<double> dummy_g;
       eval_mml_core(x_at, dummy_g, nullptr, &out.person_eap, &out.person_psd);
     }
@@ -1900,33 +2465,36 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
     for (double val : v) m = std::max(m, std::abs(val));
     return m;
   };
-  if (!ctrl.adaptive_quad) {
-    for (int pol = 0; pol < 3 && max_abs_v(g_fin) > 1e-9; ++pol) {
-      std::vector<double> d_phi;
-      if (!damped_spd_solve(H_full, dim, g_fin, d_phi, 0.0)) break;
-      std::vector<double> cand(static_cast<size_t>(dim)), g_c;
-      double scale = 1.0;
-      bool ok = false;
-      for (int ls = 0; ls < 10; ++ls) {
-        for (int j = 0; j < dim; ++j) cand[static_cast<size_t>(j)] = phi[static_cast<size_t>(j)] - scale * d_phi[static_cast<size_t>(j)];
-        double fc = eval_mml_core(cand, g_c, nullptr, nullptr, nullptr);
-        if (std::isfinite(fc) && fc <= nll_fin + 1e-13 * (1.0 + std::abs(nll_fin))) {
-          phi = cand;
-          ok = true;
-          break;
-        }
-        scale *= 0.5;
-      }
-      if (!ok) break;
-      compute_hessian_and_scores(phi, g_fin, H_full, S_person, nll_fin);
+  for (int pol = 0; pol < 6 && total_iters < ctrl.maxit && std::isfinite(nll_fin) && max_abs_v(g_fin) > 1e-9; ++pol) {
+    std::vector<double> d_phi;
+    if (!damped_spd_solve(H_full, dim, g_fin, d_phi, 0.0) &&
+        !damped_spd_solve(H_full, dim, g_fin, d_phi, 1e-6)) {
+      break;
     }
+    double mstep = 0.0;
+    for (double v : d_phi) mstep = std::max(mstep, std::abs(v));
+    double scale = (mstep > 2.0) ? (2.0 / mstep) : 1.0;
+    std::vector<double> cand(static_cast<size_t>(dim)), g_c;
+    bool ok = false;
+    for (int ls = 0; ls < 12; ++ls) {
+      for (int j = 0; j < dim; ++j) cand[static_cast<size_t>(j)] = phi[static_cast<size_t>(j)] - scale * d_phi[static_cast<size_t>(j)];
+      double fc = eval_mml_core(cand, g_c, nullptr, nullptr, nullptr);
+      if (std::isfinite(fc) && fc <= nll_fin + 1e-13 * (1.0 + std::abs(nll_fin))) {
+        phi = cand;
+        ok = true;
+        ++total_iters;
+        break;
+      }
+      scale *= 0.5;
+    }
+    if (!ok) break;
+    compute_hessian_and_scores(phi, g_fin, H_full, S_person, nll_fin);
   }
 
   out.iterations = total_iters;
-  out.loglik = -nll_fin;
   out.objective = nll_fin;
   out.max_abs_grad = max_abs_v(g_fin);
-  out.converged = std::isfinite(nll_fin) && (out.max_abs_grad <= 1e-4);
+  out.converged = std::isfinite(nll_fin) && adaptive_basis_valid && (out.max_abs_grad <= 1e-4);
   out.xi_est = phi; // Full parameter vector [n_xi + dX + has_free_sigma] for warm starts & vcov!
 
   double sigma_hat = 1.0;
@@ -1936,6 +2504,13 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
   for (int c = 0; c < dX; ++c) out.pop_beta[static_cast<size_t>(c)] = phi[static_cast<size_t>(n_xi + c)];
   smap.expand(spec, phi.data(), out.facet_est, out.step_est, out.step_cum);
   smap.expand_slopes(spec, phi.data(), out.log_slope_est, out.slope_est, out.alpha_obs);
+
+  double pen_fin = 0.0;
+  if (std::isfinite(nll_fin) && (ctrl.facet_l2_pen > 0.0 || ctrl.slope_l2_pen > 0.0)) {
+    std::vector<double> dummy_pen_g(static_cast<size_t>(dim), 0.0);
+    pen_fin = add_structural_l2_penalties(spec, smap, ctrl, out.facet_est, out.log_slope_est, dummy_pen_g);
+  }
+  out.loglik = std::isfinite(nll_fin) ? -(nll_fin - pen_fin) : kNaN;
 
   // Boundary guard: if free sigma collapses near 0, withhold Wald covariance
   std::vector<double> V_model, V_sw;
@@ -2048,6 +2623,283 @@ inline void solve_mml(const FastDesignSpec& spec, const StructuralMap& smap,
   compute_fast_diagnostics_and_fair(
       spec, out.person_est, diag_exclude, out.facet_est, out.step_cum,
       ctrl.whexact, out.person_diag, out.facet_diag, alpha_ptr);
+
+  // Posterior-integrated MML fit indices (TAM::msq.itemfit quadrature expectation over P(theta | y_p))
+  {
+    std::vector<double> mu_fin(static_cast<size_t>(P), 0.0);
+    if (dX > 0 && static_cast<int>(out.pop_beta.size()) == dX) {
+      for (int p = 0; p < P; ++p) {
+        double m = 0.0;
+        const double* xp = spec.pop_X.data() + static_cast<size_t>(p) * dX;
+        for (int c = 0; c < dX; ++c) m += xp[c] * out.pop_beta[static_cast<size_t>(c)];
+        mu_fin[static_cast<size_t>(p)] = m;
+      }
+    }
+    const bool post_sigma_ok = std::isfinite(sigma_hat) && sigma_hat > 0.0;
+    if (post_sigma_ok && Q >= 1) {
+      const double inv_sig2_fin = 1.0 / (sigma_hat * sigma_hat);
+      std::vector<double> p_post_n(static_cast<size_t>(P), 0.0);
+      std::vector<double> p_post_out_n(static_cast<size_t>(P), 0.0);
+      std::vector<double> p_post_var(static_cast<size_t>(P), 0.0);
+      std::vector<double> p_post_sq(static_cast<size_t>(P), 0.0);
+      std::vector<double> p_post_std(static_cast<size_t>(P), 0.0);
+      std::vector<double> p_post_f4i(static_cast<size_t>(P), 0.0);
+      std::vector<double> p_post_f4o(static_cast<size_t>(P), 0.0);
+
+      std::vector<std::vector<double>> f_post_n(static_cast<size_t>(F));
+      std::vector<std::vector<double>> f_post_out_n(static_cast<size_t>(F));
+      std::vector<std::vector<double>> f_post_var(static_cast<size_t>(F));
+      std::vector<std::vector<double>> f_post_sq(static_cast<size_t>(F));
+      std::vector<std::vector<double>> f_post_std(static_cast<size_t>(F));
+      std::vector<std::vector<double>> f_post_f4i(static_cast<size_t>(F));
+      std::vector<std::vector<double>> f_post_f4o(static_cast<size_t>(F));
+      for (int f = 0; f < F; ++f) {
+        size_t Lf = static_cast<size_t>(spec.facet_n_levels[static_cast<size_t>(f)]);
+        f_post_n[static_cast<size_t>(f)].assign(Lf, 0.0);
+        f_post_out_n[static_cast<size_t>(f)].assign(Lf, 0.0);
+        f_post_var[static_cast<size_t>(f)].assign(Lf, 0.0);
+        f_post_sq[static_cast<size_t>(f)].assign(Lf, 0.0);
+        f_post_std[static_cast<size_t>(f)].assign(Lf, 0.0);
+        f_post_f4i[static_cast<size_t>(f)].assign(Lf, 0.0);
+        f_post_f4o[static_cast<size_t>(f)].assign(Lf, 0.0);
+      }
+
+      std::vector<double> th_q(static_cast<size_t>(Q));
+      std::vector<double> log_post(static_cast<size_t>(Q));
+      std::vector<double> W_q(static_cast<size_t>(Q));
+      std::vector<double> probs(static_cast<size_t>(C));
+
+      const bool use_post_cells = (!adaptive_active && can_use_cell_table);
+      std::vector<double> post_cell_var, post_cell_m4;
+      if (use_post_cells) {
+        post_cell_var.assign(static_cast<size_t>(M_cells) * Q, 0.0);
+        post_cell_m4.assign(static_cast<size_t>(M_cells) * Q, 0.0);
+        for (int g = 0; g < G_pop; ++g) {
+          double mg = (P > 0) ? mu_fin[static_cast<size_t>(pop_grp_rep[static_cast<size_t>(g)])] : 0.0;
+          double* g_th = grp_th_q.data() + static_cast<size_t>(g) * Q;
+          for (int q = 0; q < Q; ++q) g_th[q] = mg + sigma_hat * z_nodes[static_cast<size_t>(q)];
+        }
+        for (int cid = 0; cid < M_cells; ++cid) {
+          const MmlQuadCell& mc = mml_cells[static_cast<size_t>(cid)];
+          const int i_rep = mc.rep_obs;
+          const int sg = mc.sg, ag = mc.ag, bg = mc.bg;
+          const double* sc = out.step_cum.data() + static_cast<size_t>(sg) * C;
+          const double be = base_eta_obs[static_cast<size_t>(i_rep)];
+          const double al = alpha_ptr ? (*alpha_ptr)[static_cast<size_t>(i_rep)] : 1.0;
+          const double* g_th = grp_th_q.data() + static_cast<size_t>(mc.pop_grp) * Q;
+          for (int q = 0; q < Q; ++q) {
+            CatMoments cm = eval_gpcm_probs_and_moments(
+                g_th[q], be, al, sform, sc, C, ag, probs.data(), ag, bg);
+            // Populate log P(Y=k) for all k in [ag, bg] from normalized probs + log_py at ag
+            double log_p_ag = cm.log_py;
+            for (int k = 0; k < C; ++k) {
+              double lpk = -kInf;
+              if (k >= ag && k <= bg && std::isfinite(sc[k])) {
+                if (std::isfinite(log_p_ag) && std::isfinite(sc[ag])) {
+                  double du = (!has_slopes)
+                                  ? (static_cast<double>(k - ag) * (g_th[q] + be) - (sc[k] - sc[ag]))
+                                  : ((sform == 1)
+                                         ? (static_cast<double>(k - ag) * (al * g_th[q] + be) - (sc[k] - sc[ag]))
+                                         : (al * (static_cast<double>(k - ag) * (g_th[q] + be) - (sc[k] - sc[ag]))));
+                  lpk = log_p_ag + du;
+                } else if (probs[static_cast<size_t>(k)] > 0.0) {
+                  lpk = std::log(probs[static_cast<size_t>(k)]);
+                }
+              }
+              cell_log_p[(static_cast<size_t>(cid) * C + k) * Q + q] = lpk;
+            }
+            cell_mean[static_cast<size_t>(cid) * Q + q] = cm.mean;
+            post_cell_var[static_cast<size_t>(cid) * Q + q] = cm.var;
+            post_cell_m4[static_cast<size_t>(cid) * Q + q] = cm.m4;
+          }
+        }
+      }
+
+      std::vector<double> c_mean_buf(use_post_cells ? 0 : (static_cast<size_t>(std::max(1, max_person_obs)) * Q), 0.0);
+      std::vector<double> c_var_buf(use_post_cells ? 0 : (static_cast<size_t>(std::max(1, max_person_obs)) * Q), 0.0);
+      std::vector<double> c_m4_buf(use_post_cells ? 0 : (static_cast<size_t>(std::max(1, max_person_obs)) * Q), 0.0);
+
+      for (int p = 0; p < P; ++p) {
+        if (diag_exclude[static_cast<size_t>(p)]) continue;
+        int beg = spec.p_row_ptr[static_cast<size_t>(p)];
+        int end = spec.p_row_ptr[static_cast<size_t>(p) + 1];
+        if (beg >= end) continue;
+        const int m_obs_p = end - beg;
+
+        if (use_post_cells) {
+          std::copy_n(log_w_nodes.data(), Q, log_post.data());
+          for (int loc = 0; loc < m_obs_p; ++loc) {
+            int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
+            double w = spec.weight[static_cast<size_t>(i)];
+            if (w <= 0.0) continue;
+            int cid = obs_cell_id[static_cast<size_t>(i)];
+            int y = spec.score[static_cast<size_t>(i)];
+            const double* lp_cq = (y >= 0 && y < C)
+                                      ? (cell_log_p.data() + (static_cast<size_t>(cid) * C + y) * Q)
+                                      : nullptr;
+            if (!lp_cq) {
+              std::fill(log_post.begin(), log_post.end(), -kInf);
+              break;
+            }
+            for (int q = 0; q < Q; ++q) log_post[static_cast<size_t>(q)] += w * lp_cq[q];
+          }
+        } else {
+          double mp = mu_fin[static_cast<size_t>(p)];
+          for (int q = 0; q < Q; ++q) {
+            double z = z_nodes[static_cast<size_t>(q)];
+            if (!adaptive_active) {
+              th_q[static_cast<size_t>(q)] = mp + sigma_hat * z;
+              log_post[static_cast<size_t>(q)] = log_w_nodes[static_cast<size_t>(q)];
+            } else {
+              double sp = adap_scale[static_cast<size_t>(p)];
+              double tq = adap_mode[static_cast<size_t>(p)] + sp * z;
+              th_q[static_cast<size_t>(q)] = tq;
+              double diff = tq - mp;
+              log_post[static_cast<size_t>(q)] =
+                  log_w_nodes[static_cast<size_t>(q)] + 0.5 * z * z +
+                  std::log(sp / sigma_hat) - 0.5 * diff * diff * inv_sig2_fin;
+            }
+          }
+          for (int loc = 0; loc < m_obs_p; ++loc) {
+            int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
+            double w = spec.weight[static_cast<size_t>(i)];
+            if (w <= 0.0) continue;
+            int sg = spec.step_group[static_cast<size_t>(i)];
+            int ag = smap.cat_min[static_cast<size_t>(sg)], bg = smap.cat_max[static_cast<size_t>(sg)];
+            int y = spec.score[static_cast<size_t>(i)];
+            const double* sc = out.step_cum.data() + static_cast<size_t>(sg) * C;
+            double be = base_eta_obs[static_cast<size_t>(i)];
+            double al = alpha_ptr ? (*alpha_ptr)[static_cast<size_t>(i)] : 1.0;
+
+            for (int q = 0; q < Q; ++q) {
+              CatMoments cm = eval_gpcm_probs_and_moments(
+                  th_q[static_cast<size_t>(q)], be, al, sform, sc, C, y, probs.data(), ag, bg);
+              log_post[static_cast<size_t>(q)] += w * cm.log_py;
+              size_t idx_lq = static_cast<size_t>(loc) * Q + q;
+              c_mean_buf[idx_lq] = cm.mean;
+              c_var_buf[idx_lq] = cm.var;
+              c_m4_buf[idx_lq] = cm.m4;
+            }
+          }
+        }
+
+        double max_lp = log_post[0];
+        for (int q = 1; q < Q; ++q) {
+          if (log_post[static_cast<size_t>(q)] > max_lp) max_lp = log_post[static_cast<size_t>(q)];
+        }
+        if (!std::isfinite(max_lp)) continue;
+        double sum_exp = 0.0;
+        for (int q = 0; q < Q; ++q) {
+          W_q[static_cast<size_t>(q)] = std::exp(log_post[static_cast<size_t>(q)] - max_lp);
+          sum_exp += W_q[static_cast<size_t>(q)];
+        }
+        if (!(sum_exp > 0.0) || !std::isfinite(sum_exp)) continue;
+        double inv_sum = 1.0 / sum_exp;
+        for (int q = 0; q < Q; ++q) W_q[static_cast<size_t>(q)] *= inv_sum;
+
+        for (int loc = 0; loc < m_obs_p; ++loc) {
+          int i = spec.p_obs_idx[static_cast<size_t>(beg + loc)];
+          double w = spec.weight[static_cast<size_t>(i)];
+          if (w <= 0.0) continue;
+          int sg = spec.step_group[static_cast<size_t>(i)];
+          if (smap.cat_max[static_cast<size_t>(sg)] <= smap.cat_min[static_cast<size_t>(sg)]) continue;
+          double y = static_cast<double>(spec.score[static_cast<size_t>(i)]);
+
+          double e_sq = 0.0, e_v = 0.0, e_f4i = 0.0;
+          double e_std = 0.0, e_f4o = 0.0, w_out_ok = 0.0;
+          const int cid = use_post_cells ? obs_cell_id[static_cast<size_t>(i)] : -1;
+          const double* mq_row = use_post_cells ? (cell_mean.data() + static_cast<size_t>(cid) * Q)
+                                                : (c_mean_buf.data() + static_cast<size_t>(loc) * Q);
+          const double* vq_row = use_post_cells ? (post_cell_var.data() + static_cast<size_t>(cid) * Q)
+                                                : (c_var_buf.data() + static_cast<size_t>(loc) * Q);
+          const double* m4_row = use_post_cells ? (post_cell_m4.data() + static_cast<size_t>(cid) * Q)
+                                                : (c_m4_buf.data() + static_cast<size_t>(loc) * Q);
+          for (int q = 0; q < Q; ++q) {
+            double wq = W_q[static_cast<size_t>(q)];
+            if (wq <= 0.0) continue;
+            double mq = mq_row[q];
+            double vq = vq_row[q];
+            double m4q = m4_row[q];
+            if (!std::isfinite(mq) || !std::isfinite(vq) || !std::isfinite(m4q)) continue;
+            double r = y - mq;
+            double r2 = r * r;
+            e_sq += wq * r2;
+            e_v += wq * vq;
+            e_f4i += wq * (m4q - vq * vq);
+            if (vq > 1e-12) {
+              e_std += wq * (r2 / vq);
+              e_f4o += wq * (m4q / (vq * vq) - 1.0);
+              w_out_ok += wq;
+            }
+          }
+          if (e_v <= 1e-12) continue;
+
+          p_post_n[static_cast<size_t>(p)] += w;
+          p_post_var[static_cast<size_t>(p)] += w * e_v;
+          p_post_sq[static_cast<size_t>(p)] += w * e_sq;
+          p_post_f4i[static_cast<size_t>(p)] += w * e_f4i;
+          if (w_out_ok > 0.999) {
+            double sc_o = 1.0 / w_out_ok;
+            p_post_out_n[static_cast<size_t>(p)] += w;
+            p_post_std[static_cast<size_t>(p)] += w * (e_std * sc_o);
+            p_post_f4o[static_cast<size_t>(p)] += w * (e_f4o * sc_o);
+          }
+
+          for (int f = 0; f < F; ++f) {
+            size_t l = static_cast<size_t>(spec.facet_flat[static_cast<size_t>(i) * F + f]);
+            f_post_n[static_cast<size_t>(f)][l] += w;
+            f_post_var[static_cast<size_t>(f)][l] += w * e_v;
+            f_post_sq[static_cast<size_t>(f)][l] += w * e_sq;
+            f_post_f4i[static_cast<size_t>(f)][l] += w * e_f4i;
+            if (w_out_ok > 0.999) {
+              double sc_o = 1.0 / w_out_ok;
+              f_post_out_n[static_cast<size_t>(f)][l] += w;
+              f_post_std[static_cast<size_t>(f)][l] += w * (e_std * sc_o);
+              f_post_f4o[static_cast<size_t>(f)][l] += w * (e_f4o * sc_o);
+            }
+          }
+        }
+      }
+
+      auto finalize_post = [&](ElementDiagTable& t,
+                               const std::vector<double>& n_in,
+                               const std::vector<double>& n_out,
+                               const std::vector<double>& sc_v,
+                               const std::vector<double>& sq_r,
+                               const std::vector<double>& std_sq,
+                               const std::vector<double>& f4_i,
+                               const std::vector<double>& f4_o) {
+        for (size_t j = 0; j < t.obs_n.size(); ++j) {
+          if (n_in[j] > 0.0 && sc_v[j] > 1e-12) {
+            double infit = sq_r[j] / sc_v[j];
+            t.post_infit_mnsq[j] = infit;
+            if (f4_i[j] > 1e-18 && infit >= 0.0) {
+              double q_in = std::sqrt(f4_i[j]) / sc_v[j];
+              double z_in = 3.0 * (std::cbrt(infit) - 1.0) / q_in + q_in / 3.0;
+              t.post_infit_zstd[j] = std::max(-9.0, std::min(9.0, z_in));
+            }
+          }
+          if (n_out[j] > 0.0) {
+            double outfit = std_sq[j] / n_out[j];
+            t.post_outfit_mnsq[j] = outfit;
+            if (f4_o[j] > 1e-18 && outfit >= 0.0) {
+              double q_out = std::sqrt(f4_o[j]) / n_out[j];
+              double z_out = 3.0 * (std::cbrt(outfit) - 1.0) / q_out + q_out / 3.0;
+              t.post_outfit_zstd[j] = std::max(-9.0, std::min(9.0, z_out));
+            }
+          }
+        }
+      };
+      finalize_post(out.person_diag, p_post_n, p_post_out_n, p_post_var, p_post_sq, p_post_std, p_post_f4i, p_post_f4o);
+      for (int f = 0; f < F; ++f) {
+        finalize_post(out.facet_diag[static_cast<size_t>(f)],
+                      f_post_n[static_cast<size_t>(f)], f_post_out_n[static_cast<size_t>(f)],
+                      f_post_var[static_cast<size_t>(f)], f_post_sq[static_cast<size_t>(f)],
+                      f_post_std[static_cast<size_t>(f)], f_post_f4i[static_cast<size_t>(f)],
+                      f_post_f4o[static_cast<size_t>(f)]);
+      }
+    }
+  }
 
   out.person_real_se.assign(static_cast<size_t>(P), kNaN);
   out.person_cond_se.assign(static_cast<size_t>(P), kNaN);
@@ -2467,35 +3319,54 @@ inline FastFitOutput run_fast_fit(FastDesignSpec& spec, const FastControl& ctrl)
   return out;
 }
 
-inline std::vector<FastFitOutput> run_fast_batch_parallel(
-    std::vector<FastDesignSpec>& specs,
-    const FastControl& ctrl,
-    int n_threads = 1) {
-  const int R = static_cast<int>(specs.size());
+template <typename Fit>
+inline std::vector<FastFitOutput> run_fast_batch(int R, int n_threads, Fit fit) {
   std::vector<FastFitOutput> results(static_cast<size_t>(R));
   if (R == 0) return results;
   int workers = std::max(1, std::min(n_threads, R));
   if (workers == 1) {
     for (int r = 0; r < R; ++r) {
-      results[static_cast<size_t>(r)] = run_fast_fit(specs[static_cast<size_t>(r)], ctrl);
+      results[static_cast<size_t>(r)] = fit(r);
     }
     return results;
   }
 
   std::atomic<int> next_idx{0};
   std::vector<std::thread> pool;
+  std::vector<std::exception_ptr> errors(static_cast<size_t>(workers));
   pool.reserve(static_cast<size_t>(workers));
-  for (int w = 0; w < workers; ++w) {
-    pool.emplace_back([&]() {
-      while (true) {
-        int r = next_idx.fetch_add(1, std::memory_order_relaxed);
-        if (r >= R) break;
-        results[static_cast<size_t>(r)] = run_fast_fit(specs[static_cast<size_t>(r)], ctrl);
-      }
-    });
+  try {
+    for (int w = 0; w < workers; ++w) {
+      pool.emplace_back([&, w]() {
+        try {
+          while (true) {
+            int r = next_idx.fetch_add(1, std::memory_order_relaxed);
+            if (r >= R) break;
+            results[static_cast<size_t>(r)] = fit(r);
+          }
+        } catch (...) {
+          errors[static_cast<size_t>(w)] = std::current_exception();
+          next_idx.store(R, std::memory_order_relaxed);
+        }
+      });
+    }
+  } catch (...) {
+    next_idx.store(R, std::memory_order_relaxed);
+    for (auto& th : pool) th.join();
+    throw;
   }
   for (auto& th : pool) th.join();
+  for (const auto& error : errors) {
+    if (error) std::rethrow_exception(error);
+  }
   return results;
+}
+
+inline std::vector<FastFitOutput> run_fast_batch_parallel(
+    std::vector<FastDesignSpec>& specs, const FastControl& ctrl, int n_threads = 1) {
+  return run_fast_batch(static_cast<int>(specs.size()), n_threads, [&](int r) {
+    return run_fast_fit(specs[static_cast<size_t>(r)], ctrl);
+  });
 }
 
 // Parallel per-spec warm-start runner (used by analyze_dff for parallel split-rater refits!)
@@ -2503,31 +3374,9 @@ inline std::vector<FastFitOutput> run_fast_batch_warm_parallel(
     std::vector<FastDesignSpec>& specs,
     const std::vector<FastControl>& ctrls,
     int n_threads = 1) {
-  const int R = static_cast<int>(specs.size());
-  std::vector<FastFitOutput> results(static_cast<size_t>(R));
-  if (R == 0) return results;
-  int workers = std::max(1, std::min(n_threads, R));
-  if (workers == 1) {
-    for (int r = 0; r < R; ++r) {
-      results[static_cast<size_t>(r)] = run_fast_fit(specs[static_cast<size_t>(r)], ctrls[static_cast<size_t>(r)]);
-    }
-    return results;
-  }
-
-  std::atomic<int> next_idx{0};
-  std::vector<std::thread> pool;
-  pool.reserve(static_cast<size_t>(workers));
-  for (int w = 0; w < workers; ++w) {
-    pool.emplace_back([&]() {
-      while (true) {
-        int r = next_idx.fetch_add(1, std::memory_order_relaxed);
-        if (r >= R) break;
-        results[static_cast<size_t>(r)] = run_fast_fit(specs[static_cast<size_t>(r)], ctrls[static_cast<size_t>(r)]);
-      }
-    });
-  }
-  for (auto& th : pool) th.join();
-  return results;
+  return run_fast_batch(static_cast<int>(specs.size()), n_threads, [&](int r) {
+    return run_fast_fit(specs[static_cast<size_t>(r)], ctrls[static_cast<size_t>(r)]);
+  });
 }
 
 } // namespace mfrm_fast

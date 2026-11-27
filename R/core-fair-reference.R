@@ -6,8 +6,8 @@ mfrm_fair_reference_plan <- function(fit, plan) {
     mfrm_fair_reference_score_fit(fit)
     facets <- fit$encoding$base_facets
     levels <- stats::setNames(fit$encoding$facet_levels, fit$encoding$facets)
-    if ("Weight" %in% facets)
-        stop("The reference plan reserves the column name 'Weight'.", call. = FALSE)
+    if (any(c("Weight", "NormalizedWeight") %in% facets))
+        stop("The reference plan reserves the column names 'Weight' and 'NormalizedWeight'.", call. = FALSE)
     if (!is.data.frame(plan) || !nrow(plan) || anyDuplicated(names(plan)) || !setequal(setdiff(names(plan),
         "Weight"), facets))
         stop("`reference_plan` must contain every fitted facet and optional Weight only.", call. = FALSE)
@@ -43,7 +43,7 @@ mfrm_fair_reference_scores <- function(fit, plan, level = NULL) {
         for (start in starts) {
             ids <- ok[seq.int(start, min(length(ok), start + batch - 1L))]
             block <- nd[rep(seq_len(nrow(plan)), length(ids)), , drop = FALSE]
-            block$theta <- rep(theta[ids], each = nrow(plan))
+            attr(block, ".mfrm_theta") <- rep(theta[ids], each = nrow(plan))
             score <- matrix(predict(fit, block, type = "response"), nrow = nrow(plan))
             out[ids] <- drop(crossprod(plan$NormalizedWeight, score))
         }

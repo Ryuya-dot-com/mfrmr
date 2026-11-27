@@ -323,6 +323,10 @@ writable::list pack_fit_output(const mfrm_fast::FastDesignSpec& spec,
       "infit_zstd"_nm = vec_to_r(fd.infit_zstd),
       "outfit_mnsq"_nm = vec_to_r(fd.outfit_mnsq),
       "outfit_zstd"_nm = vec_to_r(fd.outfit_zstd),
+      "post_infit_mnsq"_nm = vec_to_r(fd.post_infit_mnsq),
+      "post_infit_zstd"_nm = vec_to_r(fd.post_infit_zstd),
+      "post_outfit_mnsq"_nm = vec_to_r(fd.post_outfit_mnsq),
+      "post_outfit_zstd"_nm = vec_to_r(fd.post_outfit_zstd),
       "fair_m"_nm = vec_to_r(fd.fair_m),
       "fair_z"_nm = vec_to_r(fd.fair_z)
     });
@@ -337,6 +341,10 @@ writable::list pack_fit_output(const mfrm_fast::FastDesignSpec& spec,
     "infit_zstd"_nm = vec_to_r(res.person_diag.infit_zstd),
     "outfit_mnsq"_nm = vec_to_r(res.person_diag.outfit_mnsq),
     "outfit_zstd"_nm = vec_to_r(res.person_diag.outfit_zstd),
+    "post_infit_mnsq"_nm = vec_to_r(res.person_diag.post_infit_mnsq),
+    "post_infit_zstd"_nm = vec_to_r(res.person_diag.post_infit_zstd),
+    "post_outfit_mnsq"_nm = vec_to_r(res.person_diag.post_outfit_mnsq),
+    "post_outfit_zstd"_nm = vec_to_r(res.person_diag.post_outfit_zstd),
     "fair_m"_nm = vec_to_r(res.person_diag.fair_m),
     "fair_z"_nm = vec_to_r(res.person_diag.fair_z)
   });
@@ -485,12 +493,15 @@ writable::list mfrm_cpp_fast_wle(
     doubles_matrix<> step_cum_mat,
     integers step_group0,
     integers step_cat_min,
-    integers step_cat_max) {
+    integers step_cat_max,
+    doubles alpha_obs,
+    int slope_formula) {
   using namespace cpp11::literals;
   mfrm_fast::FastDesignSpec spec;
   spec.n_obs = person0.size();
   spec.n_person = n_person;
   spec.n_cat = n_cat;
+  spec.slope_formula = slope_formula;
   spec.person.assign(person0.begin(), person0.end());
   spec.score.assign(score0.begin(), score0.end());
   spec.weight.assign(weight.begin(), weight.end());
@@ -509,7 +520,9 @@ writable::list mfrm_cpp_fast_wle(
           (cpp11::is_na(v) || std::isnan(v)) ? mfrm_fast::kInf : v;
     }
   }
-  auto wle = mfrm_fast::score_wle_persons(spec, be, sc);
+  std::vector<double> alpha_vec(alpha_obs.begin(), alpha_obs.end());
+  const std::vector<double>* alpha_ptr = alpha_vec.empty() ? nullptr : &alpha_vec;
+  auto wle = mfrm_fast::score_wle_persons(spec, be, sc, alpha_ptr);
   return writable::list({
     "theta"_nm = vec_to_r(wle.theta),
     "se"_nm = vec_to_r(wle.se)

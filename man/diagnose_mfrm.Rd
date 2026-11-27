@@ -8,15 +8,19 @@ Summarizes facet- and person-level measurement quality from a fitted Many-Facet 
 diagnose_mfrm(
   fit,
   residual_pca = c("none", "overall", "facet", "both"),
-  pca_max_factors = 10L)
+  pca_max_factors = 10L,
+  mnsq_range = c(0.5, 1.5),
+  fit_method = c("auto", "posterior", "plugin"))
 }
 \arguments{
   \item{fit}{A fitted model object returned by \code{\link{fit_mfrm}}.}
   \item{residual_pca}{Optional residual principal-components mode (\code{"none"}, \code{"overall"}, \code{"facet"}, or \code{"both"}).}
   \item{pca_max_factors}{Maximum number of residual PCA factors extracted when \code{residual_pca != "none"}.}
+  \item{mnsq_range}{Acceptable \code{MnSq} interval for \code{summary()$flagged_elements} (default \code{c(0.50, 1.50)}).}
+  \item{fit_method}{Fit-statistic basis for element flagging: \code{"auto"} (posterior-integrated \code{PostInfit}/\code{PostOutfit} for \code{MML}, plug-in \code{Infit}/\code{Outfit} otherwise), \code{"posterior"}, or \code{"plugin"}. Both sets of columns are retained in \code{measures}.}
 }
 \value{
-An S3 diagnostic bundle of class \code{"mfrm_diagnostics"} containing \code{reliability} (per-facet \code{ModelReliability}, \code{RealReliability}, \code{ModelSeparation}, \code{RealSeparation}, \code{Strata}, and \code{HomogeneityChiSq}), \code{measures} (element-level \code{Estimate}, \code{ModelSE}, \code{RealSE}, \code{FairM}, \code{Infit}, \code{InfitZSTD}, \code{Outfit}, \code{OutfitZSTD}), and \code{unexpected} (flagged rating rows sorted by \code{|StdResidual|}).
+An S3 diagnostic bundle of class \code{"mfrm_diagnostics"} containing \code{reliability} (per-facet \code{ModelReliability}, \code{RealReliability}, \code{ModelSeparation}, \code{RealSeparation}, \code{Strata}, and \code{HomogeneityChiSq}), \code{measures} (element-level \code{Estimate}, \code{ModelSE}, \code{RealSE}, \code{FairM}, plug-in \code{Infit}/\code{InfitZSTD}/\code{Outfit}/\code{OutfitZSTD}, and MML posterior-integrated \code{PostInfit}/\code{PostInfitZSTD}/\code{PostOutfit}/\code{PostOutfitZSTD}), and \code{unexpected} (flagged rating rows sorted by \code{|StdResidual|}).
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{compute_person_fit_indices}}, \code{\link{fair_average_table}}, \code{\link{plot.mfrm_fit}}

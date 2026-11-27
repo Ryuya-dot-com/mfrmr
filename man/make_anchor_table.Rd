@@ -13,8 +13,8 @@ make_anchor_table(
   \item{fit}{A fitted baseline model object returned by \code{\link{fit_mfrm}}.}
   \item{facets}{Optional character vector of non-person facet names to include; defaults to all non-person facets.}
   \item{include_person}{Logical; if \code{TRUE}, also exports finite person ability estimates as \code{Facet = "Person"} rows.}
-  \item{digits}{Optional integer rounding precision applied to \code{Anchor} values.}
-  \item{readiness_policy}{\code{"error"} (rejects non-converged or unready legacy calibrations) or \code{"review"}.}
+  \item{digits}{Optional nonnegative integer rounding precision applied to \code{Anchor} values.}
+  \item{readiness_policy}{\code{"error"} (default; rejects non-converged or non-inference-ready calibrations) or \code{"review"} (exports finite estimates for manual inspection).}
 }
 \value{
 A \code{data.frame} (or \code{tibble}) with columns \code{Facet}, \code{Level}, and \code{Anchor}.

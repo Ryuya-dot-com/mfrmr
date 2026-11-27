@@ -23,7 +23,8 @@ test_that("check_mfrm_connectivity and pre-estimation fit_mfrm warning detect di
     "Disconnected rating design"
   )
   expect_no_warning(
-    fit_mfrm(d_disc, "Person", c("Rater", "Criterion"), "Score", warn_connectivity = FALSE)
+    fit_mfrm(d_disc, "Person", c("Rater", "Criterion"), "Score", warn_connectivity = FALSE,
+      control = list(mml_integration = "fixed"))
   )
 })
 

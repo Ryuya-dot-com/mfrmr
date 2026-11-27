@@ -77,29 +77,39 @@ writable::doubles mfrm_cpp_expected_agreement(
     list groups, doubles scores, doubles_matrix<> probs) {
   double units = 0, pairs = 0, exact = 0, adjacent = 0;
   double expected_exact = 0, expected_adjacent = 0;
+  const int ncol = probs.ncol();
   for (SEXP group : groups) {
     integers rows(group);
     bool counted = false;
     for (R_xlen_t i = 0; i < rows.size(); ++i) {
       const int a = rows[i] - 1;
+      const double sa = scores[a];
+      if (!std::isfinite(sa) || sa < 1.0 || sa > static_cast<double>(ncol)) continue;
       for (R_xlen_t j = i + 1; j < rows.size(); ++j) {
         const int b = rows[j] - 1;
+        const double sb = scores[b];
+        if (!std::isfinite(sb) || sb < 1.0 || sb > static_cast<double>(ncol)) continue;
         double exact_pair = 0, adjacent_pair = 0;
         double total_a = 0, total_b = 0;
-        for (int k = 0; k < probs.ncol(); ++k) {
+        bool valid_probs = true;
+        for (int k = 0; k < ncol; ++k) {
           const double pa = probs(a, k), pb = probs(b, k);
+          if (!std::isfinite(pa) || !std::isfinite(pb) || pa < 0.0 || pb < 0.0) {
+            valid_probs = false;
+            break;
+          }
           total_a += pa;
           total_b += pb;
           exact_pair += pa * pb;
           adjacent_pair += pa * (pb + (k > 0 ? probs(b, k - 1) : 0) +
-                                      (k + 1 < probs.ncol() ? probs(b, k + 1) : 0));
+                                      (k + 1 < ncol ? probs(b, k + 1) : 0));
         }
-        if (!std::isfinite(total_a) || !std::isfinite(total_b) ||
+        if (!valid_probs || !std::isfinite(total_a) || !std::isfinite(total_b) ||
             std::abs(total_a - 1) > 1e-8 || std::abs(total_b - 1) > 1e-8) continue;
         counted = true;
         ++pairs;
-        exact += scores[a] == scores[b];
-        adjacent += std::abs(scores[a] - scores[b]) <= 1.0;
+        exact += sa == sb;
+        adjacent += std::abs(sa - sb) <= 1.0;
         expected_exact += exact_pair;
         expected_adjacent += adjacent_pair;
       }

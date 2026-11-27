@@ -19,9 +19,14 @@ mfrm_batch_fit(
   population_formula = NULL, person_data = NULL, step_constraints = NULL,
   category_support = NULL, facet_formulas = NULL, facet_data = NULL,
   slope_prior_sd = NULL, quad_points = 31L,
-  mml_integration = c("fixed", "adaptive"), xtreme = 0,
+  mml_integration = c("auto", "fixed", "adaptive"), xtreme = 0,
   whexact = FALSE, bias_facets = NULL, maxit = 400L, reltol = 1e-10,
-  threads = 1L, return_fits = TRUE)
+  threads = 1L, return_fits = TRUE, weight = NULL,
+  noncenter_facet = "Person", positive_facets = NULL,
+  centering_scope = c("remainder", "facet"), person_id = NULL,
+  population_sd = 1, facet_interactions = NULL,
+  facet_shrinkage = c("none", "empirical_bayes", "laplace"),
+  facet_prior_sd = NULL)
 }
 \arguments{
   \item{data}{A template \code{data.frame} (when \code{score_matrix} is supplied) or a list of \code{data.frame}s of observed ratings.}
@@ -52,8 +57,8 @@ mfrm_batch_fit(
   \item{facet_formulas}{Optional explanatory facet covariate formulas.}
   \item{facet_data}{Optional covariate tables for explanatory facets.}
   \item{slope_prior_sd}{Optional log-normal prior SD regularizing GPCM log-slopes.}
-  \item{quad_points}{Gauss-Hermite quadrature points for \code{MML} (default \code{31L}).}
-  \item{mml_integration}{Integration mode (\code{"fixed"} or \code{"adaptive"}).}
+  \item{quad_points}{Integer number of quadrature points, at least five, for \code{MML} (default \code{31L}).}
+  \item{mml_integration}{Integration mode: \code{"auto"} (MML default), \code{"fixed"}, or \code{"adaptive"}. See \code{\link{fit_mfrm}} for the automatic refinement limits and tolerances.}
   \item{xtreme}{Extreme-score adjustment for \code{JML} (default \code{0}).}
   \item{whexact}{Logical flag for exact Wilson-Hilferty \code{ZSTD} (default \code{FALSE}).}
   \item{bias_facets}{Optional length-2 character vector for 2-way local bias.}
@@ -61,9 +66,25 @@ mfrm_batch_fit(
   \item{reltol}{Relative convergence tolerance (default \code{1e-10}).}
   \item{threads}{Number of C++ worker threads (default \code{1L}). When the CRAN check environment variable \code{_R_CHECK_LIMIT_CORES_} is enabled, requests are capped at two workers.}
   \item{return_fits}{Logical; if \code{TRUE}, returns the list of \code{mfrm_fit} objects; if \code{FALSE}, returns a compact per-replication summary \code{data.frame}.}
+  \item{weight}{Optional column name of nonnegative observation weights.}
+  \item{noncenter_facet}{Facet left uncentered to set the scale origin (default \code{"Person"}).}
+  \item{positive_facets}{Optional character vector of facets oriented positively (\code{Sign = +1}).}
+  \item{centering_scope}{Centering rule under partial anchors: \code{"remainder"} (default; unanchored elements sum to zero) or \code{"facet"} (all elements sum to zero).}
+  \item{person_id}{Optional person identifier column name in \code{person_data}.}
+  \item{population_sd}{Fixed normal population SD when \code{population_formula} is \code{NULL} (default \code{1}).}
+  \item{facet_interactions}{Optional list of length-2 character vectors declaring joint zero-margin 2-way facet interactions.}
+  \item{facet_shrinkage}{Facet regularization mode: \code{"none"} (default), \code{"empirical_bayes"}, or \code{"laplace"}.}
+  \item{facet_prior_sd}{Optional prior SD for \code{facet_shrinkage}.}
 }
 \value{
 A list of \code{mfrm_fit} objects (when \code{return_fits = TRUE}) or a \code{data.frame} of replication convergence, iteration counts, and log-likelihoods (when \code{return_fits = FALSE}), with attribute \code{"elapsed_sec"}.
+}
+\details{
+The same rubric and anchor checks apply as in \code{\link{fit_mfrm}}.
+CML requires unit observation weights on retained ratings and rejects Laplace
+facet regularization. Nonfinite conditional likelihood solutions are marked
+unavailable for inference. The compact output retains the readiness status.
+Empirical Bayes shrinkage uses the final calibration after quadrature refinement.
 }
 \seealso{
 \code{\link{fit_mfrm}}

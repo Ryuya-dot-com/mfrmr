@@ -38,10 +38,20 @@
   if (G == 1L && identical(owners, "Common")) {
     lvl_in[lvl_in %in% c("shared", "Shared", "COMMON", "common")] <- "Common"
   }
+  for (sc_nm in c("From", "To")) {
+    sc_v <- step_constraints[[sc_nm]]
+    if (!is.numeric(sc_v) || is.factor(sc_v) || is.object(sc_v) || is.complex(sc_v) ||
+        !is.null(dim(sc_v)) || any(!is.finite(sc_v)) || any(sc_v != round(sc_v))) {
+      stop(
+        "`step_constraints$", sc_nm, "` must contain plain finite integer rubric scores; factor or character columns are not coerced.",
+        call. = FALSE
+      )
+    }
+  }
   owner_idx <- match(lvl_in, owners)
   from_seq <- rating_min + seq(0L, K - 1L)
-  trans_idx <- match(as.numeric(step_constraints$From), from_seq)
-  to_num <- as.numeric(step_constraints$To)
+  trans_idx <- match(as.double(step_constraints$From), from_seq)
+  to_num <- as.double(step_constraints$To)
 
   if (anyNA(owner_idx) || anyNA(trans_idx) || anyNA(to_num) ||
       any(to_num != from_seq[trans_idx] + 1)) {
@@ -76,7 +86,8 @@
   grp_vec <- if ("Group" %in% names(step_constraints)) step_constraints$Group else rep(NA_character_, nrow(step_constraints))
   if (is.logical(val_vec) && all(is.na(val_vec))) val_vec <- as.numeric(val_vec)
   if (is.logical(grp_vec) && all(is.na(grp_vec))) grp_vec <- as.character(grp_vec)
-  if (!is.numeric(val_vec) || any(is.nan(val_vec) | is.infinite(val_vec)) ||
+  if (!is.numeric(val_vec) || is.factor(val_vec) || is.object(val_vec) || is.complex(val_vec) ||
+      !is.null(dim(val_vec)) || any(is.nan(val_vec) | is.infinite(val_vec)) ||
       !is.character(grp_vec) || any(!is.na(grp_vec) & !nzchar(grp_vec)) ||
       any(is.na(val_vec) & is.na(grp_vec))) {
     stop("Each row of `step_constraints` needs a finite `Value` or a non-empty `Group`.", call. = FALSE)
@@ -322,6 +333,75 @@
   ids
 }
 
+.mfrm_anchor_input <- function(table, levels, dummy, groups = FALSE) {
+  arg <- if (groups) "group_anchors" else "anchors"
+  if (is.null(table)) return(NULL)
+  if (!is.data.frame(table) || anyDuplicated(names(table)))
+    stop("`", arg, "` must be a data frame with unique column names.", call. = FALSE)
+  if (!nrow(table)) return(NULL)
+  column <- function(aliases) {
+    id <- intersect(aliases, names(table))
+    if (!length(id)) stop("`", arg, "` needs a ", aliases[1L], " column.", call. = FALSE)
+    table[[id[1L]]]
+  }
+  facet <- as.character(column(c("Facet", "facet")))
+  level <- as.character(column(c("Level", "level", "Element", "element")))
+  raw_value <- if (groups) column(c("GroupValue", "Value", "Anchor", "value", "anchor")) else
+    column(c("Anchor", "anchor", "Value", "value", "Estimate"))
+  value <- if (is.numeric(raw_value) && !is.complex(raw_value)) as.double(raw_value) else
+    suppressWarnings(as.numeric(as.character(raw_value)))
+  if (any(!facet %in% names(levels)) || anyNA(level) || any(!nzchar(level)) || any(!is.finite(value))) {
+    stop("`", arg, "` requires model facet names, valid level IDs and finite anchor values.", call. = FALSE)
+  }
+  if (any(dummy[match(facet, names(levels))] == 1L))
+    stop("`", arg, "` cannot constrain a dummy facet.", call. = FALSE)
+  present <- vapply(seq_along(level), function(i) level[i] %in% levels[[facet[i]]], logical(1))
+  if (!groups) {
+    d <- unique(data.frame(Facet = facet, Level = level, Anchor = value,
+                           Status = ifelse(present, "applied", "not_observed")))
+    if (anyDuplicated(d[c("Facet", "Level")]))
+      stop("Conflicting duplicate fixed anchors for the same facet and level.", call. = FALSE)
+    return(d)
+  }
+  group <- as.character(column(c("Group", "group")))
+  if (anyNA(group) || any(!nzchar(group)))
+    stop("`group_anchors` requires nonblank group IDs.", call. = FALSE)
+  for (i in split(seq_along(group), .mfrm_mvgt_group(list(factor(facet), factor(group))))) {
+    if (length(unique(value[i])) != 1L)
+      stop("Each `group_anchors` group must declare a single finite `GroupValue`.", call. = FALSE)
+    if (any(present[i]) && !all(present[i]))
+      stop("Partially observed `group_anchors` group '", group[i[1L]],
+           "' on facet '", facet[i[1L]], "'. Its declared mean needs all member levels.", call. = FALSE)
+  }
+  unique(data.frame(Facet = facet, Level = level, Group = group, GroupValue = value,
+                    Status = ifelse(present, "applied", "not_observed")))
+}
+
+.mfrm_validate_category_support_df <- function(category_support) {
+  if (is.null(category_support)) return(invisible(NULL))
+  if (!is.data.frame(category_support) || nrow(category_support) == 0L ||
+      !all(c("Min", "Max") %in% names(category_support))) {
+    stop("`category_support` must be a non-empty data.frame containing columns `Level` (for PCM), `Min`, and `Max`.", call. = FALSE)
+  }
+  for (cs_nm in c("Min", "Max")) {
+    cs_v <- category_support[[cs_nm]]
+    if (!is.numeric(cs_v) || is.factor(cs_v) || is.object(cs_v) || is.complex(cs_v) ||
+        !is.null(dim(cs_v)) || any(!is.finite(cs_v)) || any(cs_v != round(cs_v))) {
+      stop("`category_support$", cs_nm, "` must contain plain finite integer rubric scores; factor or character columns are not coerced.", call. = FALSE)
+    }
+  }
+  invisible(category_support)
+}
+
+.mfrm_validate_bias_facets <- function(bias_facets, base_facets) {
+  if (is.null(bias_facets)) return(c(-1L, -1L))
+  if (!is.character(bias_facets) || is.object(bias_facets) || length(bias_facets) != 2L ||
+      anyNA(bias_facets) || bias_facets[1L] == bias_facets[2L] || any(!bias_facets %in% base_facets)) {
+    stop("`bias_facets` must name two distinct facets included in `facets`.", call. = FALSE)
+  }
+  match(bias_facets, base_facets) - 1L
+}
+
 .mfrm_encode_dataset <- function(data,
                                       person,
                                       facets,
@@ -354,12 +434,16 @@
   if (!is.data.frame(data) || nrow(data) == 0L) {
     stop("`data` must be a non-empty data.frame.", call. = FALSE)
   }
-  if (!is.character(person) || length(person) != 1L || !nzchar(person)) {
+  if (!is.character(person) || is.object(person) || length(person) != 1L || is.na(person) || !nzchar(trimws(person))) {
     stop("`person` must be a single column name.", call. = FALSE)
   }
-  if (!is.character(facets) || length(facets) < 1L || any(!nzchar(facets))) {
-    stop("`facets` must be a non-empty character vector of facet column names.", call. = FALSE)
+  if (!is.character(facets) || is.object(facets) || length(facets) < 1L || anyNA(facets) ||
+      any(!nzchar(trimws(facets))) || anyDuplicated(facets) || person %in% facets ||
+      (!is.null(score) && length(score) == 1L && !is.na(score) && score %in% c(person, facets)) ||
+      (!is.null(weight) && length(weight) == 1L && !is.na(weight) && weight %in% c(person, facets, score))) {
+    stop("`facets` must be a non-empty character vector of distinct non-person facet column names.", call. = FALSE)
   }
+  .mfrm_validate_category_support_df(category_support)
   req_cols <- c(person, facets, score, weight)
   miss_cols <- setdiff(req_cols, names(data))
   if (length(miss_cols) > 0L) {
@@ -370,9 +454,11 @@
     stop("The score column must contain numeric rating values. Convert factor labels to numeric scores before calibration.", call. = FALSE)
   }
   raw_y <- as.numeric(data[[score]])
-  w_vec <- if (is.null(weight)) rep(1.0, nrow(data)) else as.numeric(data[[weight]])
-  keep <- is.finite(raw_y) & !is.na(data[[person]]) & is.finite(w_vec) & (w_vec > 0)
-  for (fc in facets) keep <- keep & !is.na(data[[fc]])
+  w_vec <- .mfrm_extract_weights(data, weight)
+  keep <- .mfrm_rating_rows(data, person, facets, score, weight)
+  if (identical(method_in, "CML") && any(w_vec[keep] != 1)) {
+    stop("CML requires unit observation weights for retained ratings.", call. = FALSE)
+  }
   if (!all(keep)) {
     data <- data[keep, , drop = FALSE]
     raw_y <- raw_y[keep]
@@ -382,29 +468,30 @@
     stop("No complete finite rating rows remain after omitting missing values.", call. = FALSE)
   }
 
-  rmin <- if (is.null(rating_min)) min(raw_y) else as.numeric(rating_min)[1L]
-  rmax <- if (is.null(rating_max)) max(raw_y) else as.numeric(rating_max)[1L]
-  if (!is.null(category_support) && is.data.frame(category_support)) {
-    if ("Min" %in% names(category_support) && is.null(rating_min)) {
-      rmin <- min(rmin, min(as.numeric(category_support$Min), na.rm = TRUE))
+  rmin <- if (is.null(rating_min)) min(round(raw_y)) else rating_min
+  rmax <- if (is.null(rating_max)) max(round(raw_y)) else rating_max
+  if (!is.null(category_support)) {
+    if (is.null(rating_min)) {
+      rmin <- min(rmin, min(as.double(category_support$Min)))
     }
-    if ("Max" %in% names(category_support) && is.null(rating_max)) {
-      rmax <- max(rmax, max(as.numeric(category_support$Max), na.rm = TRUE))
+    if (is.null(rating_max)) {
+      rmax <- max(rmax, max(as.double(category_support$Max)))
     }
   }
-  if (!is.finite(rmin) || !is.finite(rmax) || rmax <= rmin ||
-      abs((rmax - rmin) - round(rmax - rmin)) > 1e-8) {
-    stop("`rating_min` and `rating_max` must define an integer span with `rating_max > rating_min`.", call. = FALSE)
+  rmin <- .mfrm_validate_rating_bound(rmin, "rating_min")
+  rmax <- .mfrm_validate_rating_bound(rmax, "rating_max")
+  if (rmax <= rmin || rmax - rmin >= .Machine$integer.max) {
+    stop("`rating_min` and `rating_max` must define a supported integer span with `rating_max > rating_min`.", call. = FALSE)
   }
   if (any(abs(raw_y - round(raw_y)) > 1e-8)) {
     stop("Observed scores must be integer-valued categories.", call. = FALSE)
   }
-  score0 <- as.integer(round(raw_y - rmin))
-  n_cat <- as.integer(round(rmax - rmin) + 1L)
-  K <- n_cat - 1L
-  if (any(score0 < 0L | score0 >= n_cat)) {
+  if (any(round(raw_y) < rmin | round(raw_y) > rmax)) {
     stop("Observed scores fall outside [`rating_min`, `rating_max`].", call. = FALSE)
   }
+  score0 <- as.integer(round(raw_y) - rmin)
+  n_cat <- as.integer(rmax - rmin + 1)
+  K <- n_cat - 1L
 
   p_chr <- as.character(data[[person]])
   p_levels <- .mfrm_sort_levels(data[[person]])
@@ -425,9 +512,36 @@
     facet_mat0[, f] <- match(as.character(data[[fc]]), lv) - 1L
   }
 
-  facet_signs <- ifelse(base_facets %in% as.character(positive_facets), 1.0, -1.0)
-  facet_dummy <- as.integer(base_facets %in% as.character(dummy_facets))
-  noncenter_chr <- if (is.null(noncenter_facet)) "Person" else as.character(noncenter_facet)
+  if (!is.null(positive_facets)) {
+    if (!is.character(positive_facets) || is.object(positive_facets) || anyNA(positive_facets) ||
+        any(!positive_facets %in% base_facets)) {
+      stop("`positive_facets` must name facet(s) included in `facets`.", call. = FALSE)
+    }
+  }
+  if (!is.null(dummy_facets)) {
+    if (!is.character(dummy_facets) || is.object(dummy_facets) || anyNA(dummy_facets) ||
+        any(!dummy_facets %in% base_facets)) {
+      stop("`dummy_facets` must name facet(s) included in `facets`.", call. = FALSE)
+    }
+  }
+  if (!is.null(noncenter_facet)) {
+    if (!is.character(noncenter_facet) || is.object(noncenter_facet) || length(noncenter_facet) < 1L ||
+        anyNA(noncenter_facet)) {
+      stop("`noncenter_facet` must name 'Person' or facet(s) included in `facets`.", call. = FALSE)
+    }
+    nc_norm <- ifelse(noncenter_facet == person & !(person %in% base_facets), "Person", noncenter_facet)
+    if (any(!nc_norm %in% c("Person", base_facets))) {
+      stop("`noncenter_facet` must name 'Person' or facet(s) included in `facets`.", call. = FALSE)
+    }
+    if (!is.null(dummy_facets) && any(intersect(nc_norm, dummy_facets) %in% base_facets)) {
+      stop("`noncenter_facet` cannot designate a facet fixed at zero in `dummy_facets`.", call. = FALSE)
+    }
+    noncenter_chr <- nc_norm
+  } else {
+    noncenter_chr <- "Person"
+  }
+  facet_signs <- ifelse(base_facets %in% positive_facets, 1.0, -1.0)
+  facet_dummy <- as.integer(base_facets %in% dummy_facets)
   facet_noncenter <- as.integer(base_facets %in% setdiff(noncenter_chr, "Person"))
   cscope_int <- if (identical(centering_scope, "facet")) 1L else 0L
 
@@ -437,26 +551,16 @@
     anchor_fixed[[f]] <- integer(facet_n_levels[f])
     anchor_val[[f]] <- numeric(facet_n_levels[f])
   }
-  if (!is.null(anchors) && is.data.frame(anchors) && nrow(anchors) > 0L) {
-    f_col <- intersect(c("Facet", "facet"), names(anchors))[1L]
-    l_col <- intersect(c("Level", "level", "Element", "element"), names(anchors))[1L]
-    v_col <- intersect(c("Anchor", "anchor", "Value", "value", "Estimate"), names(anchors))[1L]
-    if (is.na(f_col) || is.na(l_col) || is.na(v_col)) {
-      stop("`anchors` must contain columns `Facet`, `Level`, and `Anchor`.", call. = FALSE)
-    }
-    for (r in seq_len(nrow(anchors))) {
-      fnm <- as.character(anchors[[f_col]][r])
-      fidx <- match(fnm, base_facets)
-      if (is.na(fidx)) next
-      lidx <- match(as.character(anchors[[l_col]][r]), facet_levels[[fidx]])
-      if (is.na(lidx)) next
-      aval <- as.numeric(anchors[[v_col]][r])
-      if (is.finite(aval)) {
-        anchor_fixed[[fidx]][lidx] <- 1L
-        anchor_val[[fidx]][lidx] <- aval
-      }
-    }
+  anchor_input <- .mfrm_anchor_input(anchors, facet_levels, facet_dummy)
+  group_input <- .mfrm_anchor_input(group_anchors, facet_levels, facet_dummy, groups = TRUE)
+  for (r in which(anchor_input$Status == "applied")) {
+    fidx <- match(anchor_input$Facet[r], base_facets)
+    lidx <- match(anchor_input$Level[r], facet_levels[[fidx]])
+    anchor_fixed[[fidx]][lidx] <- 1L
+    anchor_val[[fidx]][lidx] <- anchor_input$Anchor[r]
   }
+  group_anchors <- if (any(group_input$Status == "applied"))
+    group_input[group_input$Status == "applied", c("Facet", "Level", "Group", "GroupValue")]
 
   # Custom affine facet maps: Explanatory RSM/PCM/GPCM & group_anchors
   has_custom_facet_map <- integer(n_base_facets)
@@ -481,18 +585,13 @@
     if (!is.na(f_nc_auto)) facet_noncenter[f_nc_auto] <- 1L
   }
 
-  if (!is.null(group_anchors) && is.data.frame(group_anchors) && nrow(group_anchors) > 0L) {
-    f_col_ga <- intersect(c("Facet", "facet"), names(group_anchors))[1L]
-    if (is.na(f_col_ga)) {
-      stop("`group_anchors` must contain column `Facet`.", call. = FALSE)
-    }
-    for (fnm in unique(as.character(group_anchors[[f_col_ga]]))) {
+  if (!is.null(group_anchors)) {
+    for (fnm in unique(group_anchors$Facet)) {
       fidx <- match(fnm, base_facets)
-      if (is.na(fidx) || facet_dummy[fidx] == 1L) next
       if (!is.null(facet_formulas) && fnm %in% names(facet_formulas)) {
         stop("Cannot combine `group_anchors` and `facet_formulas` on the same facet ('", fnm, "').", call. = FALSE)
       }
-      g_sub <- group_anchors[as.character(group_anchors[[f_col_ga]]) == fnm, , drop = FALSE]
+      g_sub <- group_anchors[group_anchors$Facet == fnm, , drop = FALSE]
       ga_map <- .mfrm_build_cpp_group_anchor_map(
         levels_f = facet_levels[[fidx]],
         anchor_fixed_f = anchor_fixed[[fidx]],
@@ -554,7 +653,11 @@
       }
       fdf_ord <- fdf[m_idx, , drop = FALSE]
       tt <- stats::delete.response(stats::terms(fml))
-      mm <- stats::model.matrix(tt, data = fdf_ord)
+      mf_f <- stats::model.frame(tt, data = fdf_ord, na.action = stats::na.pass)
+      tt <- attr(mf_f, "terms")
+      xlev_f <- stats::.getXlevels(tt, mf_f)
+      mm <- stats::model.matrix(tt, data = mf_f)
+      contr_f <- attr(mm, "contrasts")
       if (any(!is.finite(mm))) {
         stop("Covariate design matrix for facet '", fnm, "' contains missing or non-finite values.", call. = FALSE)
       }
@@ -592,6 +695,8 @@
         facet_idx = fidx,
         formula = fml,
         terms = tt,
+        xlevels = xlev_f,
+        contrasts = contr_f,
         centered = is_centered,
         col_means = col_means,
         colnames = colnames(mm),
@@ -855,6 +960,8 @@
   pop_col_names <- character(0)
   pop_X_mat <- matrix(0.0, nrow = 0L, ncol = 0L)
   pop_terms <- NULL
+  pop_xlevels <- NULL
+  pop_contrasts <- NULL
   if (!is.null(population_formula)) {
     pop_mode <- 1L
     if (is.null(person_data)) {
@@ -872,7 +979,11 @@
       pdata <- person_data[idx_m, , drop = FALSE]
     }
     pop_terms <- stats::delete.response(stats::terms(population_formula))
-    mm <- stats::model.matrix(pop_terms, data = pdata)
+    mf_pop <- stats::model.frame(pop_terms, data = pdata, na.action = stats::na.pass)
+    pop_terms <- attr(mf_pop, "terms")
+    pop_xlevels <- stats::.getXlevels(pop_terms, mf_pop)
+    mm <- stats::model.matrix(pop_terms, data = mf_pop)
+    pop_contrasts <- attr(mm, "contrasts")
     if (any(facet_noncenter == 1L) && "(Intercept)" %in% colnames(mm)) {
       mm <- mm[, colnames(mm) != "(Intercept)", drop = FALSE]
     }
@@ -904,6 +1015,7 @@
     custom_facet_anchored = custom_facet_anchored,
     group_anchor_meta = group_anchor_meta,
     group_anchors = group_anchors,
+    anchor_application = list(individual = anchor_input, group = group_input),
     explanatory_meta = explanatory_meta,
     interaction_meta = interaction_meta,
     n_slope_facets = as.integer(n_slope_facets),
@@ -946,8 +1058,11 @@
     pop_col_names = pop_col_names,
     pop_formula = population_formula,
     pop_terms = pop_terms,
+    pop_xlevels = pop_xlevels,
+    pop_contrasts = pop_contrasts,
     person_id = if (is.null(person_id)) person else person_id,
     retained_data = data,
+    retained_rows = which(keep),
     n_obs = nrow(data)
   )
   if (identical(toupper(method_in[1L]), "MML")) {
@@ -1111,7 +1226,11 @@
         ObsAvg = ifelse(raw$person_diag$obs_n > 0, raw$person_diag$obs_score/raw$person_diag$obs_n, NA_real_),
         ExpAvg = ifelse(raw$person_diag$obs_n > 0, raw$person_diag$exp_score/raw$person_diag$obs_n, NA_real_),
         InfitMnSq = p_infit, InfitZSTD = raw$person_diag$infit_zstd, OutfitMnSq = raw$person_diag$outfit_mnsq,
-        OutfitZSTD = raw$person_diag$outfit_zstd, ExtremeFlag = raw$person_extreme_flag, Subset = raw$person_subset,
+        OutfitZSTD = raw$person_diag$outfit_zstd, PostInfitMnSq = raw$person_diag$post_infit_mnsq %||%
+            rep(NA_real_, enc$n_person), PostInfitZSTD = raw$person_diag$post_infit_zstd %||%
+            rep(NA_real_, enc$n_person), PostOutfitMnSq = raw$person_diag$post_outfit_mnsq %||%
+            rep(NA_real_, enc$n_person), PostOutfitZSTD = raw$person_diag$post_outfit_zstd %||%
+            rep(NA_real_, enc$n_person), ExtremeFlag = raw$person_extreme_flag, Subset = raw$person_subset,
         ScoreMethod = score_lbl, stringsAsFactors = FALSE)
     facet_rows <- vector("list", n_base)
     cov_model <- vector("list", length(enc$facets))
@@ -1134,7 +1253,12 @@
                 ModelSE = raw$facet_se[[f]], RealSE = raw$facet_real_se[[f]], SandwichSE = raw$facet_joint_se[[f]],
                 FairM = fd$fair_m, FairZ = fd$fair_z, ObsCount = fd$obs_n, ObsAvg = ifelse(fd$obs_n > 0, fd$obs_score/fd$obs_n,
                   NA_real_), ExpAvg = ifelse(fd$obs_n > 0, fd$exp_score/fd$obs_n, NA_real_), InfitMnSq = fd$infit_mnsq,
-                InfitZSTD = fd$infit_zstd, OutfitMnSq = fd$outfit_mnsq, OutfitZSTD = fd$outfit_zstd, Subset = raw$facet_subset[[f]],
+                InfitZSTD = fd$infit_zstd, OutfitMnSq = fd$outfit_mnsq, OutfitZSTD = fd$outfit_zstd,
+                PostInfitMnSq = fd$post_infit_mnsq %||% rep(NA_real_, length(lvs)),
+                PostInfitZSTD = fd$post_infit_zstd %||% rep(NA_real_, length(lvs)),
+                PostOutfitMnSq = fd$post_outfit_mnsq %||% rep(NA_real_, length(lvs)),
+                PostOutfitZSTD = fd$post_outfit_zstd %||% rep(NA_real_, length(lvs)),
+                Subset = raw$facet_subset[[f]],
                 stringsAsFactors = FALSE)
         }
     }
@@ -1212,9 +1336,22 @@
     }
     steps_df <- do.call(rbind, step_list)
     rownames(steps_df) <- NULL
+    step_support_audit <- .mfrm_step_support_audit(enc, layout)
+    steps_df <- .mfrm_screen_steps_table(steps_df, enc, layout, step_audit = step_support_audit)
     step_row_nms <- paste0(steps_df$ScaleLevel, ":", steps_df$Step)
     step_cov_mod <- raw$step_cov_model
     step_cov_sw <- raw$step_cov_sandwich
+    if (any(step_support_audit$unidentified_step)) {
+        u_idx <- which(step_support_audit$unidentified_step)
+        if (nrow(step_cov_mod) == length(step_row_nms)) {
+            step_cov_mod[u_idx, ] <- NA_real_
+            step_cov_mod[, u_idx] <- NA_real_
+        }
+        if (nrow(step_cov_sw) == length(step_row_nms)) {
+            step_cov_sw[u_idx, ] <- NA_real_
+            step_cov_sw[, u_idx] <- NA_real_
+        }
+    }
     if (nrow(step_cov_mod) == length(step_row_nms))
         dimnames(step_cov_mod) <- list(step_row_nms, step_row_nms)
     if (nrow(step_cov_sw) == length(step_row_nms))
@@ -1302,6 +1439,7 @@
         xi_covariance_sandwich = xi_cov_sw, xi_layout = layout, local_bias = bias_df, encoding = enc, control = ctrl_list,
         elapsed_sec = elapsed_sec), class = "mfrm_fit")
     out$schema_version <- 1L
+    out$step_support_audit <- step_support_audit
     out$boundary_audit <- .mfrm_structural_boundary(out)
     if (identical(method_label, "MML")) {
         out["population_location_rank"] <- list(.mfrm_population_location_rank(enc))
@@ -1311,7 +1449,10 @@
     out$summary$InferenceReady <- out$readiness$ready
     out$summary$InferenceStatus <- out$readiness$status
     if (isTRUE(out$boundary_audit$detected))
-        warning("No finite structural MML estimate: a likelihood-increasing boundary direction was detected. Inference and classification require review.",
+        warning("No finite structural ", method_label, " estimate: a likelihood-increasing boundary direction was detected. Inference requires review.",
+            call. = FALSE)
+    else if (isTRUE(step_support_audit$step_rank_deficient))
+        warning("One or more rating categories within a step ladder have zero observed counts without identifying `step_constraints` or `category_support`; affected step thresholds are withheld and inference requires review.",
             call. = FALSE)
     out
 }
@@ -1696,6 +1837,7 @@ check_mfrm_connectivity <- function(data,
                           reltol = 1e-10) {
   t0 <- proc.time()[[3L]]
   model <- .mfrm_model_code(model)
+  .mfrm_validate_numerics(quad_points, maxit, reltol, slope_prior_sd, facet_prior_sd)
   method_in <- match.arg(method[1L], c("MML", "JML", "JMLE", "JML_jeffreys", "CML"))
   jml_penalty <- match.arg(jml_penalty)
   if (method_in %in% c("JML", "JMLE") && identical(jml_penalty, "jeffreys")) {
@@ -1705,10 +1847,10 @@ check_mfrm_connectivity <- function(data,
   person_score <- match.arg(person_score)
   centering_scope <- match.arg(centering_scope)
   mml_integration <- match.arg(mml_integration)
-  if (mml_integration == "auto" && method_in != "MML") stop("Automatic quadrature applies only to MML.", call. = FALSE)
   slope_type <- match.arg(slope_type)
   gpcm_mml_identification <- match.arg(gpcm_mml_identification)
   facet_shrinkage <- match.arg(facet_shrinkage)
+  .mfrm_validate_estimation_options(model, method_in, mml_integration, facet_shrinkage, slope_prior_sd)
 
   method_code <- switch(
     method_in,
@@ -1769,15 +1911,9 @@ check_mfrm_connectivity <- function(data,
     }
   }
 
-  bf_a <- -1L
-  bf_b <- -1L
-  if (!is.null(bias_facets)) {
-    if (length(bias_facets) != 2L || any(!bias_facets %in% enc$base_facets)) {
-      stop("`bias_facets` must name two facets included in `facets`.", call. = FALSE)
-    }
-    bf_a <- match(bias_facets[1L], enc$facets) - 1L
-    bf_b <- match(bias_facets[2L], enc$facets) - 1L
-  }
+  bf_pair <- .mfrm_validate_bias_facets(bias_facets, enc$base_facets)
+  bf_a <- bf_pair[1L]
+  bf_b <- bf_pair[2L]
 
   f_l2 <- 0.0
   if (identical(facet_shrinkage, "laplace")) {
@@ -1817,10 +1953,45 @@ check_mfrm_connectivity <- function(data,
     out$local_bias$LevelB <- enc$facet_levels[[bf_b + 1L]][out$local_bias$LevelB_Index]
   }
   if (identical(facet_shrinkage, "empirical_bayes")) {
-    out <- apply_empirical_bayes_shrinkage(out, facet_prior_sd = facet_prior_sd)
-    out$facets$MLEEstimate <- out$facets$Estimate
-    out$facets$Estimate <- out$facets$ShrunkEstimate
+    out <- .mfrm_activate_eb_facets(out, facet_prior_sd = facet_prior_sd)
   }
+  out
+}
+
+.mfrm_activate_eb_facets <- function(out, facet_prior_sd = NULL) {
+  out$facets$MLEEstimate <- out$facets$Estimate
+  out$facets$MLEModelSE <- out$facets$ModelSE
+  out$facets$MLERealSE <- out$facets$RealSE
+  out$facets$MLESandwichSE <- out$facets$SandwichSE
+  out <- apply_empirical_bayes_shrinkage(out, facet_prior_sd = facet_prior_sd)
+  out$facets$Estimate <- out$facets$ShrunkEstimate
+  out$facets$ModelSE <- out$facets$ShrunkSE
+  out$facets$RealSE <- ifelse(
+    is.finite(out$facets$ShrunkSE) & is.finite(out$facets$InfitMnSq),
+    out$facets$ShrunkSE * sqrt(pmax(1, out$facets$InfitMnSq)),
+    out$facets$ShrunkSE
+  )
+  out$facets$SandwichSE[] <- NA_real_
+  enc <- out$encoding
+  exp_row <- as.numeric(stats::fitted(out, type = "response"))
+  ok_w <- is.finite(exp_row) & (enc$weight > 0)
+  if (any(ok_w)) {
+    p_id <- enc$person0[ok_w] + 1L
+    pw <- as.numeric(rowsum(enc$weight[ok_w], p_id, reorder = FALSE))
+    ps <- as.numeric(rowsum(enc$weight[ok_w] * exp_row[ok_w], p_id, reorder = FALSE))
+    p_u <- as.integer(rownames(rowsum(enc$weight[ok_w], p_id, reorder = FALSE)))
+    out$person$ExpAvg[p_u] <- ifelse(pw > 0, ps / pw, NA_real_)
+    for (f in seq_along(enc$base_facets)) {
+      fnm <- enc$base_facets[f]
+      f_id <- enc$facet_mat0[ok_w, f] + 1L
+      fw_m <- rowsum(enc$weight[ok_w], f_id, reorder = FALSE)
+      fs_m <- rowsum(enc$weight[ok_w] * exp_row[ok_w], f_id, reorder = FALSE)
+      l_u <- as.integer(rownames(fw_m))
+      f_rows <- which(out$facets$Facet == fnm)[l_u]
+      out$facets$ExpAvg[f_rows] <- ifelse(as.numeric(fw_m) > 0, as.numeric(fs_m) / as.numeric(fw_m), NA_real_)
+    }
+  }
+  out$shrinkage <- "empirical_bayes"
   out
 }
 
@@ -1855,7 +2026,7 @@ check_mfrm_connectivity <- function(data,
 #' @param category_support Optional per-level category support bounds.
 #' @param facet_formulas,facet_data Optional explanatory facet covariate models.
 #' @param quad_points Quadrature points for `MML` (default `31L`).
-#' @param mml_integration `"fixed"` or `"adaptive"`.
+#' @param mml_integration `"auto"` (MML default), `"fixed"`, or `"adaptive"`. Automatic refinement compares structural estimates, predictions, SEs and covariance; see [fit_mfrm()].
 #' @param xtreme Extreme-score adjustment for `JML` (default `0.0`).
 #' @param whexact Wilson-Hilferty ZSTD flag (default `FALSE`).
 #' @param bias_facets Optional length-2 character vector for 2-way local bias.
@@ -1865,6 +2036,11 @@ check_mfrm_connectivity <- function(data,
 #'   safety; pass e.g. `parallel::detectCores()` for multi-core batch benchmarks).
 #' @param return_fits Logical; if `TRUE` (default), returns the list of formatted
 #'   `mfrm_fit` objects; if `FALSE`, returns a compact summary `data.frame`.
+#' @details The same rubric and anchor checks apply as in [fit_mfrm()]. CML
+#'   requires unit observation weights on retained ratings and rejects Laplace
+#'   facet regularization. Its conditional likelihood boundary check controls
+#'   inference readiness in both output forms. Empirical Bayes shrinkage is
+#'   applied after quadrature refinement.
 #' @return A list of `mfrm_fit` objects (with attribute `"elapsed_sec"`) or
 #'   a replicate summary `data.frame`.
 #' @export
@@ -1894,29 +2070,53 @@ mfrm_batch_fit <- function(data,
                            facet_data = NULL,
                            slope_prior_sd = NULL,
                            quad_points = 31L,
-                           mml_integration = c("fixed", "adaptive"),
+                           mml_integration = c("auto", "fixed", "adaptive"),
                            xtreme = 0.0,
                            whexact = FALSE,
                            bias_facets = NULL,
                            maxit = 400L,
                            reltol = 1e-10,
                            threads = 1L,
-                           return_fits = TRUE) {
+                           return_fits = TRUE,
+                           weight = NULL,
+                           noncenter_facet = "Person",
+                           positive_facets = NULL,
+                           centering_scope = c("remainder", "facet"),
+                           person_id = NULL,
+                           population_sd = 1,
+                           facet_interactions = NULL,
+                           facet_shrinkage = c("none", "empirical_bayes", "laplace"),
+                           facet_prior_sd = NULL) {
+  .mfrm_validate_numerics(quad_points, maxit, reltol, slope_prior_sd, facet_prior_sd)
   t0 <- proc.time()[[3L]]
   model <- .mfrm_model_code(model)
   method <- match.arg(method[1L], c("MML", "JML", "JML_jeffreys", "CML"))
   person_score <- match.arg(person_score)
+  centering_scope <- match.arg(centering_scope)
+  facet_shrinkage <- match.arg(facet_shrinkage)
+  if (missing(mml_integration) && method != "MML") mml_integration <- "fixed"
   mml_integration <- match.arg(mml_integration)
+  .mfrm_validate_estimation_options(model, method, mml_integration, facet_shrinkage, slope_prior_sd)
   slope_type <- match.arg(slope_type)
   gpcm_mml_identification <- match.arg(gpcm_mml_identification)
   threads <- .mfrm_threads(threads)
 
+  if (!is.character(person) || is.object(person) || length(person) != 1L || is.na(person) || !nzchar(trimws(person))) {
+    stop("`person` must be a single column name.", call. = FALSE)
+  }
+  if (!is.character(facets) || is.object(facets) || length(facets) < 1L || anyNA(facets) ||
+      any(!nzchar(trimws(facets))) || anyDuplicated(facets) || person %in% facets) {
+    stop("`facets` must be a non-empty character vector of distinct non-person facet column names.", call. = FALSE)
+  }
+  .mfrm_validate_category_support_df(category_support)
   method_code <- switch(method, JML = 0L, JML_jeffreys = 1L, MML = 2L, CML = 3L)
-  bf_a <- -1L
-  bf_b <- -1L
-  if (!is.null(bias_facets)) {
-    bf_a <- match(bias_facets[1L], facets) - 1L
-    bf_b <- match(bias_facets[2L], facets) - 1L
+  bf_pair <- .mfrm_validate_bias_facets(bias_facets, facets)
+  bf_a <- bf_pair[1L]
+  bf_b <- bf_pair[2L]
+  f_l2 <- 0.0
+  if (identical(facet_shrinkage, "laplace")) {
+    psd <- if (is.null(facet_prior_sd)) 2.0 else as.numeric(facet_prior_sd)[1L]
+    if (is.finite(psd) && psd > 0) f_l2 <- 1.0 / (psd * psd)
   }
   s_l2 <- 0.0
   if (!is.null(slope_prior_sd)) {
@@ -1936,6 +2136,7 @@ mfrm_batch_fit <- function(data,
     wle_primary = identical(person_score, "WLE"),
     bias_facet_a = as.integer(bf_a),
     bias_facet_b = as.integer(bf_b),
+    facet_l2_pen = as.double(f_l2),
     slope_l2_pen = as.double(s_l2)
   )
 
@@ -1952,8 +2153,9 @@ mfrm_batch_fit <- function(data,
       stop("`score_matrix` must contain at least one column of finite integer-valued ratings.", call. = FALSE)
     }
     tmp_df <- data
-    rmin <- if (is.null(rating_min)) min(score_matrix) else as.numeric(rating_min)[1L]
-    rmax <- if (is.null(rating_max)) max(score_matrix) else as.numeric(rating_max)[1L]
+    support <- category_support
+    rmin <- if (is.null(rating_min)) min(round(score_matrix), if (!is.null(support)) as.double(support$Min), na.rm = TRUE) else rating_min
+    rmax <- if (is.null(rating_max)) max(round(score_matrix), if (!is.null(support)) as.double(support$Max), na.rm = TRUE) else rating_max
     tmp_df[[score]] <- score_matrix[, 1L]
     enc <- .mfrm_encode_dataset(
       data = tmp_df, person = person, facets = facets, score = score,
@@ -1961,42 +2163,48 @@ mfrm_batch_fit <- function(data,
       slope_facet = slope_facet, slope_reference = slope_reference,
       slope_type = slope_type, gpcm_mml_identification = gpcm_mml_identification,
       method_in = method,
-      rating_min = rmin, rating_max = rmax,
+      rating_min = rmin, rating_max = rmax, weight = weight,
       anchors = anchors, group_anchors = group_anchors,
-      dummy_facets = dummy_facets,
+      dummy_facets = dummy_facets, noncenter_facet = noncenter_facet,
+      positive_facets = positive_facets, centering_scope = centering_scope,
       population_formula = population_formula, person_data = person_data,
+      person_id = person_id, population_sd = population_sd,
       step_constraints = step_constraints, category_support = category_support,
-      facet_formulas = facet_formulas, facet_data = facet_data
+      facet_formulas = facet_formulas, facet_data = facet_data,
+      facet_interactions = facet_interactions
     )
     if (enc$n_obs != nrow(data)) {
       stop("The shared design must have complete Person and facet identifiers. Use a list of rating tables for designs with omitted rows.", call. = FALSE)
     }
-    score_offset <- round(score_matrix - enc$rating_min)
+    score_offset <- round(score_matrix) - enc$rating_min
     if (any(score_offset < enc$step_cat_min[enc$step_group0 + 1L] |
             score_offset > enc$step_cat_max[enc$step_group0 + 1L])) {
       stop("Scores in `score_matrix` fall outside the rubric bounds or declared `category_support`.", call. = FALSE)
     }
     smat0 <- matrix(as.integer(score_offset), nrow = nrow(score_matrix), ncol = ncol(score_matrix))
+    if (method == "MML" && !is.null(population_formula)) {
+      audit_enc <- enc
+      for (i in seq_len(ncol(smat0))) {
+        audit_enc$score0 <- smat0[, i]
+        .mfrm_check_mml_population_boundary(audit_enc)
+      }
+    }
     raw_list <- mfrm_cpp_fast_batch_shared_design(enc, smat0, ctrl_list, threads)
     elapsed <- proc.time()[[3L]] - t0
-    if (!isTRUE(return_fits)) {
-      return(data.frame(
-        Replicate = seq_along(raw_list),
-        Converged = vapply(raw_list, function(x) isTRUE(x$converged), logical(1)),
-        Iterations = vapply(raw_list, function(x) as.integer(x$iterations), integer(1)),
-        LogLik = vapply(raw_list, function(x) as.numeric(x$loglik), numeric(1)),
-        MaxAbsGrad = vapply(raw_list, function(x) as.numeric(x$max_abs_grad), numeric(1))
-      ))
-    }
+    cml_cache <- if (identical(method, "CML"))
+      .mfrm_cml_design_cache(enc, .mfrm_compute_xi_layout(enc))
+    else NULL
     fits <- lapply(seq_along(raw_list), function(i) {
       replicate_enc <- enc
       replicate_enc$score0 <- smat0[, i]
       replicate_enc$retained_data[[score]] <- score_matrix[, i]
-      .mfrm_format_result(replicate_enc, raw_list[[i]], method, person_score,
-                               xtreme, ctrl_list, elapsed / length(raw_list))
+      if (!is.null(cml_cache)) replicate_enc$cml_cache <- cml_cache
+      res_i <- .mfrm_format_result(replicate_enc, raw_list[[i]], method, person_score,
+                                   xtreme, ctrl_list, elapsed / length(raw_list))
+      res_i$encoding$cml_cache <- NULL
+      res_i
     })
-    attr(fits, "elapsed_sec") <- elapsed
-    return(fits)
+    return(.mfrm_finish_batch(fits, mml_integration, return_fits, t0, facet_shrinkage, facet_prior_sd))
   }
 
   if (!is.list(data) || is.data.frame(data)) {
@@ -2005,39 +2213,35 @@ mfrm_batch_fit <- function(data,
 
   enc_list <- lapply(seq_along(data), function(i) {
     pdata_i <- if (is.list(person_data) && !is.data.frame(person_data)) person_data[[i]] else person_data
-    .mfrm_encode_dataset(
+    enc <- .mfrm_encode_dataset(
       data = data[[i]], person = person, facets = facets, score = score,
       model = model, step_facet = step_facet,
       slope_facet = slope_facet, slope_reference = slope_reference,
       slope_type = slope_type, gpcm_mml_identification = gpcm_mml_identification,
       method_in = method,
-      rating_min = rating_min, rating_max = rating_max,
+      rating_min = rating_min, rating_max = rating_max, weight = weight,
       anchors = anchors, group_anchors = group_anchors,
-      dummy_facets = dummy_facets,
+      dummy_facets = dummy_facets, noncenter_facet = noncenter_facet,
+      positive_facets = positive_facets, centering_scope = centering_scope,
       population_formula = population_formula, person_data = pdata_i,
+      person_id = person_id, population_sd = population_sd,
       step_constraints = step_constraints, category_support = category_support,
-      facet_formulas = facet_formulas, facet_data = facet_data
+      facet_formulas = facet_formulas, facet_data = facet_data,
+      facet_interactions = facet_interactions
     )
+    if (method == "MML" && !is.null(population_formula))
+      .mfrm_check_mml_population_boundary(enc)
+    enc
   })
 
   raw_list <- mfrm_cpp_fast_batch_list(enc_list, ctrl_list, threads)
   elapsed <- proc.time()[[3L]] - t0
 
-  if (!isTRUE(return_fits)) {
-    return(data.frame(
-      Replicate = seq_along(raw_list),
-      Converged = vapply(raw_list, function(x) isTRUE(x$converged), logical(1)),
-      Iterations = vapply(raw_list, function(x) as.integer(x$iterations), integer(1)),
-      LogLik = vapply(raw_list, function(x) as.numeric(x$loglik), numeric(1)),
-      MaxAbsGrad = vapply(raw_list, function(x) as.numeric(x$max_abs_grad), numeric(1))
-    ))
-  }
 
   fits <- lapply(seq_along(raw_list), function(i) {
     .mfrm_format_result(enc_list[[i]], raw_list[[i]], method, person_score, xtreme, ctrl_list, elapsed / length(raw_list))
   })
-  attr(fits, "elapsed_sec") <- elapsed
-  fits
+  .mfrm_finish_batch(fits, mml_integration, return_fits, t0, facet_shrinkage, facet_prior_sd)
 }
 
 # ==============================================================================
@@ -2057,14 +2261,28 @@ mfrm_batch_fit <- function(data,
 }
 
 .mfrm_wle_newdata <- function(newdata, enc, step_group0) {
-  score_col <- intersect(c(enc$score_col, "Score", "score"), names(newdata))[1L]
-  person_col <- intersect(c(enc$person_col, "Person", "person"), names(newdata))[1L]
+  non_score_roles <- unique(c(enc$person_col, enc$base_facets, enc$weight_col))
+  non_person_roles <- unique(c(enc$base_facets, enc$score_col, enc$weight_col))
+  score_candidates <- unique(c(enc$score_col, setdiff(c("Score", "score"), non_score_roles)))
+  person_candidates <- unique(c(enc$person_col, setdiff(c("Person", "person"), non_person_roles)))
+  score_col <- intersect(score_candidates, names(newdata))[1L]
+  person_col <- intersect(person_candidates, names(newdata))[1L]
   if (is.na(score_col) || is.na(person_col)) {
-    stop("`newdata` must contain person and score columns when `type = 'wle'`.", call. = FALSE)
+    stop("`newdata` must contain person ('", enc$person_col, "') and score ('", enc$score_col,
+         "') columns when `type = 'wle'`.", call. = FALSE)
   }
   persons <- as.character(newdata[[person_col]])
   if (anyNA(persons) || any(!nzchar(trimws(persons)))) {
     stop("New-data WLE requires a non-missing Person ID on every row.", call. = FALSE)
+  }
+  w_new <- if (!is.null(enc$weight_col) && enc$weight_col %in% names(newdata)) {
+    w_raw <- .mfrm_extract_weights(newdata, enc$weight_col)
+    if (anyNA(w_raw) || any(!is.finite(w_raw)) || any(w_raw < 0)) {
+      stop("New-data WLE observation weights must be finite and nonnegative.", call. = FALSE)
+    }
+    w_raw
+  } else {
+    rep(1.0, nrow(newdata))
   }
   scores <- newdata[[score_col]]
   if (is.factor(scores)) scores <- as.character(scores)
@@ -2072,18 +2290,47 @@ mfrm_batch_fit <- function(data,
     stop("New-data WLE scores must be finite, integer-valued categories.", call. = FALSE)
   }
   scores <- suppressWarnings(as.numeric(scores))
-  if (any(!is.finite(scores)) || any(abs(scores - round(scores)) > 1e-8)) {
+  active_w <- w_new > 0
+  if (any(!is.finite(scores[active_w])) || any(abs(scores[active_w] - round(scores[active_w])) > 1e-8)) {
     stop("New-data WLE scores must be finite, integer-valued categories.", call. = FALSE)
   }
-  offset <- round(scores - enc$rating_min)
+  offset <- ifelse(active_w, round(scores) - enc$rating_min, 0)
   group <- step_group0 + 1L
-  invalid <- which(offset < enc$step_cat_min[group] | offset > enc$step_cat_max[group])
+  invalid <- which(active_w & (offset < enc$step_cat_min[group] | offset > enc$step_cat_max[group]))
   if (length(invalid)) {
     stop(sprintf("New-data WLE score at row %d falls outside the fitted rubric or category support.",
                  invalid[1L]), call. = FALSE)
   }
   levels <- .mfrm_sort_levels(newdata[[person_col]])
-  list(levels = levels, person0 = match(persons, levels) - 1L, score0 = as.integer(offset))
+  list(levels = levels, person0 = match(persons, levels) - 1L, score0 = as.integer(offset), weights = as.double(w_new))
+}
+
+.mfrm_validate_ability_input <- function(x, n_rows, label = "`theta`") {
+  if (!is.numeric(x) || is.factor(x) || is.object(x) || is.complex(x) || !is.null(dim(x))) {
+    stop(label, " must contain plain numeric ability values; factor or character IDs are not coerced.", call. = FALSE)
+  }
+  if (!length(x) %in% c(1L, n_rows)) {
+    stop(label, " must have length 1 or `nrow(newdata)` (", n_rows, ").", call. = FALSE)
+  }
+  as.double(rep_len(x, n_rows))
+}
+
+.mfrm_facet_predict_matrix <- function(em, facet_data, facet, levels) {
+    fdf <- if (is.data.frame(facet_data)) facet_data else facet_data[[facet]]
+    if (!is.data.frame(fdf))
+        stop("Supply a covariate data frame for facet '", facet, "'.", call. = FALSE)
+    id <- intersect(c(facet, "Level", "Element"), names(fdf))
+    ids <- if (length(id)) fdf[[id[1L]]] else rownames(fdf)
+    rows <- match(levels, .mfrm_unique_covariate_ids(ids, paste0("`facet_data` for facet '", facet, "'")))
+    if (anyNA(rows))
+        stop("Unseen level(s) of facet '", facet, "' missing in `facet_data`: ",
+             paste(unique(levels[is.na(rows)]), collapse = ", "), ".", call. = FALSE)
+    mf <- stats::model.frame(em$terms, data = fdf[rows, , drop = FALSE],
+        xlev = em$xlevels, na.action = stats::na.pass)
+    mm <- stats::model.matrix(em$terms, data = mf, contrasts.arg = em$contrasts)
+    mm <- mm[, em$colnames, drop = FALSE]
+    if (em$centered) mm <- sweep(mm, 2L, em$col_means, "-")
+    mm
 }
 
 #' @export
@@ -2091,11 +2338,6 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "probs
     "wle", "eap"), person_data = NULL, facet_data = NULL, se.fit = FALSE, ...) {
     .mfrm_validate_fit(object)
     type <- match.arg(type)
-    if (!is.null(newdata) && "Theta" %in% names(newdata) && !"Theta" %in% object$encoding$base_facets) {
-        if ("theta" %in% names(newdata) && !isTRUE(all.equal(newdata$theta, newdata$Theta)))
-            stop("theta and Theta specify different abilities; supply one ability column.", call. = FALSE)
-        if (!"theta" %in% names(newdata)) newdata$theta <- newdata$Theta
-    }
     if (identical(type, "prob"))
         type <- "probs"
     enc <- object$encoding
@@ -2112,6 +2354,7 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "probs
         return(data.frame(Person = object$person$Person, Estimate = object$person$WLE, SE = object$person$WLE_SE,
             stringsAsFactors = FALSE))
     }
+    pop_pred_X <- NULL
     if (is.null(newdata)) {
         th_row <- object$person$Estimate[enc$person0 + 1L]
         base_eta <- numeric(enc$n_obs)
@@ -2150,22 +2393,8 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "probs
             if (anyNA(m_old)) {
                 em <- enc$explanatory_meta[[fnm]]
                 if (!is.null(em) && !is.null(facet_data)) {
-                  fdf <- if (is.list(facet_data) && !is.data.frame(facet_data))
-                    facet_data[[fnm]]
-                  else facet_data
-                  id_c <- intersect(c(fnm, "Level", "Element"), names(fdf))[1L]
                   unseen <- which(is.na(m_old))
-                  m_fd <- match(vals_chr[unseen], .mfrm_unique_covariate_ids(fdf[[id_c]], paste0("`facet_data` for facet '",
-                    fnm, "'")))
-                  if (anyNA(m_fd)) {
-                    stop("Unseen level(s) in `newdata[['", fnm, "']]` not found in `facet_data`: ", paste(unique(vals_chr[unseen][is.na(m_fd)]),
-                      collapse = ", "), ".", call. = FALSE)
-                  }
-                  mm_new <- stats::model.matrix(em$terms, data = fdf[m_fd, , drop = FALSE])
-                  if (em$centered) {
-                    mm_new <- mm_new[, colnames(mm_new) != "(Intercept)", drop = FALSE]
-                    mm_new <- sweep(mm_new, 2L, em$col_means, "-")
-                  }
+                  mm_new <- .mfrm_facet_predict_matrix(em, facet_data, fnm, vals_chr[unseen])
                   exp_sub <- object$explanatory[object$explanatory$Facet == fnm, ]
                   gam <- exp_sub$Estimate[match(colnames(mm_new), exp_sub$Term)]
                   b_row[unseen] <- as.numeric(mm_new %*% gam)
@@ -2210,85 +2439,46 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "probs
         }
         if (identical(type, "wle")) {
             scoring <- .mfrm_wle_newdata(newdata, enc, sg0)
-            p_new_lv <- scoring$levels
-            p0_new <- scoring$person0
-            sc0_new <- scoring$score0
-            if (is.null(alpha_new)) {
-                ans <- mfrm_cpp_fast_wle(as.integer(length(p_new_lv)), as.integer(enc$n_cat), as.integer(p0_new),
-                  sc0_new, rep(1, N_new), as.double(base_eta), object$step_cumulative, sg0, enc$step_cat_min,
-                  enc$step_cat_max)
-                return(data.frame(Person = p_new_lv, Estimate = ans$theta, SE = ans$se, stringsAsFactors = FALSE))
-            }
-            th_out <- numeric(length(p_new_lv))
-            se_out <- rep(NA_real_, length(p_new_lv))
-            for (pp in seq_along(p_new_lv)) {
-                ii <- which(p0_new == (pp - 1L))
-                th <- 0
-                for (it_w in seq_len(30L)) {
-                  S_th <- 0
-                  I_th <- 0
-                  J_th <- 0
-                  dJ_th <- 0
-                  for (r in ii) {
-                    g <- sg0[r] + 1L
-                    kmin <- enc$step_cat_min[g]
-                    kmax <- enc$step_cat_max[g]
-                    ks <- kmin:kmax
-                    al <- alpha_new[r]
-                    S_vec <- object$step_cumulative[g, ks + 1L]
-                    u <- if (sform == 1L) {
-                      (ks - kmin) * (al * th + base_eta[r]) - S_vec
-                    }
-                    else {
-                      al * ((ks - kmin) * (th + base_eta[r]) - S_vec)
-                    }
-                    u <- u - max(u)
-                    pr <- exp(u)
-                    pr <- pr/sum(pr)
-                    m1 <- sum(ks * pr)
-                    d_k <- ks - m1
-                    v_r <- sum((d_k^2) * pr)
-                    mu3 <- sum((d_k^3) * pr)
-                    mu4 <- sum((d_k^4) * pr)
-                    S_th <- S_th + al * (sc0_new[r] - m1)
-                    I_th <- I_th + (al^2) * v_r
-                    J_th <- J_th + (al^3) * mu3
-                    dJ_th <- dJ_th + (al^4) * (mu4 - 3 * v_r^2)
-                  }
-                  if (I_th < 1e-12)
-                    break
-                  w_sc <- S_th + J_th/(2 * I_th)
-                  h_eff <- max(1e-06, I_th - (dJ_th * I_th - J_th^2)/(2 * I_th^2))
-                  dth <- max(-2, min(2, w_sc/h_eff))
-                  th <- max(-15, min(15, th + dth))
-                  if (abs(dth) < 1e-09)
-                    break
-                }
-                th_out[pp] <- th
-                I_fin <- 0
-                for (r in ii) {
-                  g <- sg0[r] + 1L
-                  kmin <- enc$step_cat_min[g]
-                  kmax <- enc$step_cat_max[g]
-                  ks <- kmin:kmax
-                  al <- alpha_new[r]
-                  S_vec <- object$step_cumulative[g, ks + 1L]
-                  u <- if (sform == 1L)
-                    (ks - kmin) * (al * th + base_eta[r]) - S_vec
-                  else al * ((ks - kmin) * (th + base_eta[r]) - S_vec)
-                  u <- u - max(u)
-                  pr <- exp(u)
-                  pr <- pr/sum(pr)
-                  m1 <- sum(ks * pr)
-                  I_fin <- I_fin + (al^2) * sum(((ks - m1)^2) * pr)
-                }
-                if (I_fin > 1e-12)
-                  se_out[pp] <- 1/sqrt(I_fin)
-            }
-            return(data.frame(Person = p_new_lv, Estimate = th_out, SE = se_out, stringsAsFactors = FALSE))
+            ans <- mfrm_cpp_fast_wle(
+                as.integer(length(scoring$levels)),
+                as.integer(enc$n_cat),
+                as.integer(scoring$person0),
+                scoring$score0,
+                scoring$weights,
+                as.double(base_eta),
+                object$step_cumulative,
+                sg0,
+                enc$step_cat_min,
+                enc$step_cat_max,
+                as.double(if (is.null(alpha_new)) numeric(0) else alpha_new),
+                as.integer(sform)
+            )
+            return(data.frame(Person = scoring$levels, Estimate = ans$theta, SE = ans$se, stringsAsFactors = FALSE))
         }
-        if ("theta" %in% names(newdata)) {
-            th_row <- as.numeric(newdata$theta)
+        pop_pred_X <- NULL
+        model_cols <- unique(c(enc$person_col, enc$base_facets, enc$score_col, enc$weight_col))
+        has_th_low <- "theta" %in% names(newdata) && !("theta" %in% model_cols)
+        has_th_up <- "Theta" %in% names(newdata) && !("Theta" %in% model_cols)
+        if (has_th_low && has_th_up) {
+            v_low <- .mfrm_validate_ability_input(newdata[["theta"]], N_new, "`newdata$theta`")
+            v_up <- .mfrm_validate_ability_input(newdata[["Theta"]], N_new, "`newdata$Theta`")
+            if (!isTRUE(all.equal(v_low, v_up))) {
+                stop("theta and Theta specify different abilities; supply one ability column.", call. = FALSE)
+            }
+        }
+        th_attr <- attr(newdata, ".mfrm_theta", exact = TRUE)
+        dots_pred <- list(...)
+        if (!is.null(th_attr)) {
+            th_row <- .mfrm_validate_ability_input(th_attr, N_new, "`attr(newdata, '.mfrm_theta')`")
+        }
+        else if ("theta" %in% names(dots_pred) && !is.null(dots_pred$theta)) {
+            th_row <- .mfrm_validate_ability_input(dots_pred$theta, N_new, "`theta`")
+        }
+        else if (has_th_low) {
+            th_row <- .mfrm_validate_ability_input(newdata[["theta"]], N_new, "`newdata$theta`")
+        }
+        else if (has_th_up) {
+            th_row <- .mfrm_validate_ability_input(newdata[["Theta"]], N_new, "`newdata$Theta`")
         }
         else if (enc$person_col %in% names(newdata)) {
             p_chr <- as.character(newdata[[enc$person_col]])
@@ -2296,20 +2486,32 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "probs
             th_row <- object$person$Estimate[m_p]
             if (anyNA(m_p)) {
                 unseen_p <- which(is.na(m_p))
+                if (enc$pop_mode == 1L && length(enc$pop_col_names) > 0L) {
+                  pop_pred_X <- matrix(0, nrow = N_new, ncol = length(enc$pop_col_names),
+                    dimnames = list(NULL, enc$pop_col_names))
+                }
                 if (enc$pop_mode == 1L && !is.null(person_data)) {
+                  if (!is.data.frame(person_data) || !enc$person_id %in% names(person_data))
+                    stop("`person_data` must contain person ID column '", enc$person_id, "'.", call. = FALSE)
                   m_pd <- match(p_chr[unseen_p], .mfrm_unique_covariate_ids(person_data[[enc$person_id]],
                     "`person_data`"))
-                  if (anyNA(m_pd)) {
-                    th_row[unseen_p] <- 0
-                  }
-                  else {
-                    mm_p <- stats::model.matrix(enc$pop_terms, data = person_data[m_pd, , drop = FALSE])
+                  matched <- !is.na(m_pd)
+                  if (any(!matched))
+                    warning("No population covariates for some new Person IDs. Their predictions are NA.", call. = FALSE)
+                  if (any(matched)) {
+                    mf_p <- stats::model.frame(enc$pop_terms, data = person_data[m_pd[matched], , drop = FALSE],
+                      xlev = enc$pop_xlevels, na.action = stats::na.pass)
+                    mm_p <- stats::model.matrix(enc$pop_terms, data = mf_p, contrasts.arg = enc$pop_contrasts)
                     mm_p <- mm_p[, enc$pop_col_names, drop = FALSE]
-                    th_row[unseen_p] <- as.numeric(mm_p %*% object$population$coefficients)
+                    th_row[unseen_p[matched]] <- as.numeric(mm_p %*% object$population$coefficients)
+                    if (!is.null(pop_pred_X)) pop_pred_X[unseen_p[matched], ] <- mm_p
                   }
                 }
                 else if (enc$pop_mode == 1L && "(Intercept)" %in% names(object$population$coefficients)) {
                   th_row[unseen_p] <- unname(object$population$coefficients["(Intercept)"])
+                  if (!is.null(pop_pred_X) && "(Intercept)" %in% colnames(pop_pred_X)) {
+                    pop_pred_X[unseen_p, "(Intercept)"] <- 1
+                  }
                 }
                 else {
                   th_row[unseen_p] <- 0
@@ -2346,11 +2548,14 @@ predict.mfrm_fit <- function(object, newdata = NULL, type = c("response", "probs
     else ev$expected
     if (!isTRUE(se.fit))
         return(val)
-    G <- .mfrm_prediction_gradient(object, newdata, ev, th_row, base_eta, sg0, alpha_row, type, facet_data)
     V <- object$xi_covariance_model
-    se_out <- if (!.mfrm_readiness(object)$ready || any(!is.finite(V)))
-        rep(NA_real_, length(val))
-    else sqrt(pmax(0, rowSums((G %*% V) * G)))
+    se_out <- rep(NA_real_, length(val))
+    if (is.null(object$facets$MLEEstimate) && .mfrm_readiness(object)$ready && all(is.finite(V))) {
+        G <- .mfrm_prediction_gradient(object, newdata, ev, th_row, base_eta, sg0, alpha_row, type, facet_data, pop_X_new = pop_pred_X)
+        ok <- is.finite(val)
+        G <- G[ok, , drop = FALSE]
+        se_out[ok] <- sqrt(pmax(0, rowSums((G %*% V) * G)))
+    }
     list(fit = val, se.fit = se_out)
 }
 
@@ -2439,7 +2644,8 @@ coef.mfrm_fit <- function(object, type = c("all", "facets", "locations", "steps"
         return(stats::setNames(object$facets$Estimate, paste0(object$facets$Facet, ":", object$facets$Level)))
     }
     if (identical(type, "steps")) {
-        return(stats::setNames(object$steps$Estimate, paste0(object$steps$ScaleLevel, ":", object$steps$Step)))
+        st_tb <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
+        return(stats::setNames(st_tb$Estimate, paste0(st_tb$ScaleLevel, ":", st_tb$Step)))
     }
     if (identical(type, "slopes")) {
         if (is.null(object$slopes) || nrow(object$slopes) == 0L)
@@ -2465,8 +2671,9 @@ coef.mfrm_fit <- function(object, type = c("all", "facets", "locations", "steps"
             return(c(SD = object$population$sigma))
         return(stats::setNames(object$population$table$Estimate, paste0("Pop:", object$population$table$Term)))
     }
-    c(stats::setNames(object$facets$Estimate, paste0(object$facets$Facet, ":", object$facets$Level)), stats::setNames(object$steps$Estimate,
-        paste0(object$steps$ScaleLevel, ":", object$steps$Step)), if (!is.null(object$slopes) && nrow(object$slopes) >
+    st_all <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
+    c(stats::setNames(object$facets$Estimate, paste0(object$facets$Facet, ":", object$facets$Level)), stats::setNames(st_all$Estimate,
+        paste0(st_all$ScaleLevel, ":", st_all$Step)), if (!is.null(object$slopes) && nrow(object$slopes) >
         0L) {
         stats::setNames(object$slopes$Estimate, paste0("Slope:", object$slopes$Facet, ":", object$slopes$Level))
     }, if (!is.null(object$explanatory)) {
@@ -2490,7 +2697,14 @@ vcov.mfrm_fit <- function(object, component = c("design", "facets", "steps", "sl
         return(if (use_sw) object$xi_covariance_sandwich else object$xi_covariance_model)
     }
     if (identical(component, "steps")) {
-        return(if (use_sw) object$step_covariance_sandwich else object$step_covariance_model)
+        cm <- if (use_sw) object$step_covariance_sandwich else object$step_covariance_model
+        st_a <- object$step_support_audit %||% .mfrm_step_support_audit(object$encoding, object$xi_layout)
+        if (any(st_a$unidentified_step) && nrow(cm) == length(st_a$unidentified_step)) {
+            u_idx <- which(st_a$unidentified_step)
+            cm[u_idx, ] <- NA_real_
+            cm[, u_idx] <- NA_real_
+        }
+        return(cm)
     }
     if (identical(component, "slopes")) {
         sl_cov <- if (use_sw)
@@ -2544,17 +2758,22 @@ vcov.mfrm_fit <- function(object, component = c("design", "facets", "steps", "sl
     cov_list[[facet]]
 }
 
-# 1D C++ profile-likelihood CI helper for any free coordinate j in 1..n_xi
-.mfrm_profile_xi_ci <- function(object, xi_indices, level = 0.95) {
+# 1D C++ profile-likelihood CI helper for any affine structural parameter row (or free xi coordinate)
+.mfrm_profile_targets_ci <- function(object, targets, level = 0.95) {
+  if (any(c(object$control$facet_l2_pen, object$control$slope_l2_pen) > 0) ||
+      identical(object$method, "JML_jeffreys")) {
+    stop(
+      "Profile likelihood intervals (`se_type = 'profile'`) require an unpenalized MLE/MML/CML calibration.",
+      call. = FALSE
+    )
+  }
   enc <- object$encoding
   lay <- object$xi_layout
   ll_max <- object$loglik
   crit <- 0.5 * stats::qchisq(level, df = 1L)
   target_ll <- ll_max - crit
   xi_hat <- object$xi
-  V_mod <- object$xi_covariance_model
 
-  # Build explicit affine maps for ALL facets and steps so any single xi column can be fixed cleanly
   F <- length(enc$facets)
   K <- enc$n_cat - 1L
   G <- enc$n_step_groups
@@ -2623,7 +2842,23 @@ vcov.mfrm_fit <- function(object, component = c("design", "facets", "steps", "sl
     }
   }
 
-  eval_profile_ll <- function(j_global, val) {
+  eliminate_affine_row <- function(d0, B, r, val) {
+    if (ncol(B) == 0L || !is.finite(d0[r])) return(NULL)
+    brow <- B[r, ]
+    p_col <- which.max(abs(brow))
+    piv <- brow[p_col]
+    if (!is.finite(piv) || abs(piv) <= 1e-12) return(NULL)
+    act <- is.finite(d0)
+    d0_new <- d0
+    d0_new[act] <- d0[act] + B[act, p_col] * ((val - d0[r]) / piv)
+    B_rem <- B[, -p_col, drop = FALSE]
+    if (ncol(B_rem) > 0L) {
+      B_rem[act, ] <- B_rem[act, , drop = FALSE] - outer(B[act, p_col], brow[-p_col] / piv)
+    }
+    list(d0 = d0_new, B = B_rem, p_col = p_col)
+  }
+
+  eval_target_ll <- function(tg, val) {
     ds_p <- enc
     ds_p$has_custom_facet_map <- rep(1L, F)
     ds_p$custom_facet_d0 <- base_f_d0
@@ -2635,29 +2870,59 @@ vcov.mfrm_fit <- function(object, component = c("design", "facets", "steps", "sl
     ds_p$custom_step_q <- ncol(base_s_B)
     ds_p$custom_step_fixed <- base_s_fix
 
-    if (j_global <= lay$step_start) {
-      f_hit <- which(lay$facet_start < j_global & (lay$facet_start + lay$facet_len) >= j_global)[1L]
-      c_loc <- j_global - lay$facet_start[f_hit]
-      Bf <- ds_p$custom_facet_B[[f_hit]]
-      ds_p$custom_facet_d0[[f_hit]] <- ds_p$custom_facet_d0[[f_hit]] + Bf[, c_loc] * val
-      ds_p$custom_facet_B[[f_hit]] <- Bf[, -c_loc, drop = FALSE]
-      ds_p$custom_facet_q[f_hit] <- ncol(ds_p$custom_facet_B[[f_hit]])
-    } else if (j_global <= (lay$slope_start %||% (lay$step_start + lay$step_len))) {
-      c_loc <- j_global - lay$step_start
-      Bs <- ds_p$custom_step_B
-      act <- is.finite(ds_p$custom_step_d0)
-      ds_p$custom_step_d0[act] <- ds_p$custom_step_d0[act] + Bs[act, c_loc] * val
-      ds_p$custom_step_B <- Bs[, -c_loc, drop = FALSE]
-      ds_p$custom_step_q <- ncol(ds_p$custom_step_B)
+    j_drop <- NA_integer_
+    if (identical(tg$kind, "xi")) {
+      j_global <- tg$index
+      j_drop <- j_global
+      if (j_global <= lay$step_start) {
+        f_hit <- which(lay$facet_start < j_global & (lay$facet_start + lay$facet_len) >= j_global)[1L]
+        c_loc <- j_global - lay$facet_start[f_hit]
+        Bf <- ds_p$custom_facet_B[[f_hit]]
+        ds_p$custom_facet_d0[[f_hit]] <- ds_p$custom_facet_d0[[f_hit]] + Bf[, c_loc] * val
+        ds_p$custom_facet_B[[f_hit]] <- Bf[, -c_loc, drop = FALSE]
+        ds_p$custom_facet_q[f_hit] <- ncol(ds_p$custom_facet_B[[f_hit]])
+      } else if (j_global <= (lay$slope_start %||% (lay$step_start + lay$step_len))) {
+        c_loc <- j_global - lay$step_start
+        Bs <- ds_p$custom_step_B
+        act <- is.finite(ds_p$custom_step_d0)
+        ds_p$custom_step_d0[act] <- ds_p$custom_step_d0[act] + Bs[act, c_loc] * val
+        ds_p$custom_step_B <- Bs[, -c_loc, drop = FALSE]
+        ds_p$custom_step_q <- ncol(ds_p$custom_step_B)
+      } else {
+        sl_lens <- enc$slope_q
+        sl_starts <- lay$slope_offset
+        s_hit <- which(sl_starts < j_global & (sl_starts + sl_lens) >= j_global)[1L]
+        c_loc <- j_global - sl_starts[s_hit]
+        Bsl <- ds_p$slope_B[[s_hit]]
+        ds_p$slope_d0[[s_hit]] <- ds_p$slope_d0[[s_hit]] + Bsl[, c_loc] * val
+        ds_p$slope_B[[s_hit]] <- Bsl[, -c_loc, drop = FALSE]
+        ds_p$slope_q[s_hit] <- ncol(ds_p$slope_B[[s_hit]])
+      }
+    } else if (identical(tg$kind, "facet_row")) {
+      f_hit <- tg$block
+      el <- eliminate_affine_row(ds_p$custom_facet_d0[[f_hit]], ds_p$custom_facet_B[[f_hit]], tg$row, val)
+      if (is.null(el)) return(NA_real_)
+      ds_p$custom_facet_d0[[f_hit]] <- el$d0
+      ds_p$custom_facet_B[[f_hit]] <- el$B
+      ds_p$custom_facet_q[f_hit] <- ncol(el$B)
+      j_drop <- lay$facet_start[f_hit] + el$p_col
+    } else if (identical(tg$kind, "step_row")) {
+      el <- eliminate_affine_row(ds_p$custom_step_d0, ds_p$custom_step_B, tg$row, val)
+      if (is.null(el)) return(NA_real_)
+      ds_p$custom_step_d0 <- el$d0
+      ds_p$custom_step_B <- el$B
+      ds_p$custom_step_q <- ncol(el$B)
+      j_drop <- lay$step_start + el$p_col
+    } else if (identical(tg$kind, "slope_row")) {
+      s_hit <- tg$block
+      el <- eliminate_affine_row(ds_p$slope_d0[[s_hit]], ds_p$slope_B[[s_hit]], tg$row, val)
+      if (is.null(el)) return(NA_real_)
+      ds_p$slope_d0[[s_hit]] <- el$d0
+      ds_p$slope_B[[s_hit]] <- el$B
+      ds_p$slope_q[s_hit] <- ncol(el$B)
+      j_drop <- lay$slope_offset[s_hit] + el$p_col
     } else {
-      sl_lens <- lay$slope_len
-      sl_starts <- lay$slope_start + c(0L, cumsum(sl_lens)[-length(sl_lens)])
-      s_hit <- which(sl_starts < j_global & (sl_starts + sl_lens) >= j_global)[1L]
-      c_loc <- j_global - sl_starts[s_hit]
-      Bsl <- ds_p$slope_B[[s_hit]]
-      ds_p$slope_d0[[s_hit]] <- ds_p$slope_d0[[s_hit]] + Bsl[, c_loc] * val
-      ds_p$slope_B[[s_hit]] <- Bsl[, -c_loc, drop = FALSE]
-      ds_p$slope_q[s_hit] <- ncol(ds_p$slope_B[[s_hit]])
+      return(NA_real_)
     }
 
     ctrl_p <- object$control
@@ -2665,33 +2930,35 @@ vcov.mfrm_fit <- function(object, component = c("design", "facets", "steps", "sl
     ctrl_p$compute_wle <- FALSE
     ctrl_p$bias_facet_a <- -1L
     ctrl_p$bias_facet_b <- -1L
-    ctrl_p$warm_init <- as.double(xi_hat[-j_global])
+    ctrl_p$warm_init <- if (!is.na(j_drop) && length(xi_hat) >= j_drop) as.double(xi_hat[-j_drop]) else numeric(0)
     rw <- mfrm_cpp_fast_fit_spec(ds_p, ctrl_p)
+    if (!isTRUE(rw$converged)) return(NA_real_)
     as.numeric(rw$loglik)
   }
 
-  out_ci <- matrix(NA_real_, nrow = length(xi_indices), ncol = 2L)
+  out_ci <- matrix(NA_real_, nrow = length(targets), ncol = 2L)
   z_mult <- stats::qnorm(0.5 + 0.5 * level)
-  for (ii in seq_along(xi_indices)) {
-    j <- xi_indices[ii]
-    est <- unname(xi_hat[j])
-    se0 <- if (nrow(V_mod) >= j && is.finite(V_mod[j, j]) && V_mod[j, j] > 0) sqrt(V_mod[j, j]) else 0.25
+  for (ii in seq_along(targets)) {
+    tg <- targets[[ii]]
+    est <- tg$est
+    se0 <- tg$se
+    if (!is.finite(est) || !is.finite(se0) || se0 <= 0) next
     for (dir in c(-1.0, 1.0)) {
       step <- dir * max(1e-3, z_mult * se0)
       x_lo <- est
       x_hi <- est + step
-      f_hi <- eval_profile_ll(j, x_hi) - target_ll
+      f_hi <- eval_target_ll(tg, x_hi) - target_ll
       for (k_exp in seq_len(8L)) {
         if (!is.finite(f_hi) || f_hi <= 0.0) break
         x_lo <- x_hi
         step <- step * 1.8
         x_hi <- est + step
-        f_hi <- eval_profile_ll(j, x_hi) - target_ll
+        f_hi <- eval_target_ll(tg, x_hi) - target_ll
       }
       if (is.finite(f_hi) && f_hi <= 0.0) {
         iv <- sort(c(x_lo, x_hi))
         rt <- tryCatch(
-          stats::uniroot(function(v) eval_profile_ll(j, v) - target_ll, interval = iv, tol = 1e-4)$root,
+          stats::uniroot(function(v) eval_target_ll(tg, v) - target_ll, interval = iv, tol = 1e-4)$root,
           error = function(e) NA_real_
         )
         out_ci[ii, if (dir < 0) 1L else 2L] <- rt
@@ -2705,6 +2972,8 @@ vcov.mfrm_fit <- function(object, component = c("design", "facets", "steps", "sl
 confint.mfrm_fit <- function(object, parm = NULL, level = 0.95, component = c("facets", "steps", "slopes",
     "person", "explanatory", "interactions", "population", "free"), se_type = c("model", "real", "sandwich",
     "profile"), ...) {
+    .mfrm_validate_interval_level(level)
+    if (...length()) stop("Unused arguments in confint.mfrm_fit().", call. = FALSE)
     .mfrm_validate_fit(object)
     readiness <- .mfrm_readiness(object)
     if (!readiness$ready)
@@ -2712,7 +2981,10 @@ confint.mfrm_fit <- function(object, parm = NULL, level = 0.95, component = c("f
             call. = FALSE)
     if (!is.null(parm) && is.character(parm) && length(parm) == 1L && parm %in% c("facets", "locations", "steps",
         "slopes", "person", "persons", "explanatory", "interactions", "population", "free")) {
-        component <- switch(parm, locations = "facets", persons = "person", parm)
+        selected <- switch(parm, locations = "facets", persons = "person", parm)
+        if (!missing(component) && !identical(component, selected))
+            stop("`parm` and `component` specify different components.", call. = FALSE)
+        component <- selected
         parm <- NULL
     }
     component <- match.arg(component)
@@ -2720,36 +2992,99 @@ confint.mfrm_fit <- function(object, parm = NULL, level = 0.95, component = c("f
     z <- stats::qnorm(0.5 + 0.5 * level)
     pct_lbls <- paste0(format(100 * c((1 - level)/2, (1 + level)/2), trim = TRUE), "%")
     if (identical(se_type, "profile")) {
-        if (identical(component, "slopes")) {
-            sl_start <- object$xi_layout$slope_start %||% object$xi_layout$n_xi
-            n_xi <- object$xi_layout$n_xi
-            if (sl_start >= n_xi)
-                return(matrix(NA_real_, 0L, 2L, dimnames = list(character(0), pct_lbls)))
-            idx <- seq.int(sl_start + 1L, n_xi)
-            nms <- sub("^LogSlope:", "", names(object$xi)[idx])
-            if (!is.null(parm)) {
-                sel <- if (is.character(parm))
-                  match(parm, nms)
-                else as.integer(parm)
-                sel <- sel[!is.na(sel) & sel >= 1L & sel <= length(idx)]
-                idx <- idx[sel]
-                nms <- nms[sel]
+        if (component %in% c("person", "population")) {
+            stop(
+              "Profile likelihood intervals (`se_type = 'profile'`) are supported for structural components (`'facets'`, `'steps'`, `'slopes'`, `'explanatory'`, `'interactions'`, `'free'`), not `'",
+              component, "'`.",
+              call. = FALSE
+            )
+        }
+        enc <- object$encoding
+        lay <- object$xi_layout
+        exp_transform <- FALSE
+        if (identical(component, "facets")) {
+            tb <- object$facets
+            nms <- paste0(tb$Facet, ":", tb$Level)
+            if ("MLEEstimate" %in% names(tb)) {
+                if (!is.null(parm)) {
+                    sel <- if (is.character(parm)) match(parm, nms) else as.integer(parm)
+                    if (anyNA(sel) || any(sel < 1L | sel > length(nms)))
+                        stop("Unknown parameter(s) in `parm`.", call. = FALSE)
+                    nms <- nms[sel]
+                }
+                return(matrix(NA_real_, length(nms), 2L, dimnames = list(nms, pct_lbls)))
             }
-            ci_mat <- exp(.mfrm_profile_xi_ci(object, idx, level = level))
-            dimnames(ci_mat) <- list(nms, pct_lbls)
-            return(ci_mat)
+            targets <- lapply(seq_len(nrow(tb)), function(i) {
+                f_idx <- match(tb$Facet[i], enc$base_facets)
+                r_idx <- match(tb$Level[i], enc$facet_levels[[f_idx]])
+                list(kind = "facet_row", block = f_idx, row = r_idx, est = tb$Estimate[i], se = tb$ModelSE[i])
+            })
+        } else if (identical(component, "steps")) {
+            tb <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
+            nms <- paste0(tb$ScaleLevel, ":", tb$Step)
+            targets <- lapply(seq_len(nrow(tb)), function(i) {
+                list(kind = "step_row", row = i, est = tb$Estimate[i], se = tb$ModelSE[i])
+            })
+        } else if (identical(component, "slopes")) {
+            tb <- object$slopes
+            if (is.null(tb) || nrow(tb) == 0L)
+                return(matrix(NA_real_, 0L, 2L, dimnames = list(character(0), pct_lbls)))
+            nms <- paste0(tb$Facet, ":", tb$Level)
+            exp_transform <- TRUE
+            targets <- lapply(seq_len(nrow(tb)), function(i) {
+                s_idx <- match(tb$Facet[i], enc$slope_facets)
+                f_idx <- enc$slope_facets0[s_idx] + 1L
+                r_idx <- match(tb$Level[i], enc$facet_levels[[f_idx]])
+                se_log <- if (is.finite(tb$ModelSE[i]) && is.finite(tb$Estimate[i]) && tb$Estimate[i] > 0) tb$ModelSE[i] / tb$Estimate[i] else NA_real_
+                list(kind = "slope_row", block = s_idx, row = r_idx, est = tb$LogEstimate[i], se = se_log)
+            })
+        } else if (identical(component, "explanatory")) {
+            tb <- object$explanatory
+            if (is.null(tb) || nrow(tb) == 0L)
+                return(matrix(NA_real_, 0L, 2L, dimnames = list(character(0), pct_lbls)))
+            nms <- paste0(tb$Facet, ":", tb$Term)
+            idx_vec <- unlist(lapply(enc$explanatory_meta, function(em) {
+                f <- em$facet_idx
+                lay$facet_start[f] + seq_len(lay$facet_len[f])
+            }))
+            targets <- lapply(seq_len(nrow(tb)), function(i) {
+                list(kind = "xi", index = idx_vec[i], est = tb$Estimate[i], se = tb$ModelSE[i])
+            })
+        } else if (identical(component, "interactions")) {
+            tb <- object$interactions
+            if (is.null(tb) || nrow(tb) == 0L)
+                return(matrix(NA_real_, 0L, 2L, dimnames = list(character(0), pct_lbls)))
+            nms <- paste0(tb$Interaction, ":", tb$LevelA, ":", tb$LevelB)
+            targets <- lapply(seq_len(nrow(tb)), function(i) {
+                im <- enc$interaction_meta[[tb$Interaction[i]]]
+                ia <- match(im$facet_a, enc$base_facets)
+                ib <- match(im$facet_b, enc$base_facets)
+                a_idx <- match(tb$LevelA[i], enc$facet_levels[[ia]])
+                b_idx <- match(tb$LevelB[i], enc$facet_levels[[ib]])
+                r_idx <- (a_idx - 1L) * enc$facet_n_levels[ib] + b_idx
+                list(kind = "facet_row", block = im$facet_idx, row = r_idx, est = tb$Estimate[i], se = tb$ModelSE[i])
+            })
+        } else {
+            n_xi <- lay$n_xi
+            nms <- names(object$xi)[seq_len(n_xi)]
+            V_m <- object$xi_covariance_model
+            se_xi <- if (nrow(V_m) >= n_xi) sqrt(pmax(0, diag(V_m)[seq_len(n_xi)])) else rep(NA_real_, n_xi)
+            targets <- lapply(seq_len(n_xi), function(j) {
+                list(kind = "xi", index = j, est = unname(object$xi[j]), se = se_xi[j])
+            })
         }
-        n_xi <- object$xi_layout$n_xi
-        idx <- seq_len(n_xi)
-        nms <- names(object$xi)[idx]
         if (!is.null(parm)) {
-            idx <- if (is.character(parm))
-                match(parm, nms)
-            else as.integer(parm)
-            idx <- idx[!is.na(idx) & idx >= 1L & idx <= n_xi]
+            if (is.character(parm) && any(parm %in% nms[duplicated(nms)]))
+                stop("Ambiguous parameter name(s) in `parm`; select rows by integer index when level labels contain ':'.", call. = FALSE)
+            sel <- if (is.character(parm)) match(parm, nms) else as.integer(parm)
+            if (anyNA(sel) || any(sel < 1L | sel > length(nms)))
+                stop("Unknown parameter(s) in `parm`.", call. = FALSE)
+            targets <- targets[sel]
+            nms <- nms[sel]
         }
-        ci_mat <- .mfrm_profile_xi_ci(object, idx, level = level)
-        dimnames(ci_mat) <- list(nms[idx], pct_lbls)
+        ci_mat <- .mfrm_profile_targets_ci(object, targets, level = level)
+        if (exp_transform) ci_mat <- exp(ci_mat)
+        dimnames(ci_mat) <- list(nms, pct_lbls)
         return(ci_mat)
     }
     pick_se <- function(mod_se, real_se = NULL, sw_se = NULL) {
@@ -2763,10 +3098,11 @@ confint.mfrm_fit <- function(object, parm = NULL, level = 0.95, component = c("f
         tb <- object$facets
         est <- tb$Estimate
         se <- pick_se(tb$ModelSE, tb$RealSE, tb$SandwichSE)
+        if ("MLEEstimate" %in% names(tb)) se[] <- NA_real_
         nms <- paste0(tb$Facet, ":", tb$Level)
     }
     else if (identical(component, "steps")) {
-        tb <- object$steps
+        tb <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
         est <- tb$Estimate
         se <- pick_se(tb$ModelSE, NULL, tb$SandwichSE)
         nms <- paste0(tb$ScaleLevel, ":", tb$Step)
@@ -2893,10 +3229,16 @@ summary.mfrm_fit <- function(object, ...) {
     overview$InferenceStatus <- readiness$status
     list(overview = overview, model_label = .mfrm_model_label(object$model, unique(object$slopes$Facet)),
         readiness = readiness, connectivity = object$connectivity, population = object$population, facets = object$facets,
-        steps = object$steps, slopes = object$slopes, explanatory = object$explanatory, interactions = object$interactions,
+        anchor_application = object$encoding$anchor_application,
+        steps = .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit),
+        slopes = object$slopes, explanatory = object$explanatory, interactions = object$interactions,
         person_summary = data.frame(MeanAbility = mean(object$person$Estimate[is.finite(object$person$Estimate)]),
             SDAbility = stats::sd(object$person$Estimate[is.finite(object$person$Estimate)]), MeanModelSE = mean(object$person$ModelSE,
                 na.rm = TRUE), MeanRealSE = mean(object$person$RealSE, na.rm = TRUE), MeanInfit = mean(object$person$InfitMnSq,
-                na.rm = TRUE), MeanOutfit = mean(object$person$OutfitMnSq, na.rm = TRUE), ExtremeMin = sum(object$person$ExtremeFlag ==
+                na.rm = TRUE), MeanOutfit = mean(object$person$OutfitMnSq, na.rm = TRUE), MeanPostInfit = if ("PostInfitMnSq" %in%
+                names(object$person) && any(is.finite(object$person$PostInfitMnSq))) mean(object$person$PostInfitMnSq,
+                na.rm = TRUE) else NA_real_, MeanPostOutfit = if ("PostOutfitMnSq" %in%
+                names(object$person) && any(is.finite(object$person$PostOutfitMnSq))) mean(object$person$PostOutfitMnSq,
+                na.rm = TRUE) else NA_real_, ExtremeMin = sum(object$person$ExtremeFlag ==
                 -1L), ExtremeMax = sum(object$person$ExtremeFlag == 1L)))
 }

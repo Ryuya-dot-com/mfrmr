@@ -32,7 +32,9 @@ When \env{_R_CHECK_LIMIT_CORES_} requests a core limit, native worker counts are
 Split-likelihood tests support unified, unpenalized RSM/PCM calibrations without
 anchors, custom facet/step constraints, interactions or restricted category
 support. Unsupported specifications are rejected rather than dropped.
-Weights, facet signs and integration/optimizer controls are retained.
+Facet signs and integration/optimizer controls are retained; observation weights
+are retained for \code{method = "mml_lrt"}, whereas \code{method = "cml_lrt"}
+requires unit observation weights on retained ratings.
 The selected test method determines the refitting estimator. With
 \code{method = "mml_lrt"}, both models are refitted by MML even if the
 supplied calibration was estimated by JML.
@@ -42,6 +44,19 @@ to an estimated population. Both the baseline and split models use this same
 population design. A group varying within person cannot be a person-level
 impact covariate. CML tests condition on person totals and do not use a
 population distribution.
+
+The MML likelihood-ratio statistic is checked across two quadrature orders
+(the source calibration's validated order pair when automatic refinement
+stabilized, or the source order and twice that order plus one otherwise),
+using the same order and integration mode for both models in each comparison.
+The two statistics must be finite and agree within 0.001 times the greater of
+one and the absolute refined statistic, with both models converged at both
+orders. Inspect \code{quadrature_orders} and \code{InferenceReason} if a test
+is withheld.
+Saved workflow likelihood-ratio tables created before these refit checks
+retain descriptive contrasts and withhold inferential columns. Run
+\code{\link{step_mfrm_diagnose}} with the original group and method to obtain
+current tests.
 
 Both likelihood refits must pass numerical readiness and likelihood checks.
 Otherwise \code{SE}, \code{Statistic}, \code{pValue}, \code{pAdj} and

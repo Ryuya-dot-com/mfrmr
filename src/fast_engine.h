@@ -152,73 +152,82 @@ inline void gauss_hermite_normal(int Q, std::vector<double>& nodes,
   log_weights.assign(static_cast<size_t>(Q), 0.0);
   if (Q <= 1) return;
 
-  std::vector<double> A(static_cast<size_t>(Q) * static_cast<size_t>(Q), 0.0);
-  std::vector<double> V(static_cast<size_t>(Q) * static_cast<size_t>(Q), 0.0);
-  for (int i = 0; i < Q; ++i) V[static_cast<size_t>(i) * Q + i] = 1.0;
+  std::vector<double> d(static_cast<size_t>(Q), 0.0);
+  std::vector<double> e(static_cast<size_t>(Q), 0.0);
   for (int i = 0; i < Q - 1; ++i) {
-    double s = std::sqrt(static_cast<double>(i + 1));
-    A[static_cast<size_t>(i) * Q + (i + 1)] = s;
-    A[static_cast<size_t>(i + 1) * Q + i] = s;
+    e[static_cast<size_t>(i)] = std::sqrt(static_cast<double>(i + 1));
   }
 
-  for (int sweep = 0; sweep < 80; ++sweep) {
-    double max_off = 0.0;
-    for (int p = 0; p < Q - 1; ++p) {
-      for (int q = p + 1; q < Q; ++q) {
-        max_off = std::max(max_off, std::abs(A[static_cast<size_t>(p) * Q + q]));
+  // Symmetric tridiagonal QL (Wilkinson-Reinsch imtql1): O(Q^2) time, O(Q) space.
+  for (int l = 0; l < Q; ++l) {
+    int iter = 0;
+    while (true) {
+      int m = l;
+      for (; m < Q - 1; ++m) {
+        double dd = std::abs(d[static_cast<size_t>(m)]) + std::abs(d[static_cast<size_t>(m + 1)]);
+        if (dd + std::abs(e[static_cast<size_t>(m)]) == dd ||
+            std::abs(e[static_cast<size_t>(m)]) <= 1e-15 * std::max(1.0, dd)) break;
       }
-    }
-    if (max_off < 1e-15) break;
-    for (int p = 0; p < Q - 1; ++p) {
-      for (int q = p + 1; q < Q; ++q) {
-        double apq = A[static_cast<size_t>(p) * Q + q];
-        if (std::abs(apq) < 1e-16) continue;
-        double app = A[static_cast<size_t>(p) * Q + p];
-        double aqq = A[static_cast<size_t>(q) * Q + q];
-        double tau = (aqq - app) / (2.0 * apq);
-        double t = (tau >= 0.0) ? (1.0 / (tau + std::sqrt(1.0 + tau * tau)))
-                                : (-1.0 / (-tau + std::sqrt(1.0 + tau * tau)));
-        double c = 1.0 / std::sqrt(1.0 + t * t);
-        double s = t * c;
-        A[static_cast<size_t>(p) * Q + p] = app - t * apq;
-        A[static_cast<size_t>(q) * Q + q] = aqq + t * apq;
-        A[static_cast<size_t>(p) * Q + q] = 0.0;
-        A[static_cast<size_t>(q) * Q + p] = 0.0;
-        for (int r = 0; r < Q; ++r) {
-          if (r == p || r == q) continue;
-          double arp = A[static_cast<size_t>(r) * Q + p];
-          double arq = A[static_cast<size_t>(r) * Q + q];
-          A[static_cast<size_t>(r) * Q + p] = c * arp - s * arq;
-          A[static_cast<size_t>(p) * Q + r] = A[static_cast<size_t>(r) * Q + p];
-          A[static_cast<size_t>(r) * Q + q] = s * arp + c * arq;
-          A[static_cast<size_t>(q) * Q + r] = A[static_cast<size_t>(r) * Q + q];
-        }
-        for (int r = 0; r < Q; ++r) {
-          double vrp = V[static_cast<size_t>(r) * Q + p];
-          double vrq = V[static_cast<size_t>(r) * Q + q];
-          V[static_cast<size_t>(r) * Q + p] = c * vrp - s * vrq;
-          V[static_cast<size_t>(r) * Q + q] = s * vrp + c * vrq;
-        }
+      if (m == l) break;
+      if (++iter > 100) {
+        throw std::runtime_error("Gauss-Hermite tridiagonal QL failed to converge.");
       }
+      double g = (d[static_cast<size_t>(l + 1)] - d[static_cast<size_t>(l)]) / (2.0 * e[static_cast<size_t>(l)]);
+      double r = std::hypot(g, 1.0);
+      g = d[static_cast<size_t>(m)] - d[static_cast<size_t>(l)] +
+          e[static_cast<size_t>(l)] / (g + (g >= 0.0 ? r : -r));
+      double s = 1.0, c = 1.0, p = 0.0;
+      for (int i = m - 1; i >= l; --i) {
+        double f = s * e[static_cast<size_t>(i)];
+        double b = c * e[static_cast<size_t>(i)];
+        r = std::hypot(f, g);
+        e[static_cast<size_t>(i + 1)] = r;
+        if (r == 0.0) {
+          d[static_cast<size_t>(i + 1)] -= p;
+          e[static_cast<size_t>(m)] = 0.0;
+          break;
+        }
+        s = f / r;
+        c = g / r;
+        g = d[static_cast<size_t>(i + 1)] - p;
+        r = (d[static_cast<size_t>(i)] - g) * s + 2.0 * c * b;
+        p = s * r;
+        d[static_cast<size_t>(i + 1)] = g + p;
+        g = c * r - b;
+      }
+      if (r == 0.0 && iter <= 60) continue;
+      d[static_cast<size_t>(l)] -= p;
+      e[static_cast<size_t>(l)] = g;
+      e[static_cast<size_t>(m)] = 0.0;
     }
   }
 
-  std::vector<int> ord(static_cast<size_t>(Q));
-  std::iota(ord.begin(), ord.end(), 0);
-  std::sort(ord.begin(), ord.end(), [&](int a, int b) {
-    return A[static_cast<size_t>(a) * Q + a] < A[static_cast<size_t>(b) * Q + b];
-  });
+  std::sort(d.begin(), d.end());
+  for (int k = 0; k < Q / 2; ++k) {
+    double sym = 0.5 * (d[static_cast<size_t>(Q - 1 - k)] - d[static_cast<size_t>(k)]);
+    nodes[static_cast<size_t>(k)] = -sym;
+    nodes[static_cast<size_t>(Q - 1 - k)] = sym;
+  }
+  if (Q % 2 == 1) nodes[static_cast<size_t>(Q / 2)] = 0.0;
+
   double wsum = 0.0;
   for (int k = 0; k < Q; ++k) {
-    int idx = ord[static_cast<size_t>(k)];
-    nodes[static_cast<size_t>(k)] = A[static_cast<size_t>(idx) * Q + idx];
-    double v0 = V[idx];
-    weights[static_cast<size_t>(k)] = v0 * v0;
+    // Normalized Hermite recurrence preserves relative accuracy of tiny weights.
+    double p0 = 1.0, p1 = nodes[static_cast<size_t>(k)], log_scale = 0.0;
+    for (int j = 1; j < Q - 1; ++j) {
+      double p2 = (nodes[static_cast<size_t>(k)] * p1 - std::sqrt(static_cast<double>(j)) * p0) / std::sqrt(static_cast<double>(j + 1));
+      p0 = p1; p1 = p2;
+      if (std::max(std::abs(p0), std::abs(p1)) > 1e100) {
+        p0 *= 1e-100; p1 *= 1e-100; log_scale += std::log(1e100);
+      }
+    }
+    log_weights[static_cast<size_t>(k)] = -std::log(static_cast<double>(Q)) - 2.0 * (std::log(std::abs(p1)) + log_scale);
+    weights[static_cast<size_t>(k)] = std::exp(log_weights[static_cast<size_t>(k)]);
     wsum += weights[static_cast<size_t>(k)];
   }
   for (int k = 0; k < Q; ++k) {
     weights[static_cast<size_t>(k)] /= wsum;
-    log_weights[static_cast<size_t>(k)] = std::log(weights[static_cast<size_t>(k)]);
+    log_weights[static_cast<size_t>(k)] -= std::log(wsum);
   }
 }
 
@@ -1403,7 +1412,7 @@ inline WleResult score_wle_persons(const FastDesignSpec& spec,
 inline double compute_zstd_facets(double mnsq, double df, bool whexact, double cap = 9.0) {
   if (!std::isfinite(mnsq) || !std::isfinite(df) || mnsq < 0.0 || df < 1.0) return kNaN;
   double q = std::sqrt(2.0 / df);
-  double z = 3.0 * (std::cbrt(mnsq) - 1.0) / q + (whexact ? 0.0 : (q / 3.0));
+  double z = 3.0 * (std::cbrt(mnsq) - 1.0) / q + (whexact ? (q / 3.0) : 0.0);
   if (cap > 0.0 && std::isfinite(cap)) {
     z = std::max(-cap, std::min(cap, z));
   }
@@ -1419,6 +1428,10 @@ struct ElementDiagTable {
   std::vector<double> infit_zstd;
   std::vector<double> outfit_mnsq;
   std::vector<double> outfit_zstd;
+  std::vector<double> post_infit_mnsq;
+  std::vector<double> post_infit_zstd;
+  std::vector<double> post_outfit_mnsq;
+  std::vector<double> post_outfit_zstd;
   std::vector<double> fair_m;
   std::vector<double> fair_z;
 };
@@ -1519,6 +1532,10 @@ inline void compute_fast_diagnostics_and_fair(
     t.infit_zstd.assign(static_cast<size_t>(len), kNaN);
     t.outfit_mnsq.assign(static_cast<size_t>(len), kNaN);
     t.outfit_zstd.assign(static_cast<size_t>(len), kNaN);
+    t.post_infit_mnsq.assign(static_cast<size_t>(len), kNaN);
+    t.post_infit_zstd.assign(static_cast<size_t>(len), kNaN);
+    t.post_outfit_mnsq.assign(static_cast<size_t>(len), kNaN);
+    t.post_outfit_zstd.assign(static_cast<size_t>(len), kNaN);
     t.fair_m.assign(static_cast<size_t>(len), kNaN);
     t.fair_z.assign(static_cast<size_t>(len), kNaN);
   };

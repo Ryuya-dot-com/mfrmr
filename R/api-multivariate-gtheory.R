@@ -1,6 +1,8 @@
 mfrm_g_study <- function(data, scores = NULL, person = "Person", rater = "Rater", task = "Task", method = c("anova",
     "minque0", "urgenova"), missing = c("error", "omit"), facets = NULL, nesting = NULL, score = NULL, weights = NULL,
     d_study_grid = NULL, truncate_negative = TRUE) {
+    if (!is.null(scores) && !is.null(score) && !identical(scores, score))
+        stop("`scores` and `score` must agree when both are supplied.", call. = FALSE)
     if (is.null(scores) && !is.null(score))
         scores <- score
     method <- match.arg(method)
@@ -13,11 +15,8 @@ mfrm_g_study <- function(data, scores = NULL, person = "Person", rater = "Rater"
         f_use <- if (!is.null(facets))
             unname(as.character(facets))
         else c(rater, task)[!vapply(list(rater, task), is.null, logical(1))]
-        required <- c(person, f_use, scores)
-        if (identical(missing, "error") && all(required %in% names(data)) && anyNA(data[required]))
-            stop("Missing values are not allowed with missing = 'error'.", call. = FALSE)
         return(.mfrm_gstudy_henderson(data = data, person = person, facets = f_use, scores = scores, nesting = nesting,
-            weights = weights, d_study_grid = d_study_grid, truncate_negative = truncate_negative))
+            weights = weights, d_study_grid = d_study_grid, truncate_negative = truncate_negative, missing = missing))
     }
     valid_names <- function(x) is.character(x) && length(x) > 0L && !anyNA(x) && all(nzchar(trimws(x))) &&
         !anyDuplicated(x)
@@ -41,7 +40,7 @@ mfrm_g_study <- function(data, scores = NULL, person = "Person", rater = "Rater"
             facets
         else names(facets)
         if (!.mfrm_mvgt_valid_facets(facet_names)) {
-            stop("Supply one or two unique, nonblank facet labels without ':' or reserved result names (such as Person, Residual, Score, or Scenario).",
+            stop("Supply one or two unique, nonblank facet labels without ':' or reserved result names (such as Person, Residual, Score, or Scenario); use `method = 'urgenova'` for 3 or 4 facets.",
                 call. = FALSE)
         }
         facet_args <- as.list(unname(facets))

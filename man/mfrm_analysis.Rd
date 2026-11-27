@@ -30,7 +30,7 @@ mfrm_analysis(
   facet_formulas = NULL,
   facet_data = NULL,
   quad_points = 31L,
-  mml_integration = c("fixed", "adaptive"),
+  mml_integration = c("auto", "fixed", "adaptive"),
   xtreme = 0.3,
   warn_connectivity = TRUE,
   nesting = NULL,
@@ -41,6 +41,7 @@ mfrm_analysis(
   target_phi = 0.8,
   mnsq_range = c(0.7, 1.3),
   zstd_limit = 2,
+  fit_method = c("auto", "posterior", "plugin"),
   bias_df_method = c("facets", "classical"),
   dff_group = NULL,
   dff_method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic"),
@@ -79,7 +80,7 @@ tidymfrm(
   facet_formulas = NULL,
   facet_data = NULL,
   quad_points = 31L,
-  mml_integration = c("fixed", "adaptive"),
+  mml_integration = c("auto", "fixed", "adaptive"),
   xtreme = 0.3,
   warn_connectivity = TRUE,
   nesting = NULL,
@@ -90,6 +91,7 @@ tidymfrm(
   target_phi = 0.8,
   mnsq_range = c(0.7, 1.3),
   zstd_limit = 2,
+  fit_method = c("auto", "posterior", "plugin"),
   bias_df_method = c("facets", "classical"),
   dff_group = NULL,
   dff_method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic"),
@@ -154,7 +156,7 @@ For a GMFRM with common steps on a common rubric, use \code{"Common"}.}
 
 \item{quad_points}{Quadrature points for \code{MML} (default \code{31L}).}
 
-\item{mml_integration}{\code{"fixed"} or \code{"adaptive"}.}
+\item{mml_integration}{\code{"auto"} (default for MML), \code{"fixed"}, or \code{"adaptive"}. Automatic integration compares two orders, including structural covariance and SE stability; it is not a bound on integration error or coverage.}
 
 \item{xtreme}{Extreme-score adjustment for \code{JML} (default \code{0.3} for FACETS compatibility).}
 
@@ -179,6 +181,11 @@ Supply a subset explicitly if the workflow has more than four facets.}
 \item{mnsq_range}{Acceptable \verb{Infit MnSq} interval for rater screening (default \code{c(0.70, 1.30)}).}
 
 \item{zstd_limit}{Absolute \code{ZSTD} screening threshold (default \code{2.0}).}
+
+\item{fit_method}{Fit-statistic basis used for rater screening: \code{"auto"} (default;
+uses posterior-integrated \code{PostInfitMnSq}/\code{PostInfitZSTD} matching \code{TAM::msq.itemfit}
+for \code{MML}, and point-estimate plug-in \code{InfitMnSq}/\code{InfitZSTD} for \code{JML}/\code{CML}),
+\code{"posterior"}, or \code{"plugin"}. \code{RealSE} always uses plug-in \code{InfitMnSq}.}
 
 \item{bias_df_method}{Degrees-of-freedom convention for 2-way pairwise bias
 screening: \code{"facets"} (FACETS 4.5.3 \code{RajuSA-Welch} / von Davier 2025) or \code{"classical"}.}

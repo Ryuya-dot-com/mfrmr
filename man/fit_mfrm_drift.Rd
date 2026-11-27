@@ -39,7 +39,7 @@ fit_mfrm_drift(
   \item{flag_se_ratio}{Standardized \code{|Drift| / TotalSE} ratio threshold for flagging drift contrasts (default \code{2}).}
 }
 \value{
-An S3 object of class \code{"mfrm_drift"} supporting \code{summary()}, \code{plot()}, \code{confint()}, \code{coef()}, \code{vcov()}, \code{predict()}, and \code{as.data.frame(x, component = "severity")} (returning rater-by-wave severity estimates, \code{ConditionalSE}, \code{TotalSE}, and drift flags).
+An S3 object of class \code{"mfrm_drift"} supporting \code{summary()}, \code{plot()}, \code{confint()}, \code{coef()}, \code{vcov()}, \code{predict()}, and \code{as.data.frame(x, component = "severity")} (returning rater-by-wave severity estimates, \code{ConditionalSE}, \code{TotalSE}, and drift flags). When \code{checks$NumericalReady} is \code{FALSE}, inferential standard errors, \code{vcov()}, \code{FlaggedDrift}, \code{Flagged}, and \code{FlaggedRaters} are set to \code{NA} rather than finite values or \code{FALSE}/\code{0}; under \code{drift_mode = "static"}, wave drift flags are identically \code{FALSE}. Reloading earlier saved \code{"markov_homo"} fits refreshes hyperparameter curvature and total standard errors from stored conditional components (or withholds total/hyper SEs and intervals as \code{NA} if those components were removed).
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{detect_anchor_drift}}, \code{\link{plot.mfrm_fit}}

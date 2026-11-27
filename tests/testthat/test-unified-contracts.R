@@ -54,13 +54,20 @@ test_that("all G-study estimators use one contract while retaining statistical a
 
 test_that("automatic quadrature preserves refined results and withholds unstable inference", {
   d <- load_mfrmr_data("example_core")
-  expect_warning(coarse <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
-    control = list(mml_integration = "auto", quad_points = 15L)), "quadrature orders")
-  expect_equal(coarse$quadrature_check$orders, c(15L, 31L))
-  expect_equal(coarse$control$quad_points, 31L)
-  expect_false(summary(coarse)$readiness$ready)
-  expect_true("quadrature_sensitivity_not_stable" %in% summary(coarse)$readiness$reason_codes)
-  expect_error(confint(coarse), "quadrature_sensitivity")
+  coarse <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
+    control = list(mml_integration = "auto", quad_points = 15L))
+  expect_equal(coarse$quadrature_check$history[[1]]$orders, c(15L, 31L))
+  expect_false(coarse$quadrature_check$history[[1]]$stable)
+  expect_true(coarse$quadrature_check$stable)
+  expect_true(summary(coarse)$readiness$ready)
+  # Isolate the covariance audit: unchanged estimates cannot hide an altered SE.
+  fixed <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score",
+    control = list(mml_integration = "fixed", quad_points = 127L))
+  fixed$xi_covariance_model <- fixed$xi_covariance_model * 4
+  unstable <- .mfrm_refine_quadrature_once(fixed)
+  expect_false(unstable$quadrature_check$stable)
+  expect_gt(unstable$quadrature_check$differences[["standard_error"]], .9)
+  expect_error(confint(unstable), "quadrature_sensitivity")
 })
 
 test_that("fine automatic quadrature is stable and survives serialization", {

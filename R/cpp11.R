@@ -8,8 +8,8 @@ mfrm_cpp_fast_fit_spec <- function(ds, ctrl_r) {
   .Call(`_mfrmr_mfrm_cpp_fast_fit_spec`, ds, ctrl_r)
 }
 
-mfrm_cpp_fast_wle <- function(n_person, n_cat, person0, score0, weight, base_eta_obs, step_cum_mat, step_group0, step_cat_min, step_cat_max) {
-  .Call(`_mfrmr_mfrm_cpp_fast_wle`, n_person, n_cat, person0, score0, weight, base_eta_obs, step_cum_mat, step_group0, step_cat_min, step_cat_max)
+mfrm_cpp_fast_wle <- function(n_person, n_cat, person0, score0, weight, base_eta_obs, step_cum_mat, step_group0, step_cat_min, step_cat_max, alpha_obs, slope_formula) {
+  .Call(`_mfrmr_mfrm_cpp_fast_wle`, n_person, n_cat, person0, score0, weight, base_eta_obs, step_cum_mat, step_group0, step_cat_min, step_cat_max, alpha_obs, slope_formula)
 }
 
 mfrm_cpp_fast_batch_list <- function(dataset_specs, ctrl_r, n_threads) {

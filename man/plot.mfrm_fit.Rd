@@ -18,7 +18,7 @@ Unified \pkg{ggplot2} \code{plot()} methods for fitted MFRM models, diagnostics,
 
 \method{plot}{mfrm_diagnostics}(
   x, facet = NULL, palette = c("okabe_ito", "viridis", "monochrome"),
-  base_size = 11, ..., type = c("pathway", "residual_pca"))
+  base_size = 11, ..., type = c("pathway", "residual_pca", "fit_sensitivity"))
 
 \method{plot}{mfrm_dff}(
   x, top_n = 25L, palette = c("okabe_ito", "viridis", "monochrome"),
@@ -31,7 +31,8 @@ Unified \pkg{ggplot2} \code{plot()} methods for fitted MFRM models, diagnostics,
 \method{plot}{mfrm_fit}(
   x,
   type = c("wright", "pathway", "steps", "category_curves", "persons",
-    "raters", "person_fit", "residual_qq", "slopes", "qc"),
+    "raters", "person_fit", "residual_qq", "slopes", "qc",
+    "fit_sensitivity", "cut_sensitivity"),
   palette = c("okabe_ito", "viridis", "monochrome"), facet = NULL,
   base_size = 11, ..., fit_statistic = c("infit", "outfit", "both"))
 
@@ -52,7 +53,7 @@ Unified \pkg{ggplot2} \code{plot()} methods for fitted MFRM models, diagnostics,
 \arguments{
   \item{fit_statistic}{Horizontal mean-square statistic for a pathway plot. Use \code{"both"} for separate Infit and Outfit panels on the same scale.}
   \item{x}{An \pkg{mfrmr} model, diagnostic, bias, DFF, information, drift, G/D-Study object.}
-  \item{type}{Character string selecting the visualization panel: for diagnostic objects, \code{"pathway"} or \code{"residual_pca"} (first residual contrast); for fitted models, \code{"wright"}, \code{"pathway"}, \code{"steps"}, \code{"category_curves"}, \code{"persons"}, \code{"raters"}, \code{"person_fit"}, \code{"residual_qq"}, \code{"slopes"} (GPCM), or \code{"qc"}; for G-Studies, \code{"dstudy"} or \code{"variance"} (\code{NULL} chooses D-Study for Henderson and component variance for ANOVA/MINQUE); for bias, \code{"forest"} or \code{"pairwise"}; for information, \code{"information"} or \code{"ccc"}; for drift, \code{"trajectory"} or \code{"contrasts"}.}
+  \item{type}{Character string selecting the visualization panel: for diagnostic objects, \code{"pathway"}, \code{"residual_pca"} (first residual contrast), or \code{"fit_sensitivity"}; for fitted models, \code{"wright"}, \code{"pathway"}, \code{"steps"}, \code{"category_curves"}, \code{"persons"}, \code{"raters"}, \code{"person_fit"}, \code{"residual_qq"}, \code{"slopes"} (GPCM), \code{"qc"}, \code{"fit_sensitivity"} (flagged counts across symmetric \code{[1 - d, 1 + d]} \code{MnSq} bounds), or \code{"cut_sensitivity"} (pass rate and 90\% borderline counts across candidate \code{Fair(M)} cutoffs); for G-Studies, \code{"dstudy"} or \code{"variance"} (\code{NULL} chooses D-Study for Henderson and component variance for ANOVA/MINQUE); for bias, \code{"forest"} or \code{"pairwise"}; for information, \code{"information"} or \code{"ccc"}; for drift, \code{"trajectory"} or \code{"contrasts"}.}
   \item{top_n}{Maximum number of ranked bias cells or DFF elements to display.}
   \item{palette}{Color-vision-safe palette: \code{"okabe_ito"} (default), \code{"viridis"}, or strict \code{"monochrome"} grayscale.}
   \item{base_size}{Base font size in points (default \code{11}).}
@@ -71,10 +72,13 @@ calibrated significance tests.
 
 For unified-engine fits, slope bars use the same log-scale 95 percent model
 intervals as \code{confint(x, component = "slopes")}. Person and facet diagnostic
-bars use descriptive Real-SE intervals. When the calibration fails inference
-readiness, these interval bars are withheld while finite descriptive points are
-retained; \code{attr(p, "mfrm_notes")} records the reasons. Neither visible bars
-nor a ready status establish nominal finite-sample coverage.
+bars use descriptive Real-SE intervals. For \code{mfrm_drift} objects,
+\code{type = "contrasts"} displays wave-vs-baseline severity changes with 95
+percent total-SE intervals when \code{checks$NumericalReady} is \code{TRUE}. When
+a calibration or drift fit fails numerical readiness, interval bars are withheld
+while finite descriptive points are retained; \code{attr(p, "mfrm_notes")}
+records the reasons. Neither visible bars nor a ready status establish nominal
+finite-sample coverage.
 }
 \examples{
 # Saved JML calibration of example_core; see fit_mfrm() for estimation.

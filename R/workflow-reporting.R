@@ -45,6 +45,31 @@
   gsub("\"", "&quot;", x, fixed = TRUE)
 }
 
+.tidymfrm_md_code <- function(x) {
+  x <- gsub("[\r\n]+", " ", as.character(x))
+  ticks <- regmatches(x, gregexpr("`+", x))[[1L]]
+  fence <- strrep("`", if (length(ticks)) max(nchar(ticks)) + 1L else 1L)
+  pad <- if (grepl("^`|`$", x) || (grepl("^ | $", x) && grepl("[^ ]", x))) " " else ""
+  paste0(fence, pad, x, pad, fence)
+}
+
+.tidymfrm_escape_markdown_html <- function(x) {
+  esc <- function(s) gsub("<", "&lt;", gsub("&", "&amp;", s, fixed = TRUE), fixed = TRUE)
+  escape_line <- function(ln) {
+    if (grepl("^\\|", ln)) return(esc(ln))
+    m <- gregexpr("(?<!`)(`+)(?!`)[^\n]*?(?<!`)\\1(?!`)", ln, perl = TRUE)
+    s <- regmatches(ln, m)[[1L]]
+    if (!length(s)) return(esc(ln))
+    p <- esc(regmatches(ln, m, invert = TRUE)[[1L]])
+    paste0(paste0(p[-length(p)], s, collapse = ""), p[length(p)])
+  }
+  vapply(x, function(doc) {
+    lines <- strsplit(doc, "\n", fixed = TRUE)[[1L]]
+    if (!length(lines)) return("")
+    paste(vapply(lines, escape_line, character(1), USE.NAMES = FALSE), collapse = "\n")
+  }, character(1), USE.NAMES = FALSE)
+}
+
 .tidymfrm_md_table_cells <- function(line) {
   # An even run of backslashes leaves the following pipe as a delimiter.
   inside <- substr(line, 2L, nchar(line) - 1L)
@@ -71,11 +96,25 @@
     }
   }
 
+  fmt_text <- function(t) {
+    gsub("\\*\\*([^*]+)\\*\\*", "<strong>\\1</strong>", .tidymfrm_escape_html(t), perl = TRUE)
+  }
+  fmt_code <- function(sp) {
+    k <- attr(regexpr("^`+", sp), "match.length")
+    inner <- substr(sp, k + 1L, nchar(sp) - k)
+    if (nchar(inner) >= 2L && substr(inner, 1L, 1L) == " " &&
+        substr(inner, nchar(inner), nchar(inner)) == " " && grepl("[^ ]", inner)) {
+      inner <- substr(inner, 2L, nchar(inner) - 1L)
+    }
+    paste0("<code>", .tidymfrm_escape_html(inner), "</code>")
+  }
   inline_fmt <- function(s) {
-    s <- .tidymfrm_escape_html(s)
-    s <- gsub("\\*\\*([^*]+)\\*\\*", "<strong>\\1</strong>", s)
-    s <- gsub("`([^`]+)`", "<code>\\1</code>", s)
-    s
+    m <- gregexpr("(?<!`)(`+)(?!`)[^\n]*?(?<!`)\\1(?!`)", s, perl = TRUE)
+    codes <- regmatches(s, m)[[1L]]
+    if (!length(codes)) return(fmt_text(s))
+    parts <- vapply(regmatches(s, m, invert = TRUE)[[1L]], fmt_text, character(1), USE.NAMES = FALSE)
+    codes_html <- vapply(codes, fmt_code, character(1), USE.NAMES = FALSE)
+    paste0(paste0(parts[-length(parts)], codes_html, collapse = ""), parts[length(parts)])
   }
 
   i <- 1L
@@ -176,7 +215,7 @@ format_mfrm_table <- function(x,
   engine <- match.arg(engine)
   df <- .tidymfrm_round_df(tidy(x, component = component), digits = digits)
   if (identical(engine, "markdown")) {
-    return(.tidymfrm_fmt_df_md(df, digits = digits))
+    return(.tidymfrm_escape_markdown_html(.tidymfrm_fmt_df_md(df, digits = digits)))
   }
   if (identical(engine, "kableExtra")) {
     if (!requireNamespace("knitr", quietly = TRUE) || !requireNamespace("kableExtra", quietly = TRUE)) {
@@ -333,6 +372,9 @@ render_mfrm_report <- function(x,
   if (!is.null(x$bootstrap_reason)) {
     calibration <- c(calibration, paste("Bootstrap review:", x$bootstrap_reason))
   }
+  if (!is.null(x[["drift_reason"]])) {
+    calibration <- c(calibration, paste("Dynamic drift:", x[["drift_reason"]]))
+  }
   dg <- x$diagnostics
   review <- "No rater review is attached. Run step_mfrm_diagnose() after calibration."
   unexpected <- NULL
@@ -346,9 +388,15 @@ render_mfrm_report <- function(x,
       "Review the score record and rubric before taking action."), nrow(dg$unexpected)))
     if (!is.null(dg$bias_reason)) review <- c(review, paste("Pairwise bias screening is unavailable.", dg$bias_reason))
     if (nrow(dg$unexpected) && max_unexpected > 0L) {
-      fields <- intersect(c(".row_id", sp$person, sp$facets, "Observed", "Expected", "StdResidual", "ObsProb"), names(dg$unexpected))
+      mc_u <- attr(dg$observations, "metric_cols", exact = TRUE)
+      attr(dg$unexpected, "metric_cols") <- mc_u
+      row_col <- .tidymfrm_obs_col_name(dg$unexpected, ".row_id")
+      m_cols <- vapply(c("Observed", "Expected", "StdResidual", "ObsProb"),
+                       function(k) .tidymfrm_obs_col_name(dg$unexpected, k), character(1))
+      fields <- intersect(unique(c(row_col, sp$person, sp$facets, m_cols)), names(dg$unexpected))
       unexpected <- utils::head(dg$unexpected[fields], as.integer(max_unexpected))
-      names(unexpected)[names(unexpected) == ".row_id"] <- "InputRow"
+      in_lbl <- tail(make.unique(c(setdiff(names(unexpected), row_col), "InputRow")), 1L)
+      names(unexpected)[names(unexpected) == row_col] <- in_lbl
     }
   }
   design <- sprintf("%d complete ratings across %d persons. The rating graph has %d connected subset(s).",
@@ -384,7 +432,7 @@ render_mfrm_report <- function(x,
       "Rating network statistics describe observed assignments with one edge per person-rater pair.")
   details <- c(list("Calibration methods" = metadata$calibration), report_tables, list(
     "GMFRM Discrimination Parameters" = x$fit$slopes[, slope_columns, drop = FALSE],
-    "Dynamic Markov Rater Drift Summary" = if (!is.null(x$drift)) as.data.frame(x$drift, component = "severity"),
+    "Dynamic Markov Rater Drift Summary" = if (!is.null(x[["drift"]])) as.data.frame(x[["drift"]], component = "severity"),
     "Differential Facet Functioning (DFF) Group Screening" = dg$dff,
     "Observed Score Range and Endpoint Counts by Rater" = dg$raters[, score_columns, drop = FALSE],
     "Observed Rating Counts by Rater and Category" = dg$category_counts
@@ -439,10 +487,10 @@ render_mfrm_report <- function(x,
   # Section 1: Connectivity & Design
   sec <- c(
     sec,
-    "## 1. Rating Design & Multi-Facet Graph Connectivity",
-    sprintf("- **Total complete ratings**: %d across %d persons (`%s`).", conn$n_obs, conn$n_person, sp$person),
-    sprintf("- **Non-person facets**: %s (designated rater facet: `%s`).",
-            paste(paste0("`", sp$facets, "`"), collapse = ", "), sp$rater_facet),
+    "## 1. Rating Design and Multi-Facet Graph Connectivity",
+    sprintf("- **Total complete ratings**: %d across %d persons (%s).", conn$n_obs, conn$n_person, .tidymfrm_md_code(sp$person)),
+    sprintf("- **Non-person facets**: %s (designated rater facet: %s).",
+            paste(vapply(sp$facets, .tidymfrm_md_code, character(1)), collapse = ", "), .tidymfrm_md_code(sp$rater_facet)),
     sprintf("- **Rubric category range**: %.0f to %.0f (%s).",
             rmin, rmax,
             if (isTRUE(conn$interior_categories_supported)) "all interior categories observed" else "WARNING: empty interior category detected"),
@@ -465,9 +513,14 @@ render_mfrm_report <- function(x,
     sec <- c(
       sec,
       "## 2. Many-Facet Measurement (Pillar 1)",
-      sprintf("- **Model & Estimator**: `%s` estimated via `%s` (primary person measure: `%s`; converged = `%s` in %d iterations; `logLik = %.2f`).",
+      sprintf("- **Model and Estimator**: `%s` estimated via `%s` (primary person measure: `%s`; converged = `%s` in %d iterations; `logLik = %.2f`).",
               model_label, f$method, f$score_method, f$converged, f$iterations, f$loglik),
-      "- **Scale identification**: Non-person facets sum-centered to 0.00 logits unless anchored; facet signs follow MFRM convention (`Sign = -1` for severity/difficulty so higher values denote stricter raters or harder tasks).",
+      if (any(f$facets$Sign > 0, na.rm = TRUE)) {
+        sprintf("- **Scale identification**: Non-person facets sum-centered to 0.00 logits unless anchored; positively oriented facets (`Sign = +1`: %s) assign higher values to more lenient/easier elements, while remaining facets (`Sign = -1`) assign higher values to stricter/harder elements.",
+                paste(unique(f$facets$Facet[f$facets$Sign > 0]), collapse = ", "))
+      } else {
+        "- **Scale identification**: Non-person facets sum-centered to 0.00 logits unless anchored; facet signs follow MFRM convention (`Sign = -1` for severity/difficulty so higher values denote stricter raters or harder tasks)."
+      },
       sprintf("- **Extreme person scores**: %d/%d persons at minimum/maximum possible score.", n_ext, f$n_person)
     )
     if (is.finite(f$population$eap_reliability)) {
@@ -478,7 +531,11 @@ render_mfrm_report <- function(x,
       )
     }
     sec <- c(sec, "", "### Non-Person Facet Parameter Summary", "")
-    f_disp <- f$facets[, c("Facet", "Level", "ObsCount", "ObsAvg", "FairM", "Estimate", "ModelSE", "RealSE", "InfitMnSq", "OutfitMnSq"), drop = FALSE]
+    f_cols <- c("Facet", "Level", "ObsCount", "ObsAvg", "FairM", "Estimate", "ModelSE", "RealSE", "InfitMnSq", "OutfitMnSq")
+    if ("PostInfitMnSq" %in% names(f$facets) && any(is.finite(f$facets$PostInfitMnSq))) {
+      f_cols <- c(f_cols, "PostInfitMnSq", "PostOutfitMnSq")
+    }
+    f_disp <- f$facets[, f_cols, drop = FALSE]
     sec <- c(sec, .tidymfrm_fmt_df_md(f_disp, digits = digits), "")
 
     sec <- c(sec, "### Andrich Step Thresholds", "")
@@ -503,7 +560,7 @@ render_mfrm_report <- function(x,
     gs <- gt$g_study_summary
     sec <- c(
       sec,
-      "## 3. Generalizability (G-Study) & Decision (D-Study) Planning (Pillar 2)",
+      "## 3. Generalizability (G-Study) and Decision (D-Study) Planning (Pillar 2)",
       sprintf("- **Observed-score generalizability**: Relative `G = %.4f` (`RelSEM = %.3f` rubric points); Absolute dependability `Phi = %.4f` (`AbsSEM = %.3f` rubric points).",
               gs$G, gs$RelSEM, gs$Phi, gs$AbsSEM),
       "> Methodological note: Observed-score `G` and `Phi` decompose raw rating variance via Henderson Method 1 (`urGENOVA`; Brennan, 2001) and include additive rater/task main-effect variance in `Phi`. They answer assessment-design allocation questions and are distinct from model-adjusted latent logit reliability (`EAP` reliability).",
@@ -523,20 +580,30 @@ render_mfrm_report <- function(x,
   if (!is.null(x$diagnostics)) {
     dg <- x$diagnostics
     rt <- dg$raters
+    fm_lbl <- if (identical(dg$fit_method, "posterior")) {
+      "posterior-integrated (`PostInfitMnSq` / `PostInfitZSTD`, matching `TAM::msq.itemfit`)"
+    } else {
+      "point-estimate plug-in (`InfitMnSq` / `InfitZSTD`)"
+    }
     sec <- c(
       sec,
-      "## 4. Rater Diagnostics, Fair(M), Real SE, & Quality Assurance (Pillar 3)",
-      sprintf(paste("A fit flag requires `Infit MnSq` outside `[%.2f, %.2f]`",
-        "and either `|Infit ZSTD| >= %.1f` or unavailable ZSTD. Severity flags use a separate rule."),
-              dg$mnsq_range[1L], dg$mnsq_range[2L], dg$zstd_limit),
+      "## 4. Rater Diagnostics, Fair(M), Real SE, and Quality Assurance (Pillar 3)",
+      sprintf(paste("A fit flag requires %s `Infit MnSq` outside `[%.2f, %.2f]`",
+        "and either `|Infit ZSTD| >= %.1f` or unavailable ZSTD. `RealSE` uses plug-in `InfitMnSq`. Severity flags use a separate rule."),
+              fm_lbl, dg$mnsq_range[1L], dg$mnsq_range[2L], dg$zstd_limit),
       sprintf("- **Unavailable rater screens**: %d.", sum(rt$DiagnosticFlag == "Review required")),
       "",
       "### Rater Diagnostic Summary",
       "If you start with FACETS Table 7, read the measure (`Estimate`), `FairM`, SEs and Infit/Outfit here.",
       ""
     )
-    rt_disp <- rt[, c("Level", "ObsCount", "ObsAvg", "FairM", "Estimate", "ModelSE", "RealSE",
-                      "InfitMnSq", "InfitZSTD", "OutfitMnSq", "DiagnosticFlag", "InferenceReason"), drop = FALSE]
+    rt_cols <- c("Level", "ObsCount", "ObsAvg", "FairM", "Estimate", "ModelSE", "RealSE",
+                 "InfitMnSq", "InfitZSTD", "OutfitMnSq")
+    if ("PostInfitMnSq" %in% names(rt) && any(is.finite(rt$PostInfitMnSq))) {
+      rt_cols <- c(rt_cols, "PostInfitMnSq", "PostInfitZSTD", "PostOutfitMnSq")
+    }
+    rt_cols <- c(rt_cols, "DiagnosticFlag", "InferenceReason")
+    rt_disp <- rt[, rt_cols, drop = FALSE]
     sec <- c(sec, .tidymfrm_fmt_df_md(rt_disp, digits = digits), "")
 
     if (!is.null(dg$bias) && nrow(dg$bias$pairwise) > 0L) {
@@ -575,7 +642,7 @@ render_mfrm_report <- function(x,
 
     sec <- c(
       sec,
-      "> Validity & Operational Guidance: Statistical fit indices (`Infit`/`Outfit`), severity estimates, and DFF contrasts support formative rater training, rubric anchor clarification, and targeted second-scoring. They must not be used for automated rater removal without qualitative review of scoring rationales and construct representation (Eckes, 2015).",
+      "> Validity and Operational Guidance: Statistical fit indices (`Infit`/`Outfit`), severity estimates, and DFF contrasts support formative rater training, rubric anchor clarification, and targeted second-scoring. They must not be used for automated rater removal without qualitative review of scoring rationales and construct representation (Eckes, 2015).",
       ""
     )
 
@@ -583,16 +650,30 @@ render_mfrm_report <- function(x,
       sec <- c(sec, "## 5. Individual Rater Calibration Feedback Cards", "")
       for (i in seq_len(nrow(rt))) {
         r_id <- rt$Level[i]
+        r_pos_i <- ("Sign" %in% names(rt)) && is.finite(rt$Sign[i]) && (rt$Sign[i] > 0)
         u_r <- dg$unexpected[as.character(dg$unexpected[[sp$rater_facet]]) == as.character(r_id), , drop = FALSE]
+        has_post_i <- ("PostInfitMnSq" %in% names(rt)) && is.finite(rt$PostInfitMnSq[i])
+        cons_line <- if (has_post_i) {
+          sprintf(
+            "- **Consistency**: Posterior (TAM basis) `Infit MnSq = %.3f` (`ZSTD = %.2f`), `Outfit MnSq = %.3f` (`ZSTD = %.2f`); Plug-in (%s) `Infit MnSq = %.3f` (`ZSTD = %.2f`), `Outfit MnSq = %.3f` (`ZSTD = %.2f`).",
+            rt$PostInfitMnSq[i], rt$PostInfitZSTD[i], rt$PostOutfitMnSq[i], rt$PostOutfitZSTD[i],
+            x$fit$score_method, rt$InfitMnSq[i], rt$InfitZSTD[i], rt$OutfitMnSq[i], rt$OutfitZSTD[i]
+          )
+        } else {
+          sprintf("- **Consistency (%s plug-in)**: `Infit MnSq = %.3f` (`ZSTD = %.2f`), `Outfit MnSq = %.3f` (`ZSTD = %.2f`).",
+                  x$fit$score_method, rt$InfitMnSq[i], rt$InfitZSTD[i], rt$OutfitMnSq[i], rt$OutfitZSTD[i])
+        }
         sec <- c(
           sec,
-          sprintf("### Rater `%s` -- %s", r_id, rt$DiagnosticFlag[i]),
+          sprintf("### Rater %s -- %s", .tidymfrm_md_code(r_id), rt$DiagnosticFlag[i]),
           sprintf("- **Ratings scored**: %d (Observed average = %.2f; Model-adjusted `Fair(M)` = %.2f).",
                   as.integer(rt$ObsCount[i]), rt$ObsAvg[i], rt$FairM[i]),
-          sprintf("- **Severity**: %.3f logits on the fitted scale (`ModelSE = %.3f`, `RealSE = %.3f`). Higher values indicate stricter ratings.",
-                  rt$Estimate[i], rt$ModelSE[i], rt$RealSE[i]),
-          sprintf("- **Consistency**: `Infit MnSq = %.3f` (`ZSTD = %.2f`), `Outfit MnSq = %.3f` (`ZSTD = %.2f`).",
-                  rt$InfitMnSq[i], rt$InfitZSTD[i], rt$OutfitMnSq[i], rt$OutfitZSTD[i]),
+          sprintf(if (r_pos_i) {
+            "- **Leniency (`Sign = +1`)**: %.3f logits on the fitted scale (`ModelSE = %.3f`, `RealSE = %.3f`). Higher values indicate more lenient ratings."
+          } else {
+            "- **Severity**: %.3f logits on the fitted scale (`ModelSE = %.3f`, `RealSE = %.3f`). Higher values indicate stricter ratings."
+          }, rt$Estimate[i], rt$ModelSE[i], rt$RealSE[i]),
+          cons_line,
           sprintf("- **Suggested focus**: %s (Unexpected ratings `|z| >= 2`: %d).",
                   rt$RecommendedAction[i], nrow(u_r)),
           ""
@@ -609,7 +690,8 @@ render_mfrm_report <- function(x,
     }
   }
   md_out <- paste(sec, collapse = "\n")
-  final_out <- if (format == "html") .tidymfrm_md_to_html(md_out, title = title) else md_out
+  final_out <- if (format == "html") .tidymfrm_md_to_html(md_out, title = title) else
+    .tidymfrm_escape_markdown_html(md_out)
 
   if (!is.null(file)) {
     con <- file(file, open = "wb", encoding = "UTF-8")

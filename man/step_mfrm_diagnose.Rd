@@ -12,7 +12,8 @@ step_mfrm_diagnose(
   dff_group = NULL,
   dff_method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic"),
   cut_scores = NULL,
-  threads = 1L
+  threads = 1L,
+  fit_method = c("auto", "posterior", "plugin")
 )
 }
 \arguments{
@@ -38,6 +39,11 @@ geometric reference discrimination used by \code{mfrmr}. \code{CutLogit} is \cod
 mixtures imply different thresholds; \code{CutLogitMin}/\code{CutLogitMax} give their range.}
 
 \item{threads}{Number of C++ worker threads for split-rater DFF refits (default \code{1L}).}
+
+\item{fit_method}{Fit-statistic basis used for rater screening: \code{"auto"} (default;
+uses posterior-integrated \code{PostInfitMnSq}/\code{PostInfitZSTD} matching \code{TAM::msq.itemfit}
+for \code{MML}, and point-estimate plug-in \code{InfitMnSq}/\code{InfitZSTD} for \code{JML}/\code{CML}),
+\code{"posterior"}, or \code{"plugin"}. \code{RealSE} always uses plug-in \code{InfitMnSq}.}
 }
 \value{
 Updated \code{tidymfrm} workflow object with \verb{$diagnostics}.

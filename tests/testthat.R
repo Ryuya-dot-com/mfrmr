@@ -10,6 +10,7 @@ is_cran_check <- local({
 # Broader regressions remain in this directory and run with NOT_CRAN=true.
 cran_light_tests <- c(
   "engine-032",
+  "numerical-contracts-033",
   "rating-design-display",
   "tidymfrm",
   "report-statistics",

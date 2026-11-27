@@ -95,6 +95,11 @@ tidy.tidymfrm <- function(x,
     rt <- x$diagnostics$raters
     ci <- .tidymfrm_intervals(x$fit, "facets", conf.level, use_real_se)
     ci <- ci[match(paste(rt$Facet, rt$Level), paste(x$fit$facets$Facet, x$fit$facets$Level)), , drop = FALSE]
+    post_in_r <- if ("PostInfitMnSq" %in% names(rt)) rt$PostInfitMnSq else rep(NA_real_, nrow(rt))
+    post_inz_r <- if ("PostInfitZSTD" %in% names(rt)) rt$PostInfitZSTD else rep(NA_real_, nrow(rt))
+    post_out_r <- if ("PostOutfitMnSq" %in% names(rt)) rt$PostOutfitMnSq else rep(NA_real_, nrow(rt))
+    post_outz_r <- if ("PostOutfitZSTD" %in% names(rt)) rt$PostOutfitZSTD else rep(NA_real_, nrow(rt))
+    fbasis_r <- if ("FitBasis" %in% names(rt)) rt$FitBasis else rep(x$diagnostics$fit_method %||% "plugin", nrow(rt))
     return(tibble::tibble(
       facet = rt$Facet,
       term = rt$Level,
@@ -108,6 +113,11 @@ tidy.tidymfrm <- function(x,
       infit_zstd = rt$InfitZSTD,
       outfit_mnsq = rt$OutfitMnSq,
       outfit_zstd = rt$OutfitZSTD,
+      post_infit_mnsq = post_in_r,
+      post_infit_zstd = post_inz_r,
+      post_outfit_mnsq = post_out_r,
+      post_outfit_zstd = post_outz_r,
+      fit_basis = fbasis_r,
       observed_min = rt$ObservedMin,
       observed_max = rt$ObservedMax,
       at_minimum = rt$AtMinimum,
@@ -131,8 +141,9 @@ tidy.tidymfrm <- function(x,
     return(x$diagnostics$dff)
   }
   if (component == "drift") {
-    if (is.null(x$drift)) return(tibble::tibble())
-    return(tibble::as_tibble(as.data.frame(x$drift, component = "severity")))
+    dr <- x[["drift"]]
+    if (is.null(dr)) return(tibble::tibble())
+    return(tibble::as_tibble(as.data.frame(dr, component = "severity")))
   }
 }
 
@@ -158,19 +169,29 @@ tidy.mfrm_fit <- function(x, component = c("facets", "persons", "steps", "slopes
     }
     if (component == "facets") {
         fc <- x$facets
+        p_in <- if ("PostInfitMnSq" %in% names(fc)) fc$PostInfitMnSq else rep(NA_real_, nrow(fc))
+        p_iz <- if ("PostInfitZSTD" %in% names(fc)) fc$PostInfitZSTD else rep(NA_real_, nrow(fc))
+        p_ou <- if ("PostOutfitMnSq" %in% names(fc)) fc$PostOutfitMnSq else rep(NA_real_, nrow(fc))
+        p_oz <- if ("PostOutfitZSTD" %in% names(fc)) fc$PostOutfitZSTD else rep(NA_real_, nrow(fc))
         return(tibble::tibble(facet = fc$Facet, term = fc$Level, estimate = fc$Estimate, std.error = fc$ModelSE,
             real.se = fc$RealSE, sandwich.se = fc$SandwichSE, conf.low = ci[, 1L], conf.high = ci[, 2L], inference_status = status,
             inference_reason = reason, fair_m = fc$FairM, infit_mnsq = fc$InfitMnSq, infit_zstd = fc$InfitZSTD,
-            outfit_mnsq = fc$OutfitMnSq, outfit_zstd = fc$OutfitZSTD))
+            outfit_mnsq = fc$OutfitMnSq, outfit_zstd = fc$OutfitZSTD, post_infit_mnsq = p_in, post_infit_zstd = p_iz,
+            post_outfit_mnsq = p_ou, post_outfit_zstd = p_oz))
     }
     if (component == "persons") {
         pt <- x$person
+        p_in <- if ("PostInfitMnSq" %in% names(pt)) pt$PostInfitMnSq else rep(NA_real_, nrow(pt))
+        p_iz <- if ("PostInfitZSTD" %in% names(pt)) pt$PostInfitZSTD else rep(NA_real_, nrow(pt))
+        p_ou <- if ("PostOutfitMnSq" %in% names(pt)) pt$PostOutfitMnSq else rep(NA_real_, nrow(pt))
+        p_oz <- if ("PostOutfitZSTD" %in% names(pt)) pt$PostOutfitZSTD else rep(NA_real_, nrow(pt))
         return(tibble::tibble(term = pt$Person, estimate = pt$Estimate, std.error = pt$ModelSE, real.se = pt$RealSE,
             wle = pt$WLE, wle.se = pt$WLE_SE, conf.low = ci[, 1L], conf.high = ci[, 2L], inference_status = status,
             inference_reason = reason, fair_m = pt$FairM, infit_mnsq = pt$InfitMnSq, infit_zstd = pt$InfitZSTD,
+            post_infit_mnsq = p_in, post_infit_zstd = p_iz, post_outfit_mnsq = p_ou, post_outfit_zstd = p_oz,
             extreme_flag = pt$ExtremeFlag))
     }
-    st <- x$steps
+    st <- .mfrm_screen_steps_table(x$steps, x$encoding, x$xi_layout, x$step_support_audit)
     tibble::tibble(scale = st$ScaleLevel, step = st$Step, estimate = st$Estimate, std.error = st$ModelSE,
         conf.low = ci[, 1L], conf.high = ci[, 2L], inference_status = status, inference_reason = reason)
 }
@@ -192,6 +213,7 @@ tidy.mfrm_gtheory <- function(x, component = c("g_study", "d_study"), conf.level
     return(tibble::as_tibble(do.call(rbind, rows)))
   }
   component <- match.arg(component)
+  x <- .mfrm_refresh_gstudy(x)
   if (component == "d_study") return(tibble::as_tibble(mfrm_d_study(x)))
   ci <- stats::confint(x, level = conf.level, component = "variance_components")
   out <- tibble::as_tibble(x$variance_components)

@@ -12,8 +12,8 @@ fair_average_table(fit, diagnostics = NULL, facets = NULL, umean = 0,
   \item{fit}{A fitted model object returned by \code{\link{fit_mfrm}}.}
   \item{diagnostics}{Optional precomputed \code{\link{diagnose_mfrm}} object from the same calibration.}
   \item{facets}{Optional character vector filtering which facets (including \code{"Person"}) to return.}
-  \item{umean}{Additive origin shift applied to reported logit measures \code{umean + uscale * Estimate} (default \code{0}).}
-  \item{uscale}{Multiplicative scale factor applied to reported logit measures and \code{SE} (default \code{1}).}
+  \item{umean}{Finite additive origin shift applied to reported logit measures \code{umean + uscale * Estimate} (default \code{0}).}
+  \item{uscale}{Finite strictly positive multiplicative scale factor applied to reported logit measures and \code{SE} (default \code{1}).}
   \item{fair_se}{Logical; request uncertainty. Supply a common \code{reference_plan}.}
   \item{ci_level}{Confidence level in \code{(0, 1)} when intervals are requested (default \code{0.95}).}
   \item{reference_plan}{Optional common rating plan \code{data.frame} containing exactly all fitted base facet columns plus optional \code{Weight}. Levels must be known, cells unique and weights finite and strictly positive. Weights are normalized to sum to one.}

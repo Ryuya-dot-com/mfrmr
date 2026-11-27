@@ -12,7 +12,11 @@ test_that("anchored calibrations pass through a workflow with their retained row
   display <- plot(wf, type = "pathway", facet = "Rater", fit_statistic = "both", draw = FALSE)
   expect_setequal(display$data$Statistic, c("Infit", "Outfit"))
   expect_equal(display$data$FitMnSq[display$data$Statistic == "Outfit"],
-               tidy(wf, "raters")$outfit_mnsq)
+               tidy(wf, "raters")$post_outfit_mnsq)
+  wf_plug <- step_mfrm_diagnose(work(d), fit_method = "plugin")
+  display_plug <- plot(wf_plug, type = "pathway", facet = "Rater", fit_statistic = "both", draw = FALSE)
+  expect_equal(display_plug$data$FitMnSq[display_plug$data$Statistic == "Outfit"],
+               tidy(wf_plug, "raters")$outfit_mnsq)
 })
 
 test_that("reports count absent and missing ratings against the planned roster", {

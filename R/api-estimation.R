@@ -13,10 +13,10 @@
     method = "MML", step_facet = NULL, slope_facet = NULL, slope_reference = NULL, slope_type = "full_predictor",
     gpcm_mml_identification = "free_population", person_score = "auto", rating_min = NULL, rating_max = NULL,
     weight = NULL, anchors = NULL, group_anchors = NULL, dummy_facets = NULL, noncenter_facet = "Person",
-    positive_facets = NULL, centering_scope = "facet", population_formula = NULL, person_data = NULL, person_id = NULL,
+    positive_facets = NULL, centering_scope = "remainder", population_formula = NULL, person_data = NULL, person_id = NULL,
     population_sd = 1, step_constraints = NULL, category_support = NULL, facet_formulas = NULL, facet_data = NULL,
     facet_interactions = NULL, facet_shrinkage = "none", facet_prior_sd = NULL, slope_prior_sd = NULL, quad_points = 31L,
-    mml_integration = "fixed", xtreme = 0, jml_penalty = "none", whexact = FALSE, bias_facets = NULL, warn_connectivity = TRUE,
+    mml_integration = "auto", xtreme = 0, jml_penalty = "none", whexact = FALSE, bias_facets = NULL, warn_connectivity = TRUE,
     maxit = 400L, reltol = 1e-09, missing_codes = NULL)
 
 .mfrm_fit_names <- function() {
@@ -156,6 +156,8 @@ fit_mfrm <- function(data, person = NULL, facets = NULL, score = NULL, model = c
     for (nm in setdiff(formal_supplied, "data")) {
         resolved[nm] <- list(get(nm, envir = environment(), inherits = FALSE))
     }
+    if (!"mml_integration" %in% c(names(ctrl_list), names(dots)) &&
+        !identical(resolved$method, "MML")) resolved$mml_integration <- "fixed"
     resolved$data <- data
     resolved$model <- .mfrm_model_code(resolved$model)
     missing_codes <- resolved$missing_codes
@@ -962,26 +964,45 @@ make_anchor_table <- function(fit, facets = NULL, include_person = FALSE, digits
     "review")) {
     .mfrm_validate_fit(fit)
     readiness_policy <- match.arg(readiness_policy)
-    if (!isTRUE(fit$converged) && identical(readiness_policy, "error")) {
-        stop("`fit` did not converge; resolve convergence or set `readiness_policy = 'review'`.", call. = FALSE)
+    if (!is.logical(include_person) || length(include_person) != 1L || is.na(include_person)) {
+        stop("`include_person` must be TRUE or FALSE.", call. = FALSE)
+    }
+    if (!is.null(digits)) {
+        digits <- .mfrm_validate_count(digits, "digits", lower = 0L)
+    }
+    readiness <- .mfrm_readiness(fit)
+    if (identical(readiness_policy, "error") && (!isTRUE(fit$converged) || !isTRUE(readiness$ready))) {
+        reasons <- unique(c(if (!isTRUE(fit$converged)) "optimizer_not_converged", readiness$reason_codes))
+        stop("`fit` is not inference-ready for anchor export (", paste(reasons, collapse = "; "),
+            "); resolve calibration issues or set `readiness_policy = 'review'`.", call. = FALSE)
     }
     out <- fit$facets[, c("Facet", "Level", "Estimate"), drop = FALSE]
     names(out)[3L] <- "Anchor"
     if (isTRUE(include_person)) {
-        p_anc <- data.frame(Facet = "Person", Level = fit$person$Person, Anchor = fit$person$Estimate, stringsAsFactors = FALSE)
+        p_ok <- is.finite(fit$person$Estimate)
+        p_anc <- data.frame(Facet = "Person", Level = fit$person$Person[p_ok], Anchor = fit$person$Estimate[p_ok],
+            stringsAsFactors = FALSE)
         out <- rbind(p_anc, out)
     }
+    out <- out[is.finite(out$Anchor), , drop = FALSE]
     if (!is.null(facets))
         out <- out[out$Facet %in% as.character(facets), , drop = FALSE]
     if (!is.null(digits))
-        out$Anchor <- round(out$Anchor, digits = as.integer(digits))
+        out$Anchor <- round(out$Anchor, digits = digits)
     rownames(out) <- NULL
     return(tibble::as_tibble(out))
 }
 
-diagnose_mfrm <- function(fit, residual_pca = c("none", "overall", "facet", "both"), pca_max_factors = 10L) {
+diagnose_mfrm <- function(fit, residual_pca = c("none", "overall", "facet", "both"),
+                          pca_max_factors = 10L, mnsq_range = c(0.50, 1.50),
+                          fit_method = c("auto", "posterior", "plugin")) {
     .mfrm_validate_fit(fit)
-    return(.mfrm_diagnose_fit(fit, residual_pca = match.arg(residual_pca), pca_max_factors = pca_max_factors))
+    pca_max_factors <- .mfrm_validate_count(pca_max_factors, "pca_max_factors", lower = 1L)
+    mnsq_range <- .mfrm_validate_mnsq_range(mnsq_range)
+    fit_method <- match.arg(fit_method)
+    return(.mfrm_diagnose_fit(fit, residual_pca = match.arg(residual_pca),
+                              pca_max_factors = pca_max_factors,
+                              mnsq_range = mnsq_range, fit_method = fit_method))
 }
 
 compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = FALSE) {

@@ -90,7 +90,9 @@ Standard R S3 methods (\code{predict}, \code{coef}, \code{vcov}, \code{confint},
   \item{newdata}{Rating conditions containing the fitted base facet columns.
     An explicit numeric \code{theta} column sets ability (\code{Theta} is an alias when it is not a model facet; conflicting columns are rejected); otherwise known person
     IDs use the primary fitted score. Unknown persons use the fitted population
-    mean if available, or zero. \code{NULL} uses retained rating rows.}
+    mean if available, or zero. If a covariate table is supplied with some new
+    IDs absent, predictions for those IDs are \code{NA}. \code{NULL} uses
+    retained rating rows.}
   \item{type}{For prediction: \code{"response"} returns expected rubric scores,
     \code{"probs"} (alias \code{"prob"}) category probabilities,
     \code{"link"} the unscaled ability-plus-facet predictor,
@@ -113,18 +115,28 @@ Standard R S3 methods (\code{predict}, \code{coef}, \code{vcov}, \code{confint},
     \code{"profile"} profiles selected free structural coordinates.}
   \item{facet}{Optional facet name for covariance extraction.}
   \item{parm}{Optional parameter names or indices selecting interval rows.}
-  \item{level}{Confidence level in \eqn{(0,1)}.}
+  \item{level}{A finite scalar confidence level strictly in \eqn{(0,1)}. Conflicting component selectors and unused interval arguments are rejected.}
   \item{...}{Additional fitted models for \code{anova()}; otherwise method-specific arguments.}
 }
 \details{
 \strong{Prediction uncertainty.} Response/link SEs use the full covariance of
 free structural coordinates, including cross-facet covariances, estimated steps,
 interactions, explanatory coefficients, and GPCM log-slopes as applicable.
-Ability is held fixed at the supplied or plug-in value: person-score uncertainty,
-uncertainty in a predicted population mean, and future rating variance are excluded.
+Ability is held fixed at the supplied or fitted score. For a new person
+predicted from a fitted population regression, the SE includes uncertainty
+in its estimated mean. Person-score uncertainty and future rating variance
+are excluded. The transformation of covariates uses the fitting-time values
+in new fits that store the transformation, such as centering and scaling constants.
 These are SEs of conditional model predictions, not prediction intervals for
 individual ratings. An unusable calibration gives \code{NA} SEs.
 \code{"link"} is the unscaled predictor; its gradient excludes steps and slopes.
+For an active empirical Bayes fit, \code{coef(type = "free")}, \code{vcov()},
+and \code{confint(component = "free")} describe the original unshrunk free
+coordinates. Facet intervals (\code{confint(component = "facets")}) and
+prediction SEs for the shrunk calibration are unavailable (\code{NA}). Its
+\code{ShrunkSE} is conditional on the fitted shrinkage model, and the original
+facet SEs remain available in \code{MLEModelSE}, \code{MLERealSE}, and
+\code{MLESandwichSE}.
 
 \strong{Measurement-model intervals.} Model and sandwich intervals are local
 normal approximations; slope intervals are formed on log-slopes then exponentiated.

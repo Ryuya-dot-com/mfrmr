@@ -2,7 +2,7 @@
 \alias{compare_mfrm}
 \title{Compare Many-Facet Models via Information Criteria and Affine-Subspace LRT}
 \description{
-Compares two or more fitted Many-Facet models by log-likelihood, \code{AIC}, \code{BIC}, and (when \code{nested = TRUE} or called via \code{anova()}) formal likelihood-ratio tests after algebraically verifying affine parameter-subspace nesting across facet locations, step constraints, and GPCM log-slopes.
+Compares two or more fitted Many-Facet models by log-likelihood, \code{AIC}, \code{BIC}, and (when \code{nested = TRUE} or called via \code{anova()}) formal likelihood-ratio tests after algebraically verifying affine parameter-subspace nesting across facet locations, step constraints, and GPCM log-slopes. Individual \code{AIC} and \code{BIC} values are always retained, whereas \code{DeltaAIC} and \code{DeltaBIC} are reported only when all compared models share the same unpenalized \code{MML} or \code{CML} likelihood, identical retained observations, weights, and integration settings, and numerically eligible converged calibrations.
 }
 \usage{
 compare_mfrm(
@@ -11,7 +11,7 @@ compare_mfrm(
 \arguments{
   \item{...}{Two or more fitted model objects from \code{\link{fit_mfrm}}.}
   \item{labels}{Optional character vector of model labels.}
-  \item{warn_constraints}{Logical; whether to warn when compared models differ in estimation method, sample size, or non-nested parameter subspaces.}
+  \item{warn_constraints}{Logical; whether to warn when compared models lack comparable likelihoods (for example differing in estimation method, retained observations, weights, integration settings, or numerical readiness) or when \code{nested = TRUE} finds non-nested parameter subspaces.}
   \item{nested}{Logical; if \code{TRUE}, verifies affine subspace containment via SVD and computes sequential chi-square likelihood-ratio tests for nested \code{MML} or \code{CML} models.}
 }
 \value{

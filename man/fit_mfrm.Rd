@@ -41,7 +41,7 @@ fit_mfrm(
   \item{person_score}{Primary person ability estimator stored in \code{fit$person$Estimate}: \code{"auto"} (\code{"EAP"} for \code{MML}, \code{"WLE"} for \code{CML}, \code{"JML"} for \code{JML}), \code{"EAP"}, or \code{"WLE"} (Warm, 1989).}
   \item{warn_connectivity}{Logical; if \code{TRUE} (default), audits multi-facet graph connectivity, design rank, and interior category support prior to optimization and emits a warning if disconnected subsets or rank deficiencies are detected.}
   \item{spec}{Optional named list of advanced model specification settings, including \code{slope_reference} (reference facet constrained to geometric mean 1 when two facets have discrimination parameters), \code{slope_type} (\code{"full_predictor"} or \code{"ability_only"}), \code{gpcm_mml_identification} (\code{"free_population"}, \code{"fixed_standard_normal"}, or \code{"unconstrained_slopes"}), \code{noncenter_facet}, \code{positive_facets}, \code{dummy_facets}, and \code{centering_scope} (\code{"remainder"} or \code{"facet"}).}
-  \item{control}{Optional named list of numerical and regularization controls, including \code{quad_points} (default \code{31}), \code{mml_integration} (\code{"fixed"}, \code{"adaptive"}, or \code{"auto"}), \code{facet_shrinkage} (\code{"none"}, \code{"empirical_bayes"}, or \code{"laplace"}), \code{facet_prior_sd}, \code{slope_prior_sd}, \code{xtreme}, \code{whexact}, \code{maxit}, and \code{reltol}.}
+  \item{control}{Optional named list of numerical and regularization controls, including \code{quad_points} (default \code{31}), \code{mml_integration} (\code{"auto"} (default for MML), \code{"fixed"}, or \code{"adaptive"}), \code{facet_shrinkage} (\code{"none"}, \code{"empirical_bayes"}, or \code{"laplace"}), \code{facet_prior_sd}, \code{slope_prior_sd}, \code{xtreme}, \code{whexact}, \code{maxit}, and \code{reltol}.}
   \item{...}{Additional supported specification or control arguments, supplied by name. In particular, \code{missing_codes} recodes specified values before retaining complete rating rows: an explicit vector applies to the score and identifier columns; \code{TRUE} or \code{"default"} applies the default codes (99, 999, -1, N, NA, n/a, period, blank) to scores only.}
 }
 \value{
@@ -63,22 +63,43 @@ do not specify the same setting in both places.
 
 Non-unit observation weights leave point estimates available but withhold
 inferential reporting because the supported weight interpretation has not
-been validated. A deficit in the constrained facet-location design after
+been validated. CML requires unit weights on retained ratings and rejects
+Laplace facet regularization. Its finite-MLE check uses score patterns at
+the observed person totals. A detected likelihood boundary withholds
+inferential results. The fitted optimizer values remain available for review.
+
+Fixed anchors for levels absent from the retained ratings are recorded with
+\code{Status = "not_observed"} in \code{summary(fit)$anchor_application}.
+Unknown facets, nonfinite values, and conflicting duplicates are errors.
+A wholly absent anchor group is recorded. Partially observed anchor groups
+are rejected because the declared mean applies to the full member set.
+
+A deficit in the constrained facet-location design after
 projecting out centered person-location contrasts is also flagged: MML comparisons then
 rely on population assumptions when effective anchors do not resolve the
 deficit. This conditional location check is not a proof of global
 identifiability for all nonlinear slope or threshold structures.
 
 All estimators return the same \code{mfrm_fit} schema and work with
-\code{mfrm_workflow(fit = ...)}. The implementation is selected internally;
-there is no engine-selection argument. Refit saved objects from older versions
+\code{mfrm_workflow(fit = ...)}. The encoding retains the source row positions
+in \code{fit$encoding$retained_rows}. The implementation is selected internally.
+Refit saved objects from older versions
 using their original data and model specification. Relabelling their class
 does not convert the underlying parameter and covariance layout.
 
-With \code{mml_integration = "auto"}, fixed quadrature fits at \eqn{q} and
-\eqn{2q+1} points are compared. The finer fit is returned. Relative free-parameter
+With \code{mml_integration = "auto"} (the MML default), fixed quadrature
+fits at \eqn{q} and \eqn{2q+1} points are compared. Refinement continues until
+stable, nonconverged, or the next order exceeds \code{max(255, 2*q+1)}
+for the initial q. If the fixed sequence is unstable, the adaptive sequence
+restarts at the initial q using the best available starting estimates and
+the same regular order limit. If the last adaptive fit converges and all
+sensitivity measures are finite but the check remains unstable, one additional
+order is allowed. The result records both the regular and effective order
+limits with the comparison history. Relative free-parameter
 changes, absolute expected-score changes, and log-likelihood changes per rating
 are checked against \code{1e-4}, \code{1e-4}, and \code{1e-6}, respectively.
+Relative structural SE changes and covariance changes scaled by the outer
+product of refined SEs must each be at most \code{1e-3}.
 The results and selected order are retained in \code{quadrature_check}.
 A failed check withholds inferential reporting; increase \code{quad_points} and
 inspect stability. Agreement at these two orders is a sensitivity check, not a
@@ -114,9 +135,18 @@ MLE and makes inference unavailable. Failure to find this sufficient condition i
 not a general proof of existence; GPCM boundaries and all population-boundary
 directions are not covered by this particular test. An unsuccessful numerical boundary check keeps inference unavailable. These checks do not establish finite-sample coverage.
 
-Person and facet fit statistics, expected averages, FairM/FairZ, and local-bias
-diagnostics use the primary person score. Selecting MML \code{person_score = "WLE"}
-therefore changes these derived quantities as well as \code{person$Estimate};
+Person and facet point-estimate fit statistics (\code{InfitMnSq}, \code{InfitZSTD},
+\code{OutfitMnSq}, \code{OutfitZSTD}), expected averages, \code{FairM}/\code{FairZ},
+\code{RealSE} (\code{ModelSE * sqrt(max(1, InfitMnSq))}), and local-bias
+diagnostics use the primary person score (\code{EAP} or \code{WLE} for MML, matching
+\code{TAM::msq.itemfitWLE} when \code{person_score = "WLE"}, and \code{JML} for FACETS
+compatibility). In addition, \code{method = "MML"} populates deterministic
+posterior-integrated fit columns (\code{PostInfitMnSq}, \code{PostInfitZSTD},
+\code{PostOutfitMnSq}, \code{PostOutfitZSTD}) integrating squared residuals and
+conditional moments over each person's quadrature posterior \eqn{P(\theta \mid \mathbf{y}_p)},
+matching \code{TAM::msq.itemfit} without sparse point-substitution downward shift
+(for non-MML estimators these four columns are \code{NA}). Selecting MML
+\code{person_score = "WLE"} changes plug-in quantities as well as \code{person$Estimate};
 the EAP and posterior SD remain available in separate columns.
 }
 \references{

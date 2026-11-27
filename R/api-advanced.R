@@ -5,6 +5,7 @@ analyze_dff <- function(fit, facet, group, data = NULL, focal = NULL,
     method = c("mml_lrt", "cml_lrt", "raju_welch", "mh", "logistic"),
     df_method = c("facets", "classical"), min_obs = 10, p_adjust = "holm", threads = 1L) {
     .mfrm_validate_fit(fit)
+    min_obs <- .mfrm_validate_count(min_obs, "min_obs", lower = 1L)
     .mfrm_analyze_dff(fit = fit, facet = facet, group = group, data = data, focal = focal,
         method = match.arg(method), df_method = match.arg(df_method), min_obs = min_obs,
         p_adjust = p_adjust, threads = threads)
@@ -50,6 +51,7 @@ print.summary.mfrm_dff <- function(x, ...) {
 compute_information <- function(fit, theta_range = c(-6, 6), theta_points = 201L, rating_plan = NULL, exposure_basis = c("observed_total",
     "per_person_average")) {
     .mfrm_validate_fit(fit)
+    theta_points <- .mfrm_validate_count(theta_points, "theta_points", lower = 2L)
     basis <- if (missing(exposure_basis))
         "unique_contexts"
     else match.arg(exposure_basis)
@@ -60,14 +62,38 @@ anchor_to_baseline <- function(new_data, baseline_fit, person, facets, score, an
     weight = NULL, model = NULL, method = NULL, anchor_policy = "warn", mml_integration = NULL, centering_scope = NULL,
     ..., drift_reference = NULL) {
     .mfrm_validate_fit(baseline_fit)
+    if (!is.logical(include_person) || length(include_person) != 1L || is.na(include_person))
+        stop("`include_person` must be TRUE or FALSE.", call. = FALSE)
+    if (isTRUE(include_person))
+        stop("Person-ability anchoring (`include_person = TRUE`) is not supported in `anchor_to_baseline()`; link calibrations through shared non-person `facets`.",
+            call. = FALSE)
     anchor_policy <- match.arg(anchor_policy, c("warn", "error", "silent"))
     model <- toupper(model %||% baseline_fit$model)
     method <- method %||% baseline_fit$method
-    anchor_tbl <- as.data.frame(make_anchor_table(baseline_fit, facets = anchor_facets, include_person = include_person))
+    dots <- list(...)
+    has_pos_dots <- "positive_facets" %in% names(dots)
+    has_pos_spec <- is.list(dots$spec) && "positive_facets" %in% names(dots$spec)
+    if (has_pos_dots && has_pos_spec)
+        stop("Specify `positive_facets` either directly or in `spec`, not both.", call. = FALSE)
+    base_enc <- baseline_fit$encoding
+    base_pos <- base_enc$base_facets[base_enc$facet_signs[seq_along(base_enc$base_facets)] > 0]
+    common_f <- intersect(facets, base_enc$base_facets)
+    if (has_pos_dots || has_pos_spec) {
+        raw_pos <- if (has_pos_dots) dots$positive_facets else dots$spec$positive_facets
+        user_pos <- if (is.null(raw_pos)) character(0) else as.character(raw_pos)
+        if (any(!user_pos %in% facets))
+            stop("`positive_facets` must name columns in `facets`.", call. = FALSE)
+        if (any((common_f %in% user_pos) != (common_f %in% base_pos)))
+            stop("Explicit `positive_facets` conflicts with the facet orientation of `baseline_fit`.", call. = FALSE)
+    }
+    anchor_tbl <- as.data.frame(make_anchor_table(baseline_fit, facets = anchor_facets, include_person = FALSE))
     if (!nrow(anchor_tbl))
         stop("No anchors could be extracted from the baseline.", call. = FALSE)
     args <- c(list(data = new_data, person = person, facets = facets, score = score, weight = weight, model = model,
-        method = method), list(...))
+        method = method), dots)
+    if (!(has_pos_dots || has_pos_spec) && length(intersect(facets, base_pos)) > 0L) {
+        args$spec$positive_facets <- intersect(facets, base_pos)
+    }
     if (is.null(args$step_facet) && identical(model, baseline_fit$model)) {
         args$step_facet <- if (identical(model, "GPCM"))
             baseline_fit$encoding$step_facet %||% "Common"
@@ -75,22 +101,23 @@ anchor_to_baseline <- function(new_data, baseline_fit, person, facets, score, an
     }
     if (is.null(args$slope_facet) && identical(model, "GPCM")) {
         args$slope_facet <- baseline_fit$encoding$slope_facets
-        args$spec$slope_reference <- args$spec$slope_reference %||% baseline_fit$encoding$slope_reference
-        args$spec$slope_type <- args$spec$slope_type %||% baseline_fit$encoding$slope_type
+        if (!"slope_reference" %in% names(dots))
+            args$spec$slope_reference <- args$spec$slope_reference %||% baseline_fit$encoding$slope_reference
+        if (!"slope_type" %in% names(dots))
+            args$spec$slope_type <- args$spec$slope_type %||% baseline_fit$encoding$slope_type
     }
     args$rating_min <- args$rating_min %||% baseline_fit$rating_min
     args$rating_max <- args$rating_max %||% baseline_fit$rating_max
     if (!is.null(centering_scope))
         args$spec$centering_scope <- centering_scope
-    args$spec$centering_scope <- args$spec$centering_scope %||% "remainder"
+    if (!"centering_scope" %in% names(dots))
+        args$spec$centering_scope <- args$spec$centering_scope %||% "remainder"
     if (!is.null(mml_integration))
         args$control$mml_integration <- mml_integration
     cols <- c(person, facets, score, weight)
     if (any(!cols %in% names(new_data)))
         stop("Missing rating columns in new_data.", call. = FALSE)
-    keep <- is.finite(as.numeric(new_data[[score]])) & stats::complete.cases(new_data[cols])
-    if (!is.null(weight))
-        keep <- keep & is.finite(new_data[[weight]]) & new_data[[weight]] > 0
+    keep <- .mfrm_rating_rows(new_data, person, facets, score, weight)
     present <- vapply(seq_len(nrow(anchor_tbl)), function(i) {
         f <- anchor_tbl$Facet[i]
         f %in% facets && anchor_tbl$Level[i] %in% as.character(new_data[[f]][keep])
@@ -132,7 +159,8 @@ anchor_to_baseline <- function(new_data, baseline_fit, person, facets, score, an
         args$warn_connectivity <- FALSE
         args$spec$noncenter_facet <- union(args$spec$noncenter_facet %||% "Person", ref$Facet)
         reference_fit <- do.call(fit_mfrm, c(args, list(anchors = ref)))
-        if (any(compare) && .mfrm_readiness(reference_fit)$ready && .mfrm_readiness(baseline_fit)$ready &&
+        if (any(compare) && is.null(reference_fit$facets$MLEEstimate) && is.null(baseline_fit$facets$MLEEstimate) &&
+            .mfrm_readiness(reference_fit)$ready && .mfrm_readiness(baseline_fit)$ready &&
             identical(reference_fit$encoding$step_facet, baseline_fit$encoding$step_facet) && identical(reference_fit$encoding$facet_signs,
             baseline_fit$encoding$facet_signs) && all(c(reference_fit$connectivity$n_subsets, baseline_fit$connectivity$n_subsets) ==
             1L)) {
@@ -202,6 +230,7 @@ detect_anchor_drift <- function(fits, facets = NULL, drift_threshold = 0.5, flag
         stop("reference must identify one supplied wave by name or integer index.", call. = FALSE)
     element_table <- function(fit) {
         out <- fit$facets[, c("Facet", "Level", "Estimate", "ModelSE"), drop = FALSE]
+        if (!is.null(fit$facets$MLEEstimate)) out$ModelSE[] <- NA_real_
         if (include_person) {
             out <- rbind(out, data.frame(Facet = "Person", Level = fit$person$Person,
                 Estimate = fit$person$Estimate, ModelSE = fit$person$ModelSE))
