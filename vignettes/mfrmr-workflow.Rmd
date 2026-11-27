@@ -143,6 +143,16 @@ with little evidence here for the additional discrimination parameters.
 This is a model-comparison result for these ratings, not a recommendation to
 use PCM for every rubric.
 
+To report the results side by side, give the fitted models names. The comparison
+table gives fit statistics and the eligibility of the comparison. The step
+table puts shared and criterion-specific transitions on separate rows.
+
+```{r, eval=FALSE}
+models <- list(RSM = fit_rsm, PCM = fit_pcm)
+cat(format_mfrm_table(models, nested = TRUE))
+cat(format_mfrm_table(models, component = "steps"))
+```
+
 Check `summary(fit_rsm)$readiness` before interpreting intervals. Optimizer
 convergence means that its stopping rule was met. Readiness additionally checks
 the implemented connectivity, information-matrix and boundary conditions; it

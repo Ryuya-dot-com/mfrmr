@@ -1338,7 +1338,7 @@ print.mfrm_agreement <- function(x, ...) {
 .mfrm_resolve_fit_method <- function(df, method = NULL, fit_method = c("auto", "posterior", "plugin")) {
   fit_method <- match.arg(fit_method)
   post_col <- if ("PostInfitMnSq" %in% names(df)) "PostInfitMnSq" else if ("PostInfit" %in% names(df)) "PostInfit" else NULL
-  has_post <- !is.null(post_col) && any(is.finite(df[[post_col]]))
+  has_post <- !is.null(post_col) && (identical(method, "MML") || any(is.finite(df[[post_col]])))
   if (identical(fit_method, "auto")) {
     return(if ((is.null(method) || identical(method, "MML")) && has_post) "posterior" else "plugin")
   }
@@ -1441,7 +1441,7 @@ print.mfrm_agreement <- function(x, ...) {
   )
   measures_tbl <- rbind(p_meas, f_meas)
   rownames(measures_tbl) <- NULL
-  resolved_fm <- .mfrm_resolve_fit_method(measures_tbl, fit$method, fit_method)
+  resolved_fm <- .mfrm_resolve_fit_method(f_df, fit$method, fit_method)
 
   std_res <- stats::residuals(fit, type = "pearson")
   exp_sc <- stats::fitted(fit, type = "response")
@@ -1472,7 +1472,7 @@ print.mfrm_agreement <- function(x, ...) {
       measures = measures_tbl,
       reliability = rel_tbl,
       unexpected = unexp_df,
-      steps = .mfrm_screen_steps_table(fit$steps, fit$encoding, fit$xi_layout, fit$step_support_audit),
+      steps = .mfrm_refresh_steps(fit)$steps,
       slopes = fit$slopes,
       connectivity = fit$connectivity,
       residual_pca_mode = residual_pca,
@@ -1532,7 +1532,7 @@ summary.mfrm_diagnostics <- function(object, digits = 3L, top_n = 10L, include_p
       flagged_elements = flagged_fit,
       unexpected = top_unexp,
       n_unexpected = nrow(object$unexpected),
-      steps = object$steps,
+      steps = .mfrm_refresh_steps(object$fit)$steps,
       slopes = object$slopes,
       connectivity = object$connectivity,
       residual_pca_overall = object$residual_pca_overall,

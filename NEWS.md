@@ -1,5 +1,33 @@
-# mfrmr 0.3.3 (development)
+# mfrmr 0.3.3
 
+Unreleased.
+
+## Plots and tables
+
+* Wright maps show leftward person counts, sample size and bin width. Choose a
+  density or frequency stars (default three people per star, with exact remainders).
+  Set `yardstick` for rows per logit and an optional viewing range. Pass one
+  calibrated rating context to show adjacent-category crossings.
+* The Wright map has a right-hand Fair average ruler on the original rating scale.
+  Use the pooled step-group mix or the same weighted reference plan as
+  `fair_average_table()`. Set `fair_average = FALSE` to omit it.
+* Measurement summaries print the model and inference status. `format_mfrm_table()`
+  accepts a fit or named fits, reports the selected SE and matching interval,
+  and applies `compare_mfrm()` eligibility to likelihood comparisons.
+* Request `interactive = TRUE` for optional Plotly Wright maps, category curves,
+  rater/pathway plots or fit sensitivity. The widget includes inspection notes.
+
+## Measurement, diagnostics and workflow corrections
+
+* MML step screening respects fixed anchors and the specified population location.
+  Wright maps and quality-control plots omit unidentified thresholds. Category
+  curves omit the affected ladders and name them in the plot notes, including
+  when reading a saved fit.
+* Ordinary JML step `ModelSE` and default Wald intervals use the constrained
+  covariance returned by `vcov()`. For the standard step map, the previous
+  single-transition approximation is available as `TransitionSE`.
+* A rater with missing Infit MnSq on the selected basis is reported as
+  `Infit MnSq unavailable` and excluded from evaluated rater counts.
 * Cross-check per-step-group observed category frequencies against `category_support`
   and `step_constraints` across `JML`, `MML`, `CML`, and `JML_jeffreys`, and include
   estimated `population_formula` and `JML` person-origin shifts in structural

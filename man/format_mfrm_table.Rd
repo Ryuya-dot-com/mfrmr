@@ -2,35 +2,46 @@
 % Please edit documentation in R/workflow-reporting.R
 \name{format_mfrm_table}
 \alias{format_mfrm_table}
-\title{Format a Tidy Many-Facet Summary Table with Optional \code{kableExtra} or \code{flextable}}
+\title{Format Measurement Model and Workflow Tables}
 \usage{
 format_mfrm_table(
   x,
   component = c("raters", "facets", "persons", "steps", "slopes", "g_study", "d_study",
-    "dff", "drift"),
+    "dff", "drift", "comparison"),
   engine = c("markdown", "kableExtra", "flextable"),
-  digits = 3L
+  digits = 3L, se_type = c("model", "real", "sandwich"), conf.level = 0.95,
+  nested = FALSE
 )
 }
 \arguments{
-\item{x}{A \code{tidymfrm} workflow object.}
+\item{x}{A fitted model, named list of fitted models, or workflow.}
 
-\item{component}{Component to format: \code{"raters"}, \code{"facets"}, \code{"persons"},
+\item{component}{One fit defaults to facets, named fits to comparison, and workflows to raters. Other components include \code{"raters"}, \code{"facets"}, \code{"persons"},
 \code{"steps"}, \code{"slopes"}, \code{"g_study"}, \code{"d_study"}, \code{"dff"}, or \code{"drift"}.}
 
 \item{engine}{Table engine: \code{"markdown"} (zero extra dependencies),
 \code{"kableExtra"} (requires optional \code{knitr} and \code{kableExtra}), or
 \code{"flextable"} (requires optional \code{flextable}).}
 
+\item{se_type}{Use model SE, fit-inflated real SE (facets/persons), or person-clustered sandwich SE (MML structural parameters).}
+\item{conf.level}{Interval level for fitted parameter tables.}
+\item{nested}{Request a nested likelihood-ratio test in a comparison of multiple models.}
 \item{digits}{Number of decimal places for numeric columns (default \code{3L}).}
 }
 \value{
 A Markdown string, \code{kableExtra} object, or \code{flextable} object.
 }
 \description{
-Extracts a tidy summary table from a \code{tidymfrm} workflow via \code{\link[=tidy]{tidy()}} and
-formats it as GitHub-flavored Markdown, HTML (\code{kableExtra}), or Word/Office
-(\code{flextable}).
+Formats calibration parameters, model comparisons and workflow tables in Markdown, HTML or Word.
+}
+\details{
+Parameters use the fitted facet sign and scale. Slope intervals use log slopes and
+return to the ratio scale. EAP model intervals use posterior SD conditional on calibration.
+Real-SE intervals are descriptive. Fixed parameters, unsupported steps, missing
+intervals and withheld estimates have distinct statuses. Named model columns show
+estimate (SE) [lower, upper]. Parameter tables require matching observations and compatible
+coding and identification. Shared steps and facet-specific steps occupy separate rows.
+Comparison statistics and test eligibility follow \code{\link{compare_mfrm}}.
 }
 \examples{
 # Saved JML calibration of example_core; see fit_mfrm() for estimation.
@@ -40,4 +51,5 @@ wf <- mfrm_workflow(ratings, "Person", c("Rater", "Criterion"), "Score",
                     fit = saved$fit) |>
   step_mfrm_diagnose()
 cat(format_mfrm_table(wf, component = "raters", engine = "markdown"))
+cat(format_mfrm_table(saved$fit, component = "steps"))
 }

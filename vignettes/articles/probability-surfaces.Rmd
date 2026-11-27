@@ -1,0 +1,119 @@
+---
+title: "Compare GMFRM probability surfaces"
+output:
+  rmarkdown::html_document:
+    self_contained: true
+    mathjax: null
+vignette: >
+  %\VignetteIndexEntry{Compare GMFRM probability surfaces}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+How likely is a particular score if the same performance is rated by someone
+else or on a different criterion? Select a rater, a criterion and a score
+event in each panel. Compare the dark lines for the **fitted raters**. The
+surface shows what the model predicts if that rater's severity changes by up
+to one logit, holding discrimination, criterion difficulty and steps fixed.
+Both horizontal axes are in logits. A positive change represents a more severe rater.
+
+```{css, echo=FALSE}
+.main-container { max-width: 1120px !important; }
+.surface-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 305px), 1fr)); gap: 12px; margin: 1em 0; }
+.surface-panel { min-width: 0; padding: 12px; border: 1px solid #c9d5db; border-radius: 6px; background: white; color: #20323a; }
+.surface-controls { display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.surface-controls label { display: grid; gap: 3px; font-weight: 600; font-size: 13px; }
+.surface-controls select { font: inherit; font-weight: 400; color: #20323a; border: 1px solid #869ba6; border-radius: 3px; background: white; padding: 3px 5px; }
+.surface-readout { display: block; color: #193e4d; font-size: 14px; font-variant-numeric: tabular-nums; }
+```
+
+```{r surface-data, include=FALSE}
+library(mfrmr)
+fit <- readRDS(system.file("examples", "measurement-fits.rds", package = "mfrmr"))$gpcm
+stopifnot(summary(fit)$readiness$ready, identical(unique(fit$slopes[["Formula"]]), "full_predictor"))
+ratings <- load_mfrmr_data("example_core")
+raters <- sort(unique(as.character(ratings$Rater)))
+criteria <- sort(unique(as.character(ratings$Criterion)))
+scores <- seq(fit$rating_min, fit$rating_max)
+
+# Integer tenths give exact indices for theta - change on the shared grid.
+ability10 <- -30:30
+change10 <- -10:10
+effective10 <- seq(min(ability10) - max(change10), max(ability10) - min(change10))
+contexts <- expand.grid(Rater = raters, Criterion = criteria, stringsAsFactors = FALSE)
+prob <- lapply(seq_len(nrow(contexts)), function(i) {
+  nd <- contexts[rep(i, length(effective10)), , drop = FALSE]
+  p <- predict(fit, newdata = nd, theta = effective10 / 10, type = "probs")
+  stopifnot(identical(colnames(p), as.character(scores)), all(is.finite(p)),
+            max(abs(rowSums(p) - 1)) < 1e-10)
+  unname(p)
+})
+event_labels <- c(paste("Score =", scores), paste("Score ≥", scores[-1]))
+surface_data <- list(raters = raters, criteria = criteria, scores = scores,
+                     ability10 = ability10, change10 = change10,
+                     first = min(effective10), prob = prob)
+```
+
+```{r surface-panels, echo=FALSE}
+surface_panel <- function(rater) {
+  tags <- htmltools::tags
+  control <- function(label, values, default) {
+    tags$label(label, tags$select(lapply(values, function(v)
+      tags$option(value = v, selected = if (v == default) "selected", v))))
+  }
+  scene <- list(xaxis = list(title = "Person ability", range = c(-3, 3), tickvals = c(-2, 0, 2)),
+                yaxis = list(title = "Severity change", range = c(-1, 1), tickvals = c(-1, 0, 1)),
+                zaxis = list(title = "Probability", range = c(0, 1), tickformat = ".0%"),
+                camera = list(eye = list(x = 1.75, y = -1.95, z = 1.30)),
+                aspectmode = "manual", aspectratio = list(x = 1.35, y = 1, z = 0.85))
+  # Initialize with the default event and context. Menu changes reuse the same predictions.
+  ci <- which(contexts$Rater == rater & contexts$Criterion == "Content")
+  tail_prob <- rowSums(prob[[ci]][, scores >= 3, drop = FALSE])
+  z <- t(vapply(change10, function(d)
+    tail_prob[ability10 - d - min(effective10) + 1L], numeric(length(ability10))))
+  g <- plotly::plot_ly(x = ability10 / 10, y = change10 / 10, z = z, type = "surface",
+    colorscale = "Cividis", cmin = 0, cmax = 1, showscale = FALSE, opacity = 0.88,
+    height = 355)
+  g <- plotly::add_trace(g, inherit = FALSE, type = "scatter3d", mode = "lines",
+    x = ability10 / 10, y = rep(0, length(ability10)), z = z[change10 == 0, ],
+    showlegend = FALSE, line = list(color = "#192a3f", width = 7))
+  g <- plotly::layout(g, scene = scene, margin = list(l = 0, r = 0, b = 31, t = 3),
+                      hoverlabel = list(align = "left"), uirevision = "keep-camera")
+  g <- plotly::config(g, displaylogo = FALSE, responsive = TRUE, scrollZoom = FALSE)
+  g <- htmlwidgets::onRender(g, paste(readLines("probability-surfaces.js"), collapse = "\n"),
+                             data = surface_data)
+  tags$section(class = "surface-panel", `aria-label` = paste("Comparison panel, initially", rater),
+    tags$div(class = "surface-controls", control("Rater", raters, rater),
+      control("Criterion", criteria, "Content"), control("Score event", event_labels, "Score ≥ 3")),
+    g, tags$output(class = "surface-readout", `aria-live` = "polite"))
+}
+htmltools::div(class = "surface-pair", surface_panel("R01"), surface_panel("R03"))
+```
+
+Both panels use the same ability, severity-change and probability scales.
+Hover to read the probability at a point. Rotate either panel to change both viewing angles. To compare categories, set the
+same rater and criterion on both sides and select different score events.
+For this four-point rubric, “Score ≥ 3” adds the probabilities of scores 3 and 4.
+
+### What the calculation holds fixed
+
+The bundled synthetic GMFRM has rater-specific discrimination and
+criterion-specific steps. On the dark line the severity change is zero, so the
+probabilities come directly from the calibrated rater–criterion combination.
+For this model, discrimination multiplies the full predictor. Increasing rater
+severity by `d` logits therefore gives the same category probabilities as
+predicting at `theta - d` in the original context. A GMFRM that applies
+discrimination only to ability requires a different adjustment.
+
+Differences between calibrated raters can reflect both severity and
+discrimination. Differences between criteria can reflect difficulty and step
+locations. The surfaces show conditional point predictions. To reproduce the
+two default readouts at ability zero:
+
+```{r surface-example}
+library(mfrmr)
+fit <- readRDS(system.file("examples", "measurement-fits.rds", package = "mfrmr"))$gpcm
+ctx <- data.frame(Rater = c("R01", "R03"), Criterion = "Content")
+p <- predict(fit, newdata = ctx, theta = 0, type = "probs")
+data.frame(ctx, P_exactly_3 = p[, "3"], P_at_least_3 = rowSums(p[, c("3", "4")]))
+```

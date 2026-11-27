@@ -183,20 +183,28 @@
   )
 }
 
-#' Format a Tidy Many-Facet Summary Table with Optional `kableExtra` or `flextable`
+#' Format Measurement Model and Workflow Tables
 #'
-#' Extracts a tidy summary table from a `tidymfrm` workflow via [tidy()] and
-#' formats it as GitHub-flavored Markdown, HTML (`kableExtra`), or Word/Office
-#' (`flextable`).
-#'
-#' @param x A `tidymfrm` workflow object.
-#' @param component Component to format: `"raters"`, `"facets"`, `"persons"`,
-#'   `"steps"`, `"slopes"`, `"g_study"`, `"d_study"`, `"dff"`, or `"drift"`.
-#' @param engine Table engine: `"markdown"` (zero extra dependencies),
-#'   `"kableExtra"` (requires optional `knitr` and `kableExtra`), or
-#'   `"flextable"` (requires optional `flextable`).
-#' @param digits Number of decimal places for numeric columns (default `3L`).
-#' @return A Markdown string, `kableExtra` object, or `flextable` object.
+#' Format a fitted model, a named list of fitted models or a tidy workflow table.
+#' @param x A fitted model, named list of fitted models, or workflow.
+#' @param component For one fit, facets (default), raters, persons, steps or slopes.
+#'   For a named list, comparison (default) or a parameter component. Workflows also
+#'   support G-Study, D-Study, DFF and drift tables and default to raters.
+#' @param engine Markdown, HTML via kableExtra, or Office via flextable.
+#' @param digits Number of decimal places.
+#' @param se_type Fitted parameter tables use model SE by default. Real SE applies
+#'   to facets and persons. Sandwich SE applies to MML structural parameters.
+#' @param conf.level Interval level for fitted parameter tables.
+#' @param nested Request a nested likelihood-ratio test in a multi-model comparison.
+#' @return A Markdown string, kableExtra object, or flextable object.
+#' @details Estimates and intervals retain the fitted scale and sign. Slope intervals
+#'   use log slopes and return to the ratio scale. EAP model intervals use posterior SD
+#'   conditional on calibration. Real-SE intervals are descriptive. Fixed parameters,
+#'   unsupported steps, missing intervals and withheld estimates have distinct statuses.
+#'   Named model columns show estimate (SE) [lower, upper]. Parameter tables require
+#'   matching observations and compatible coding and identification. Shared steps and
+#'   facet-specific steps occupy separate rows. Comparison statistics and test eligibility
+#'   follow [compare_mfrm()]. A parameter missing from a model is labelled explicitly.
 #' @examples
 #' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
 #' saved <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))
@@ -205,29 +213,53 @@
 #'                     fit = saved$fit) |>
 #'   step_mfrm_diagnose()
 #' cat(format_mfrm_table(wf, component = "raters", engine = "markdown"))
+#' cat(format_mfrm_table(saved$fit, component = "steps"))
 #' @export
 format_mfrm_table <- function(x,
                               component = c("raters", "facets", "persons", "steps", "slopes",
-                                            "g_study", "d_study", "dff", "drift"),
+                                            "g_study", "d_study", "dff", "drift", "comparison"),
                               engine = c("markdown", "kableExtra", "flextable"),
-                              digits = 3L) {
+                              digits = 3L, se_type = c("model", "real", "sandwich"), conf.level = 0.95, nested = FALSE) {
+  models <- is.list(x) && !inherits(x, c("mfrm_fit", "tidymfrm", "mfrm_gtheory", "data.frame"))
+  if (missing(component) && models) component <- "comparison"
+  if (missing(component) && inherits(x, "mfrm_fit")) component <- "facets"
   component <- match.arg(component)
   engine <- match.arg(engine)
-  df <- .tidymfrm_round_df(tidy(x, component = component), digits = digits)
+  if (!is.numeric(digits) || length(digits) != 1L || !is.finite(digits) || digits != floor(digits) || digits < 0 || digits > 15)
+    stop("digits must be an integer from 0 to 15.", call. = FALSE)
+  if (!is.logical(nested) || length(nested) != 1L || is.na(nested) || (nested && !models))
+    stop("nested is a logical option for a list of fitted models.", call. = FALSE)
+  caption <- NULL
+  if (models) {
+    df <- .mfrm_models_table(x, component, match.arg(se_type), conf.level, digits, nested)
+  } else if (inherits(x, "mfrm_fit")) {
+    caption <- sprintf("%s (%s), %d persons, %d ratings", x$model, x$method, x$n_person, x$n_obs)
+    se_type <- match.arg(se_type)
+    df <- .mfrm_parameter_table(x, component, se_type, conf.level)
+    names(df)[6:8] <- c(.mfrm_se_label(x, component, se_type),
+      paste0(100 * conf.level, "% lower"), paste0(100 * conf.level, "% upper"))
+  } else {
+    if (!missing(se_type) || !missing(conf.level))
+      stop("Select an interval basis on a fitted model.", call. = FALSE)
+    df <- tidy(x, component = component)
+  }
+  df <- .tidymfrm_round_df(df, digits = digits)
   if (identical(engine, "markdown")) {
-    return(.tidymfrm_escape_markdown_html(.tidymfrm_fmt_df_md(df, digits = digits)))
+    table <- .tidymfrm_escape_markdown_html(.tidymfrm_fmt_df_md(df, digits = digits))
+    return(if (is.null(caption)) table else paste(caption, table, sep = "\n\n"))
   }
   if (identical(engine, "kableExtra")) {
     if (!requireNamespace("knitr", quietly = TRUE) || !requireNamespace("kableExtra", quietly = TRUE)) {
       stop("Install suggested packages 'knitr' and 'kableExtra' to use `engine = 'kableExtra'`.", call. = FALSE)
     }
-    kb <- knitr::kable(df, format = "html", digits = digits)
+    kb <- knitr::kable(df, format = "html", digits = digits, caption = caption)
     return(kableExtra::kable_styling(kb, full_width = FALSE))
   }
   if (!requireNamespace("flextable", quietly = TRUE)) {
     stop("Install suggested package 'flextable' to use `engine = 'flextable'`.", call. = FALSE)
   }
   ft <- flextable::flextable(df)
+  if (!is.null(caption)) ft <- flextable::set_caption(ft, caption = caption)
   flextable::autofit(flextable::theme_booktabs(ft))
 }
 
@@ -380,7 +412,7 @@ render_mfrm_report <- function(x,
   unexpected <- NULL
   if (!is.null(dg)) {
     flagged <- .tidymfrm_flag_count(dg$raters)
-    unavailable <- sum(dg$raters$DiagnosticFlag == "Review required", na.rm = TRUE)
+    unavailable <- sum(.tidymfrm_screen_unavailable(dg$raters))
     review <- if (is.na(flagged)) sprintf("Rater screening is unavailable for %d raters.", unavailable) else
       sprintf("%d of %d evaluated raters triggered the screening rule (%d unavailable).",
               flagged, nrow(dg$raters) - unavailable, unavailable)
@@ -589,9 +621,9 @@ render_mfrm_report <- function(x,
       sec,
       "## 4. Rater Diagnostics, Fair(M), Real SE, and Quality Assurance (Pillar 3)",
       sprintf(paste("A fit flag requires %s `Infit MnSq` outside `[%.2f, %.2f]`",
-        "and either `|Infit ZSTD| >= %.1f` or unavailable ZSTD. `RealSE` uses plug-in `InfitMnSq`. Severity flags use a separate rule."),
+        "and `|Infit ZSTD| >= %.1f`. Missing MnSq prevents screening. Missing ZSTD leaves an outside-MnSq result unresolved. `RealSE` uses plug-in `InfitMnSq`. Severity flags use a separate rule."),
               fm_lbl, dg$mnsq_range[1L], dg$mnsq_range[2L], dg$zstd_limit),
-      sprintf("- **Unavailable rater screens**: %d.", sum(rt$DiagnosticFlag == "Review required")),
+      sprintf("- **Unavailable rater screens**: %d.", sum(.tidymfrm_screen_unavailable(rt))),
       "",
       "### Rater Diagnostic Summary",
       "If you start with FACETS Table 7, read the measure (`Estimate`), `FairM`, SEs and Infit/Outfit here.",

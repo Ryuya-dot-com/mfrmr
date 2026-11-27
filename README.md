@@ -29,7 +29,7 @@ rubric (many-facet RS-GPCM). Select it with `model = "GPCM"` (also accepted as `
 
 ## Install and open tutorials
 
-Version 0.3.2 is available on [CRAN](https://CRAN.R-project.org/package=mfrmr).
+Version **0.3.2** is available on CRAN. The next release, **0.3.3**, is in preparation. The steps below use the CRAN release unless an example is marked **0.3.3**. [CRAN package page](https://CRAN.R-project.org/package=mfrmr) · [Release scope and plans for 0.3.x](ROADMAP.md)
 
 ```r
 install.packages("mfrmr", repos = "https://cran.r-project.org")
@@ -109,7 +109,7 @@ predict(fit, newdata = data.frame(theta = c(-1, 0, 1), Rater = "R01", Criterion 
 
 ### 2. Read the color-vision-safe `ggplot2` diagnostics
 
-Every `plot()` method returns a customizable `ggplot` object using color-vision-safe `"okabe_ito"`, `"viridis"`, or strict grayscale `"monochrome"` palettes paired with distinct point `shape` and `linetype` encodings:
+By default the plotting methods return a customizable `ggplot` object using color-vision-safe `"okabe_ito"`, `"viridis"`, or strict grayscale `"monochrome"` palettes paired with distinct point `shape` and `linetype` encodings:
 
 ```r
 plot(fit, type = "wright", palette = "okabe_ito")
@@ -117,7 +117,28 @@ plot(fit, type = "raters", palette = "monochrome")
 plot(fit, type = "category_curves", palette = "viridis")
 ```
 
-![Wright map from the synthetic example: person estimates on the left, rater and criterion locations in the middle, and shared category steps on the right.](man/figures/readme-wright.png)
+#### Available in the 0.3.3 source
+
+![Wright map from the synthetic example: person estimates on the left, rater and criterion locations in the middle, followed by shared category steps and the expected rating at each ability.](man/figures/readme-wright.png)
+
+The person histogram extends left from zero. For a FACETS-style count column, use
+a frequency star for three people and a yardstick with two rows per logit.
+A row marked `** +2` contains eight people. Read across to **Fair average** to
+translate a person ability into an expected rating on the original rubric.
+With multiple step groups the scale uses the pooled rating mix. Use
+`reference_plan` to read the expected average for a specified panel. To locate the ability
+where adjacent categories have equal probability, supply a calibrated context.
+For a publication table, choose the parameters and interval basis explicitly.
+
+```r
+plot(fit, type = "wright", person_display = "stars", persons_per_star = 3, yardstick = 2)
+plot(fit, type = "wright", newdata = data.frame(Rater = "R04", Criterion = "Content"))
+cat(format_mfrm_table(fit, component = "raters", se_type = "model"))
+# With the optional plotly package installed:
+# plot(fit, type = "category_curves", interactive = TRUE)
+```
+
+The website guide *Compare GMFRM probability surfaces* uses a bundled calibration to compare score probabilities across raters and criteria.
 
 ### 3. Screen bias, DFF, and plan future designs (`G-Study` / `D-Study`)
 
@@ -162,7 +183,7 @@ for comparisons under an explicit common reference panel.
 
 Statistical fit indices (`Infit`/`Outfit`), severity estimates, and DFF contrasts support formative rater training, rubric clarification, and targeted second-scoring; they must not be used for automated high-stakes rater exclusion without qualitative review (Eckes, 2015). Observed-score $G$ and $\Phi$ decompose raw score variance (Brennan, 2001) and answer different questions from model-adjusted latent reliability.
 
-Use `citation("mfrmr")` and see [release notes](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.3.2) and [roadmap](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/ROADMAP.md). Licensed under the [MIT License](https://opensource.org/licenses/MIT).
+Use `citation("mfrmr")` and see [release notes](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.3.2) and [current roadmap](ROADMAP.md). Licensed under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## langtest: a web-based route to MFRM
 

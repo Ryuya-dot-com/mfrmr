@@ -19,6 +19,7 @@ cran_light_tests <- c(
   "classification",
   "markov-drift",
   "unified-contracts",
+  "presentation",
   "public-polish"
 )
 

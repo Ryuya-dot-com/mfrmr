@@ -74,7 +74,7 @@
 
 .tidymfrm_plot_raters <- function(raters_df, mnsq_range = c(0.70, 1.30), zstd_limit = 2.0,
                                   fit_method = NULL, reference_bands = NULL,
-                                  palette = "okabe_ito", base_size = 11) {
+                                  palette = "okabe_ito", base_size = 11, method_label = NULL) {
   mnsq_range <- .mfrm_validate_mnsq_range(mnsq_range)
   if (!is.numeric(zstd_limit) || is.factor(zstd_limit) || length(zstd_limit) != 1L ||
       !is.finite(zstd_limit) || zstd_limit < 0) {
@@ -86,16 +86,16 @@
     return(.mfrm_gg_pathway(raters_df, mnsq_range = mnsq_range, palette = palette,
                             base_size = base_size, fit_statistic = "infit",
                             fit_method = "both", reference_bands = reference_bands,
-                            method_label = "MML"))
+                            method_label = method_label))
   }
   fm <- if (!is.null(fit_method)) {
-    .mfrm_resolve_fit_method(raters_df, NULL, fit_method)
+    .mfrm_resolve_fit_method(raters_df, method_label, fit_method)
   } else if ("FitBasis" %in% names(raters_df) && length(raters_df$FitBasis) > 0L && !is.na(raters_df$FitBasis[1L])) {
     raters_df$FitBasis[1L]
   } else {
     "plugin"
   }
-  use_post <- identical(fm, "posterior") && ("PostInfitMnSq" %in% names(raters_df)) && any(is.finite(raters_df$PostInfitMnSq))
+  use_post <- identical(fm, "posterior")
   x_col <- if (use_post) "PostInfitMnSq" else "InfitMnSq"
   z_col <- if (use_post) "PostInfitZSTD" else "InfitZSTD"
   was_review <- ("DiagnosticFlag" %in% names(raters_df)) & !is.na(raters_df$DiagnosticFlag) &
@@ -109,6 +109,7 @@
   )
   if (any(was_review)) raters_cls$DiagnosticFlag[was_review] <- "Review required"
   df <- raters_cls[is.finite(raters_cls$Estimate) & is.finite(raters_cls[[x_col]]), , drop = FALSE]
+  if (!nrow(df)) return(.mfrm_empty_mnsq_plot(df, raters_cls$Level, "Infit"))
   df$PlotInfit <- df[[x_col]]
   zv_plot <- if (z_col %in% names(df)) df[[z_col]] else rep(NA_real_, nrow(df))
   df$RealLow <- df$Estimate - 1.96 * df$RealSE
@@ -139,7 +140,7 @@
     ) +
     ggplot2::geom_text(
       ggplot2::aes(label = .data$Level),
-      nudge_y = 0.04 * max(diff(range(df$Estimate, na.rm = TRUE)), 0.5),
+      nudge_y = 0.04 * (if (nrow(df)) max(diff(range(df$Estimate)), 0.5) else 0.5),
       size = 3.0, colour = "#222222", check_overlap = TRUE
     ) +
     ggplot2::scale_colour_manual(values = st$colours, name = "Diagnostic Status") +
@@ -160,6 +161,8 @@
             if (use_post) "Posterior-integrated (TAM::msq.itemfit)" else "Plug-in", mnsq_range[1L], mnsq_range[2L], zstd_limit),
     ref_note,
     "Status is redundantly encoded via colour, point shape, and error-bar linetype. RealSE intervals use plug-in Infit MnSq.",
+    if (any(!is.finite(raters_cls[[x_col]])))
+      paste("Raters omitted because Infit MnSq is unavailable:", paste(raters_cls$Level[!is.finite(raters_cls[[x_col]])], collapse = ", ")),
     if (any(!is.finite(zv_plot))) "Raters with unavailable ZSTD (NA) outside MnSq bounds are marked 'Outside MnSq (ZSTD Unavailable)' rather than satisfying joint MnSq + ZSTD screening.",
     if (eb_shrunk) "Intervals unavailable: empirical_bayes_facet_shrinkage.",
     unique(df$InferenceReason[nzchar(df$InferenceReason)])
@@ -231,22 +234,34 @@
   p
 }
 
-.tidymfrm_plot_context_curves <- function(x, newdata, palette, base_size) {
-  facets <- x$spec$facets
-  if (is.null(newdata)) newdata <- x$fit$encoding$retained_data[1L, facets, drop = FALSE]
+.mfrm_plot_context_curves <- function(fit, newdata, palette, base_size) {
+  facets <- fit$encoding$base_facets
+  if (is.null(newdata)) newdata <- fit$encoding$retained_data[1L, facets, drop = FALSE]
   if (!is.data.frame(newdata) || !nrow(newdata) || !all(facets %in% names(newdata))) {
     stop("Provide one row per rating context in newdata with every model facet column.", call. = FALSE)
   }
   contexts <- unique(newdata[facets])
+  held <- fit$steps$Supported & !fit$steps$Identified
+  omitted <- unique(fit$steps$ScaleLevel[held])
+  note <- if (length(omitted)) paste("Unidentified step thresholds withheld for", paste(omitted, collapse = ", "))
+  if (length(omitted)) {
+    owner <- if (fit$encoding$model_code == 1L) contexts[[fit$step_facet]] else rep("Common", nrow(contexts))
+    contexts <- contexts[!owner %in% omitted, , drop = FALSE]
+    if (!nrow(contexts)) {
+      p <- ggplot2::ggplot() + ggplot2::theme_void()
+      attr(p, "mfrm_notes") <- note
+      return(p)
+    }
+  }
   labels <- make.unique(vapply(seq_len(nrow(contexts)), function(i) {
-    paste(paste(facets, unlist(contexts[i, ], use.names = FALSE)), collapse = " / ")
+    paste(paste(facets, vapply(contexts, function(col) as.character(col[i]), character(1))), collapse = " / ")
   }, character(1)))
   theta <- seq(-4, 4, length.out = 121L)
   index <- rep(seq_len(nrow(contexts)), each = length(theta))
   nd <- contexts[index, , drop = FALSE]
-  nd$theta <- rep(theta, times = nrow(contexts))
-  probs <- stats::predict(x$fit, newdata = nd, type = "probs")
-  df <- data.frame(theta = nd$theta, ContextID = index,
+  ability <- rep(theta, times = nrow(contexts))
+  probs <- stats::predict(fit, newdata = nd, type = "probs", theta = ability)
+  df <- data.frame(theta = ability, ContextID = index,
                    RatingContext = factor(labels[index], levels = labels),
                    Category = rep(colnames(probs), each = nrow(probs)),
                    Probability = as.vector(probs))
@@ -260,9 +275,9 @@
     ggplot2::scale_y_continuous(limits = c(0, 1)) +
     ggplot2::labs(x = "Person ability (logits)", y = "Category probability") +
     .tidymfrm_theme(base_size)
-  check <- summary(x$fit)$readiness
+  check <- summary(fit)$readiness
   attr(p, "mfrm_notes") <- c(
-    "Curves use fitted steps, facet locations and all discrimination families for the stated rating contexts.",
+    note, "Curves use fitted steps, facet locations and all discrimination families for the stated rating contexts.",
     "These are conditional point predictions. Contexts can differ in severity, thresholds and discrimination.",
     if (!check$ready) paste("Review calibration:", paste(check$reason_codes, collapse = ", "))
   )
@@ -281,7 +296,10 @@
 #' @param type Plot type:
 #'   - `"pathway"`: Facet measures against `Infit` or `Outfit`. Pass
 #'     `fit_statistic = "both"` for separate panels and `facet = "Rater"` to select raters.
-#'   - `"wright"`: Multi-facet Wright map aligning person distribution, facet locations, and step thresholds.
+#'   - `"wright"`: Leftward person histogram, density or frequency stars, facet locations
+#'     and steps. Pass `person_display = "stars", persons_per_star = 3, yardstick = 2`
+#'     for two rows per logit. The right-hand Fair average ruler accepts a `reference_plan`.
+#'     See [plot.mfrm_fit()] for its reference conditions and bin boundaries.
 #'   - `"raters"`: Rater severity vs `Infit MnSq` diagnostic map with 95% `Real SE` intervals.
 #'   - `"steps"` / `"category_curves"`: Category characteristic curves (CCCs) and Andrich step thresholds.
 #'   - `"dstudy"`: D-Study generalizability (\eqn{G}) and dependability (\eqn{\Phi}{Phi}) curves across sample sizes.
@@ -300,10 +318,11 @@
 #' @param draw Logical; if `TRUE` (default), renders on the active graphics device;
 #'   if `FALSE`, returns the `ggplot` (or dashboard) without drawing.
 #' @param ... Additional arguments passed to underlying [graphics::plot()] methods.
-#' @param newdata For `type = "category_curves"` or `"steps"`, a data frame with
+#' @param interactive Return an optional Plotly widget for Wright maps, category curves, rater/pathway and fit-sensitivity plots.
+#' @param newdata For a Wright map supply one calibrated context for adjacent-category crossings. For `type = "category_curves"` or `"steps"`, a data frame with
 #'   all model facet columns and one row per rating context. With GPCM, the
 #'   default is the first retained context. Predictions span ability -4 to 4.
-#' @return A `ggplot` object (with `attr(, "mfrm_notes")`), or for `type = "dashboard"`,
+#' @return An interactive call returns a Plotly widget. Static calls return a `ggplot` object (with `attr(, "mfrm_notes")`), or for `type = "dashboard"`,
 #'   a `tidymfrm_dashboard` named list of four `ggplot` panels.
 #' @examples
 #' # Saved JML calibration of example_core; see fit_mfrm() for estimation.
@@ -324,11 +343,13 @@ plot.tidymfrm <- function(x,
                           palette = c("okabe_ito", "viridis", "monochrome"),
                           base_size = 11,
                           draw = TRUE,
-                          ..., newdata = NULL) {
+                          ..., newdata = NULL, interactive = FALSE) {
   x <- .tidymfrm_refresh(x)
   type <- match.arg(type)
   palette <- match.arg(palette)
   dots <- list(...)
+  if (isTRUE(interactive) && !type %in% .mfrm_interactive_types)
+    stop("Interactive plots support: ", paste(.mfrm_interactive_types, collapse = ", "), ".", call. = FALSE)
 
   if (type == "dashboard") {
     if (is.null(x$fit)) stop("Run `step_mfrm_measure()` before plotting a dashboard.", call. = FALSE)
@@ -363,7 +384,7 @@ plot.tidymfrm <- function(x,
     },
     wright = {
       if (is.null(x$fit)) stop("Run `step_mfrm_measure()` before `type = 'wright'`.", call. = FALSE)
-      graphics::plot(x$fit, type = "wright", palette = palette, base_size = base_size, ...)
+      graphics::plot(x$fit, type = "wright", palette = palette, base_size = base_size, newdata = newdata, ...)
     },
     raters = {
       if (!is.null(x$diagnostics$raters)) {
@@ -371,7 +392,7 @@ plot.tidymfrm <- function(x,
           x$diagnostics$raters,
           mnsq_range = dots$mnsq_range %||% x$diagnostics$mnsq_range,
           zstd_limit = dots$zstd_limit %||% x$diagnostics$zstd_limit %||% 2.0,
-          fit_method = dots$fit_method,
+          fit_method = dots$fit_method, method_label = x$fit$method,
           reference_bands = dots$reference_bands,
           palette = palette,
           base_size = base_size
@@ -415,7 +436,7 @@ plot.tidymfrm <- function(x,
     category_curves = {
       if (is.null(x$fit)) stop("Run `step_mfrm_measure()` before `type = 'steps'`.", call. = FALSE)
       if (identical(x$fit$model, "GPCM") || !is.null(newdata)) {
-        .tidymfrm_plot_context_curves(x, newdata = newdata, palette = palette, base_size = base_size)
+        .mfrm_plot_context_curves(x$fit, newdata = newdata, palette = palette, base_size = base_size)
       } else graphics::plot(x$fit, type = "category_curves", palette = palette, base_size = base_size, ...)
     },
     person_fit = ,
@@ -458,6 +479,7 @@ plot.tidymfrm <- function(x,
       p_per
     }
   )
+  if (isTRUE(interactive)) return(.mfrm_plotly(p, type))
   if (isTRUE(draw)) print(p)
   if (isTRUE(draw)) invisible(p) else p
 }

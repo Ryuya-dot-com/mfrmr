@@ -1336,22 +1336,9 @@
     }
     steps_df <- do.call(rbind, step_list)
     rownames(steps_df) <- NULL
-    step_support_audit <- .mfrm_step_support_audit(enc, layout)
-    steps_df <- .mfrm_screen_steps_table(steps_df, enc, layout, step_audit = step_support_audit)
     step_row_nms <- paste0(steps_df$ScaleLevel, ":", steps_df$Step)
     step_cov_mod <- raw$step_cov_model
     step_cov_sw <- raw$step_cov_sandwich
-    if (any(step_support_audit$unidentified_step)) {
-        u_idx <- which(step_support_audit$unidentified_step)
-        if (nrow(step_cov_mod) == length(step_row_nms)) {
-            step_cov_mod[u_idx, ] <- NA_real_
-            step_cov_mod[, u_idx] <- NA_real_
-        }
-        if (nrow(step_cov_sw) == length(step_row_nms)) {
-            step_cov_sw[u_idx, ] <- NA_real_
-            step_cov_sw[, u_idx] <- NA_real_
-        }
-    }
     if (nrow(step_cov_mod) == length(step_row_nms))
         dimnames(step_cov_mod) <- list(step_row_nms, step_row_nms)
     if (nrow(step_cov_sw) == length(step_row_nms))
@@ -1439,7 +1426,7 @@
         xi_covariance_sandwich = xi_cov_sw, xi_layout = layout, local_bias = bias_df, encoding = enc, control = ctrl_list,
         elapsed_sec = elapsed_sec), class = "mfrm_fit")
     out$schema_version <- 1L
-    out$step_support_audit <- step_support_audit
+    out <- .mfrm_refresh_steps(out)
     out$boundary_audit <- .mfrm_structural_boundary(out)
     if (identical(method_label, "MML")) {
         out["population_location_rank"] <- list(.mfrm_population_location_rank(enc))
@@ -1451,7 +1438,7 @@
     if (isTRUE(out$boundary_audit$detected))
         warning("No finite structural ", method_label, " estimate: a likelihood-increasing boundary direction was detected. Inference requires review.",
             call. = FALSE)
-    else if (isTRUE(step_support_audit$step_rank_deficient))
+    else if (isTRUE(out$step_support_audit$step_rank_deficient))
         warning("One or more rating categories within a step ladder have zero observed counts without identifying `step_constraints` or `category_support`; affected step thresholds are withheld and inference requires review.",
             call. = FALSE)
     out
@@ -2644,7 +2631,7 @@ coef.mfrm_fit <- function(object, type = c("all", "facets", "locations", "steps"
         return(stats::setNames(object$facets$Estimate, paste0(object$facets$Facet, ":", object$facets$Level)))
     }
     if (identical(type, "steps")) {
-        st_tb <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
+        st_tb <- .mfrm_refresh_steps(object)$steps
         return(stats::setNames(st_tb$Estimate, paste0(st_tb$ScaleLevel, ":", st_tb$Step)))
     }
     if (identical(type, "slopes")) {
@@ -2671,7 +2658,7 @@ coef.mfrm_fit <- function(object, type = c("all", "facets", "locations", "steps"
             return(c(SD = object$population$sigma))
         return(stats::setNames(object$population$table$Estimate, paste0("Pop:", object$population$table$Term)))
     }
-    st_all <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
+    st_all <- .mfrm_refresh_steps(object)$steps
     c(stats::setNames(object$facets$Estimate, paste0(object$facets$Facet, ":", object$facets$Level)), stats::setNames(st_all$Estimate,
         paste0(st_all$ScaleLevel, ":", st_all$Step)), if (!is.null(object$slopes) && nrow(object$slopes) >
         0L) {
@@ -2697,14 +2684,8 @@ vcov.mfrm_fit <- function(object, component = c("design", "facets", "steps", "sl
         return(if (use_sw) object$xi_covariance_sandwich else object$xi_covariance_model)
     }
     if (identical(component, "steps")) {
-        cm <- if (use_sw) object$step_covariance_sandwich else object$step_covariance_model
-        st_a <- object$step_support_audit %||% .mfrm_step_support_audit(object$encoding, object$xi_layout)
-        if (any(st_a$unidentified_step) && nrow(cm) == length(st_a$unidentified_step)) {
-            u_idx <- which(st_a$unidentified_step)
-            cm[u_idx, ] <- NA_real_
-            cm[, u_idx] <- NA_real_
-        }
-        return(cm)
+        object <- .mfrm_refresh_steps(object)
+        return(if (use_sw) object$step_covariance_sandwich else object$step_covariance_model)
     }
     if (identical(component, "slopes")) {
         sl_cov <- if (use_sw)
@@ -3020,7 +3001,7 @@ confint.mfrm_fit <- function(object, parm = NULL, level = 0.95, component = c("f
                 list(kind = "facet_row", block = f_idx, row = r_idx, est = tb$Estimate[i], se = tb$ModelSE[i])
             })
         } else if (identical(component, "steps")) {
-            tb <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
+            tb <- .mfrm_refresh_steps(object)$steps
             nms <- paste0(tb$ScaleLevel, ":", tb$Step)
             targets <- lapply(seq_len(nrow(tb)), function(i) {
                 list(kind = "step_row", row = i, est = tb$Estimate[i], se = tb$ModelSE[i])
@@ -3102,7 +3083,7 @@ confint.mfrm_fit <- function(object, parm = NULL, level = 0.95, component = c("f
         nms <- paste0(tb$Facet, ":", tb$Level)
     }
     else if (identical(component, "steps")) {
-        tb <- .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit)
+        tb <- .mfrm_refresh_steps(object)$steps
         est <- tb$Estimate
         se <- pick_se(tb$ModelSE, NULL, tb$SandwichSE)
         nms <- paste0(tb$ScaleLevel, ":", tb$Step)
@@ -3178,6 +3159,7 @@ as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, compon
     "steps", "slopes"), ...) {
     .mfrm_validate_fit(x)
     component <- match.arg(component)
+    if (component == "steps") return(.mfrm_refresh_steps(x)$steps)
     x[[component]]
 }
 
@@ -3223,14 +3205,15 @@ print.mfrm_fit <- function(x, ...) {
 #' @export
 summary.mfrm_fit <- function(object, ...) {
     .mfrm_validate_fit(object)
+    object <- .mfrm_refresh_steps(object)
     readiness <- .mfrm_readiness(object)
     overview <- object$summary
     overview$InferenceReady <- readiness$ready
     overview$InferenceStatus <- readiness$status
-    list(overview = overview, model_label = .mfrm_model_label(object$model, unique(object$slopes$Facet)),
+    out <- list(overview = overview, model_label = .mfrm_model_label(object$model, unique(object$slopes$Facet)),
         readiness = readiness, connectivity = object$connectivity, population = object$population, facets = object$facets,
         anchor_application = object$encoding$anchor_application,
-        steps = .mfrm_screen_steps_table(object$steps, object$encoding, object$xi_layout, object$step_support_audit),
+        steps = object$steps,
         slopes = object$slopes, explanatory = object$explanatory, interactions = object$interactions,
         person_summary = data.frame(MeanAbility = mean(object$person$Estimate[is.finite(object$person$Estimate)]),
             SDAbility = stats::sd(object$person$Estimate[is.finite(object$person$Estimate)]), MeanModelSE = mean(object$person$ModelSE,
@@ -3241,4 +3224,16 @@ summary.mfrm_fit <- function(object, ...) {
                 names(object$person) && any(is.finite(object$person$PostOutfitMnSq))) mean(object$person$PostOutfitMnSq,
                 na.rm = TRUE) else NA_real_, ExtremeMin = sum(object$person$ExtremeFlag ==
                 -1L), ExtremeMax = sum(object$person$ExtremeFlag == 1L)))
+    class(out) <- c("summary.mfrm_fit", "list")
+    out
+}
+
+#' @export
+print.summary.mfrm_fit <- function(x, ...) {
+    o <- x$overview
+    cat(sprintf("%s (%s) | %d persons, %d ratings\n", x$model_label, o$Method, o$Persons, o$N))
+    cat("Converged:", o$Converged, "| Inference:", x$readiness$status,
+        paste(x$readiness$reason_codes, collapse = ", "), "\n")
+    print(x$person_summary[c("MeanAbility", "SDAbility", "ExtremeMin", "ExtremeMax")], row.names = FALSE)
+    invisible(x)
 }

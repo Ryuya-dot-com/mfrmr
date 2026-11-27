@@ -47,86 +47,273 @@
   rep(lt, length.out = max(1L, n))[seq_len(n)]
 }
 
-.mfrm_gg_wright <- function(person_df, facets_df, steps_df, model_lbl, palette = "okabe_ito", base_size = 11) {
-  pt <- person_df[is.finite(person_df$Estimate), , drop = FALSE]
-  fc <- facets_df[is.finite(facets_df$Estimate), , drop = FALSE]
-  st <- steps_df[is.finite(steps_df$Estimate), , drop = FALSE]
+.mfrm_wright_yardstick <- function(yardstick) {
+  if (is.null(yardstick)) return(NULL)
+  if (is.numeric(yardstick)) yardstick <- list(lines = yardstick)
+  if (!is.list(yardstick) || is.null(names(yardstick)) || anyDuplicated(names(yardstick)) ||
+      !all(names(yardstick) %in% c("lines", "range")))
+    stop("Use yardstick = lines per logit, or list(lines = ..., range = c(low, high)).", call. = FALSE)
+  lines <- yardstick[["lines"]]
+  if (!is.numeric(lines) || length(lines) != 1L || !is.finite(lines) || lines <= 0 || !is.finite(1 / lines))
+    stop("Yardstick lines must be a finite positive number of rows per logit.", call. = FALSE)
+  window <- yardstick[["range"]]
+  if (!is.null(window) && (!is.numeric(window) || length(window) != 2L ||
+      any(!is.finite(window)) || window[1] >= window[2]))
+    stop("Supply an increasing finite pair for the yardstick range.", call. = FALSE)
+  list(lines = lines, range = window)
+}
 
-  p_df <- data.frame(Panel = "Person", Element = pt$Person, Logit = pt$Estimate, stringsAsFactors = FALSE)
-  f_df <- data.frame(Panel = fc$Facet, Element = fc$Level, Logit = fc$Estimate, stringsAsFactors = FALSE)
-  s_df <- if (nrow(st) > 0L) {
-    lbl <- if (identical(model_lbl, "PCM")) paste0(st$ScaleLevel, ":", st$Step) else as.character(st$Step)
-    data.frame(Panel = "Thresholds", Element = lbl, Logit = st$Estimate, stringsAsFactors = FALSE)
+.mfrm_wright_bins <- function(pt, binwidth, lines) {
+  if (!is.null(lines)) {
+    # Assign half-row ties to the higher ruler mark, including negative measures.
+    row <- floor(pt * lines + 0.5)
+    limits <- range(row)
+    if (!is.finite(diff(limits)) || diff(limits) > 10000 || any(abs(limits) >= 2^52))
+      stop("Choose fewer yardstick lines per logit for this range.", call. = FALSE)
+    centers <- seq(limits[1], limits[2])
+    return(data.frame(Lower = (centers - 0.5) / lines, Upper = (centers + 0.5) / lines,
+      Count = tabulate(as.integer(row - limits[1] + 1), length(centers)), Center = centers / lines))
+  }
+  breaks <- "Sturges"
+  if (!is.null(binwidth)) {
+    first <- floor(min(pt) / binwidth)
+    last <- max(first + 1, ceiling(max(pt) / binwidth))
+    if (!is.finite(last - first) || last <= first || last - first > 10000 ||
+        any(abs(c(first, last)) >= 2^52))
+      stop("Choose a larger binwidth for the observed ability range.", call. = FALSE)
+    breaks <- seq(first, last) * binwidth
+  }
+  h <- graphics::hist(pt, breaks = breaks, plot = FALSE)
+  data.frame(Lower = head(h$breaks, -1L), Upper = tail(h$breaks, -1L), Count = h$counts, Center = h$mids)
+}
+
+.mfrm_wright_fair_ticks <- function(fit, y, reference_plan) {
+  if (!is.null(reference_plan)) reference_plan <- mfrm_fair_reference_plan(fit, reference_plan)
+  ready <- .mfrm_readiness(fit)
+  if (!ready$ready)
+    return(list(note = paste("Fair average withheld:", paste(ready$reason_codes, collapse = ", "))))
+  enc <- fit$encoding
+  if (is.null(reference_plan)) {
+    # Stored person Fair(M) uses the original calibration even if facet estimates were shrunk later.
+    curve <- .mfrm_person_fair_curve(fit, fit$facets$MLEEstimate %||% fit$facets$Estimate)
+    totals <- rowsum(enc$weight, enc$step_group0 + 1L, reorder = FALSE)
+    mix <- numeric(nrow(fit$step_cumulative))
+    mix[as.integer(rownames(totals))] <- totals[, 1L] / sum(totals)
+    names(mix) <- enc$step_owners
+    score <- function(th) curve(th, mix)
+    pooled <- length(mix) > 1L
+    label <- if (pooled) "Fair average\n(pooled mix)" else "Fair average"
+    reference <- if (pooled) "Rating-weighted step-group mix" else "Person Fair(M)"
+    note <- "Fair average is the expected rating at this person ability with facets at their calibration means."
+    if (pooled) note <- paste(note, "Step-group weights are pooled across ratings. Individual Fair(M) can differ when assignments differ.")
+    if (length(enc$slope_facets)) note <- paste(note, "Discrimination is set to its observation-weighted geometric mean.")
   } else {
-    data.frame(Panel = character(0), Element = character(0), Logit = numeric(0))
+    score <- function(th) .mfrm_reference_expected(fit, reference_plan, th)
+    label <- "Fair average\n(reference plan)"
+    reference <- "Specified reference plan"
+    note <- "Fair average is the weighted expected rating under the same specified reference plan at every person ability."
   }
+  limits <- vapply(y, score, numeric(1))
+  if (any(!is.finite(limits)) || limits[1] >= limits[2])
+    return(list(note = "Fair average unavailable: no resolvable score variation in the displayed logit range."))
+  scores <- unique(round(pretty(limits, n = 5), 2))
+  scores <- scores[scores > limits[1] & scores < limits[2]]
+  if (!length(scores))
+    return(list(note = "No interior fair-average tick at hundredth-of-a-point resolution in the displayed range."))
+  theta <- vapply(scores, function(v) stats::uniroot(function(th) score(th) - v, y,
+    f.lower = limits[1] - v, f.upper = limits[2] - v, tol = 1e-9)$root, numeric(1))
+  # A very wide window can compress several score labels into a single printed line.
+  keep <- 1L
+  for (i in seq_along(theta)[-1L])
+    if (theta[i] - theta[tail(keep, 1L)] >= .06 * diff(y)) keep <- c(keep, i)
+  ticks <- data.frame(FairAverage = scores[keep], Logit = theta[keep], Reference = reference)
+  if (is.null(reference_plan)) attr(ticks, "step_weights") <- mix else attr(ticks, "reference_plan") <- reference_plan
+  list(ticks = ticks, label = label, note = note)
+}
 
-  panel_levels <- unique(c("Person", unique(fc$Facet), if (nrow(s_df) > 0L) "Thresholds"))
-  all_df <- rbind(p_df, f_df, s_df)
-  all_df$Panel <- factor(all_df$Panel, levels = panel_levels)
-
-  cols <- stats::setNames(.mfrm_cvd_palette(length(panel_levels), palette), panel_levels)
-  shapes <- stats::setNames(.mfrm_cvd_shapes(length(panel_levels)), panel_levels)
-
-  non_p <- all_df[all_df$Panel != "Person", , drop = FALSE]
-  p_only <- all_df[all_df$Panel == "Person", , drop = FALSE]
-
-  hist_df <- data.frame(Panel = factor(character(0), levels = panel_levels),
-                        ymin = numeric(0), ymax = numeric(0), xmin = numeric(0), xmax = numeric(0))
-  if (nrow(p_only) >= 2L) {
-    rng <- range(all_df$Logit, na.rm = TRUE)
-    if (!is.finite(diff(rng)) || diff(rng) < 1e-6) rng <- rng + c(-1, 1)
-    brks <- seq(rng[1L] - 0.05, rng[2L] + 0.05, length.out = 19L)
-    h <- graphics::hist(p_only$Logit, breaks = brks, plot = FALSE)
-    max_c <- max(h$counts, 1L)
-    hist_df <- data.frame(
-      Panel = factor("Person", levels = panel_levels),
-      ymin = h$breaks[-length(h$breaks)],
-      ymax = h$breaks[-1L],
-      xmin = 1.0 - 0.38 * (h$counts / max_c),
-      xmax = 1.0 + 0.38 * (h$counts / max_c),
-      Count = h$counts,
-      stringsAsFactors = FALSE
-    )
-    hist_df <- hist_df[hist_df$Count > 0L, , drop = FALSE]
+.mfrm_gg_wright <- function(fit, palette, base_size, person_display = "histogram",
+                            binwidth = NULL, newdata = NULL, persons_per_star = NULL, yardstick = NULL,
+                            fair_average = TRUE, reference_plan = NULL) {
+  person_display <- match.arg(person_display, c("histogram", "density", "stars"))
+  ruler <- .mfrm_wright_yardstick(yardstick)
+  if (!is.logical(fair_average) || length(fair_average) != 1L || is.na(fair_average))
+    stop("fair_average must be TRUE or FALSE.", call. = FALSE)
+  if (!fair_average && !is.null(reference_plan))
+    stop("Use fair_average = TRUE to display a reference_plan.", call. = FALSE)
+  stars <- person_display == "stars"
+  if (!is.null(persons_per_star) && (!stars || !is.numeric(persons_per_star) ||
+      length(persons_per_star) != 1L || !is.finite(persons_per_star) || persons_per_star < 1 ||
+      persons_per_star != floor(persons_per_star)))
+    stop("Use a positive whole persons_per_star with person_display = 'stars'.", call. = FALSE)
+  persons_per_star <- persons_per_star %||% 3L
+  if (!is.null(binwidth) && (!is.numeric(binwidth) || length(binwidth) != 1L ||
+      !is.finite(binwidth) || binwidth <= 0 || person_display == "density" || !is.null(ruler)))
+    stop("Use a finite positive binwidth for counts, or choose yardstick lines per logit.", call. = FALSE)
+  pt <- fit$person$Estimate[is.finite(fit$person$Estimate)]
+  fc <- fit$facets[is.finite(fit$facets$Estimate), , drop = FALSE]
+  st <- fit$steps[fit$steps$Supported & fit$steps$Identified & is.finite(fit$steps$Estimate), , drop = FALSE]
+  enc <- fit$encoding
+  step_title <- "Step offsets"
+  notes <- "Step offsets are adjacent-category parameters relative to the element location."
+  if (!is.null(newdata)) {
+    if (!is.data.frame(newdata) || nrow(newdata) != 1L || !all(enc$base_facets %in% names(newdata)))
+      stop("Supply one row with all fitted facets for Wright map crossings.", call. = FALSE)
+    context <- newdata[enc$base_facets]
+    offset <- stats::predict(fit, newdata = context, type = "link", theta = 0)
+    if (enc$model_code == 1L)
+      st <- st[st$ScaleLevel == as.character(context[[enc$step_facet]]), , drop = FALSE]
+    divisor <- 1
+    if (isTRUE(enc$slope_formula == 1L)) {
+      for (facet in enc$slope_facets) {
+        sl <- fit$slopes[fit$slopes$Facet == facet, ]
+        divisor <- divisor * sl$Estimate[match(as.character(context[[facet]]), sl$Level)]
+      }
+    }
+    st$Estimate <- (st$Estimate - offset) / divisor
+    step_title <- "Ability crossings"
+    notes <- paste("Adjacent categories have equal probability at the displayed ability for",
+                   paste(names(context), vapply(context, as.character, character(1)), sep = " = ", collapse = ", "))
+    readiness <- .mfrm_readiness(fit)
+    if (!readiness$ready) {
+      st <- st[FALSE, ]
+      notes <- c(notes, paste("Crossings withheld:", paste(readiness$reason_codes, collapse = ", ")))
+    }
   }
-  non_p$XPos <- as.numeric(non_p$Panel)
-
-  p <- ggplot2::ggplot() +
-    ggplot2::geom_hline(yintercept = 0, linetype = "dashed", colour = "#888888", linewidth = 0.4)
-  if (nrow(hist_df) > 0L) {
-    p <- p + ggplot2::geom_rect(
-      data = hist_df,
-      ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax, ymin = .data$ymin, ymax = .data$ymax),
-      fill = cols[["Person"]], alpha = 0.30, colour = cols[["Person"]], linewidth = 0.3
-    )
+  levels <- unique(as.character(fc$Facet))
+  points <- data.frame(Panel = fc$Facet, Element = fc$Level, Label = as.character(fc$Level), Logit = fc$Estimate,
+                       XPos = match(fc$Facet, levels) + 1L)
+  if (nrow(st)) {
+    label <- if (enc$model_code == 1L) paste(st$ScaleLevel, st$Step, sep = ":") else st$Step
+    transition <- paste(st$FromCategory, "to", st$ToCategory)
+    if (enc$model_code == 1L && is.null(newdata)) transition <- paste(st$ScaleLevel, transition)
+    points <- rbind(points, data.frame(Panel = step_title, Element = label, Label = transition, Logit = st$Estimate,
+                                       XPos = length(levels) + 2L))
+    levels <- c(levels, step_title)
   }
-  if (nrow(non_p) > 0L) {
-    p <- p +
-      ggplot2::geom_point(
-        data = non_p,
-        ggplot2::aes(x = .data$XPos, y = .data$Logit, colour = .data$Panel, shape = .data$Panel),
-        size = 2.7
-      ) +
-      ggplot2::geom_text(
-        data = non_p,
-        ggplot2::aes(x = .data$XPos + 0.08, y = .data$Logit, label = .data$Element),
-        hjust = 0, size = 3.0, colour = "#222222", check_overlap = TRUE
-      )
+  colours <- .mfrm_cvd_palette(length(levels) + 1L, palette)
+  p <- ggplot2::ggplot() + ggplot2::geom_hline(yintercept = 0, linetype = "dashed", colour = "grey65", linewidth = .35)
+  right <- 1.42
+  span <- 0.94
+  axis_x <- 1
+  axis_labels <- if (stars) "+Person" else "Person"
+  person_label <- sprintf("Person ability (N = %d)", length(pt))
+  if (length(pt) && person_display != "density") {
+    bins <- .mfrm_wright_bins(pt, binwidth, ruler$lines)
+    width <- format(signif(bins$Upper[1] - bins$Lower[1], 4))
+    peak <- max(bins$Count)
+    bins$Left <- right - span * bins$Count / peak
+    if (!stars) {
+      p <- p + ggplot2::geom_rect(data = bins, ggplot2::aes(ymin = .data$Lower, ymax = .data$Upper,
+        xmin = .data$Left), xmax = right, fill = colours[1L], colour = "white", linewidth = 0.3)
+      ticks <- unique(c(0, if (peak >= 4) floor(peak / 2), peak))
+      axis_x <- right - span * ticks / peak
+      axis_labels <- as.character(ticks)
+      person_label <- sprintf("Person count (N = %d; bin width %s logits)", length(pt), width)
+    } else {
+      marks <- bins[bins$Count > 0, ]
+      whole <- marks$Count %/% persons_per_star
+      remainder <- marks$Count %% persons_per_star
+      # Reserve the same remainder column on every row so the star tallies align on the right.
+      rest <- ifelse(remainder > 0, paste0("+", remainder), "")
+      tally <- if (max(whole) > 12L) {
+        notes <- c(notes, "Large tallies use a multiplier (e.g., 20 x *).")
+        ifelse(whole > 0, paste(whole, "x *"), "")
+      } else {
+        strrep("*", as.integer(whole))
+      }
+      marks$Mark <- paste0(tally, " ", rest, strrep("\u00a0", max(nchar(rest)) - nchar(rest)))
+      p <- p + ggplot2::geom_text(data = marks, ggplot2::aes(y = .data$Center, label = .data$Mark),
+        x = right - .035, colour = colours[1L], family = "mono", fontface = "bold", size = 3.6, hjust = 1)
+      axis_x <- right - .2
+      person_label <- sprintf("N = %d; * = %s %s; +n = remainder; bin width %s logits",
+        length(pt), format(persons_per_star), if (persons_per_star == 1) "person" else "persons", width)
+    }
+  } else if (length(unique(pt)) >= 2L) {
+    den <- stats::density(pt)
+    area <- data.frame(Logit = c(den$x[1], den$x, tail(den$x, 1)), Density = c(0, den$y, 0))
+    area$XPos <- right - span * area$Density / max(den$y)
+    p <- p + ggplot2::geom_polygon(data = area, ggplot2::aes(x = .data$XPos, y = .data$Logit),
+                                   fill = colours[1L], alpha = .45)
+    axis_x <- c(right, right - span)
+    axis_labels <- format(signif(c(0, max(den$y)), 3))
+    person_label <- sprintf("Person density (N = %d; bandwidth %s logits)", length(pt), format(signif(den$bw, 3)))
+  } else if (length(pt)) {
+    p <- p + ggplot2::annotate("point", x = 1, y = pt[1L], colour = colours[1L])
+    notes <- c(notes, "Density requires distinct abilities. A point marks the common estimate.")
   }
-  p <- p +
-    ggplot2::scale_x_continuous(
-      breaks = seq_along(panel_levels), labels = panel_levels,
-      limits = c(0.45, length(panel_levels) + 0.65)
-    ) +
-    ggplot2::scale_colour_manual(values = cols, name = "Facet") +
-    ggplot2::scale_shape_manual(values = shapes, name = "Facet") +
-    ggplot2::labs(x = NULL, y = "Logit Scale") +
-    .mfrm_gg_theme(base_size = base_size)
-  attr(p, "mfrm_notes") <- c(
-    sprintf("Threshold structure: %s.", model_lbl),
-    "Facet elements are encoded simultaneously by horizontal column, colour, and point shape."
-  )
+  y <- ruler$range
+  if (is.null(y)) {
+    plotted <- c(0, points$Logit, pt)
+    if (length(pt) && person_display != "density") plotted <- c(plotted, bins$Lower, bins$Upper)
+    if (person_display == "density" && length(unique(pt)) >= 2L) plotted <- c(plotted, den$x)
+    y <- range(plotted, finite = TRUE)
+  }
+  if (!is.null(ruler)) {
+    bounds <- c(ceiling(y[1] * ruler$lines), floor(y[2] * ruler$lines))
+    if (!is.finite(diff(bounds)) || diff(bounds) > 10000 || any(abs(bounds) >= 2^52))
+      stop("Choose fewer yardstick lines per logit or a narrower range.", call. = FALSE)
+    ticks <- if (bounds[1] <= bounds[2]) seq(bounds[1], bounds[2]) / ruler$lines else numeric()
+    p <- p + ggplot2::annotate("segment", x = right, xend = right, y = y[1], yend = y[2],
+      colour = "grey45", linewidth = .35)
+    if (length(ticks)) p <- p + ggplot2::annotate("segment", x = right, xend = right + .055,
+      y = ticks, yend = ticks, colour = "grey45", linewidth = .35)
+    notes <- c(notes, sprintf("Yardstick: %s rows per logit. Facet and step points retain their fitted positions.",
+                              format(ruler$lines)))
+    if (!is.null(ruler$range)) {
+      p <- p + ggplot2::coord_cartesian(ylim = y, expand = FALSE)
+      notes <- c(notes, sprintf("Display window [%s, %s] logits; %d finite person estimates outside. N includes all bins.",
+        format(y[1]), format(y[2]), sum(pt < y[1] | pt > y[2])))
+    }
+  }
+  if (nrow(points)) {
+    labels <- points[points$Logit >= y[1] & points$Logit <= y[2], , drop = FALSE]
+    labels$LabelY <- labels$Logit
+    gap <- .055 * diff(y)
+    for (rows in split(seq_len(nrow(labels)), labels$Panel)) {
+      if (length(rows) < 2L || gap == 0 || (length(rows) - 1L) * gap > diff(y)) next
+      i <- rows[order(labels$Logit[rows])]
+      spacing <- (seq_along(i) - 1L) * gap
+      # Fit ordered label positions with minimum spacing; dots stay at their measured logits.
+      packed <- stats::isoreg(labels$Logit[i] - spacing)$yf
+      labels$LabelY[i] <- pmax(y[1], pmin(y[2] - max(spacing), packed)) + spacing
+    }
+    shifted <- labels[abs(labels$LabelY - labels$Logit) > gap / 10, , drop = FALSE]
+    if (nrow(shifted)) p <- p + ggplot2::geom_segment(data = shifted, ggplot2::aes(
+      x = .data$XPos, xend = .data$XPos + .085, y = .data$Logit, yend = .data$LabelY),
+      colour = "grey65", linewidth = .3)
+    p <- p + ggplot2::geom_point(data = points, ggplot2::aes(x = .data$XPos, y = .data$Logit,
+      colour = .data$Panel, shape = .data$Panel), size = 2.7) +
+      ggplot2::geom_text(data = labels, ggplot2::aes(x = .data$XPos + .095, y = .data$LabelY,
+        label = .data$Label), hjust = 0, size = 3, check_overlap = TRUE)
+  }
+  panel_labels <- levels
+  if (stars || !is.null(ruler)) {
+    facets <- unique(as.character(fc$Facet))
+    panel_labels[seq_along(facets)] <- paste0(ifelse(enc$facet_signs[match(facets, enc$facets)] < 0, "-", "+"), facets)
+  }
+  columns <- seq_along(levels) + 1L
+  fair <- if (fair_average) .mfrm_wright_fair_ticks(fit, y, reference_plan)
+  if (!is.null(fair$ticks)) {
+    x <- length(levels) + 2L
+    ink <- if (palette == "monochrome") "#373737" else "#285C62"
+    p <- p + ggplot2::annotate("segment", x = x, xend = x, y = y[1], yend = y[2],
+        colour = "grey78", linewidth = .4) +
+      ggplot2::geom_segment(data = fair$ticks, ggplot2::aes(y = .data$Logit, yend = .data$Logit),
+        x = x - .06, xend = x + .06, colour = ink, linewidth = .6) +
+      ggplot2::geom_text(data = fair$ticks, ggplot2::aes(y = .data$Logit, label = format(.data$FairAverage, trim = TRUE, nsmall = 1)),
+        x = x + .10, hjust = 0, fontface = "bold", colour = ink, size = 3.3)
+    columns <- c(columns, x)
+    panel_labels <- c(panel_labels, fair$label)
+  }
+  p <- p + ggplot2::scale_x_continuous(breaks = c(axis_x, columns),
+      labels = c(axis_labels, panel_labels), limits = c(.4, max(1.5, columns + .7))) +
+    ggplot2::scale_colour_manual(values = stats::setNames(colours[-1], levels), guide = "none") +
+    ggplot2::scale_shape_manual(values = stats::setNames(.mfrm_cvd_shapes(length(levels)), levels), guide = "none") +
+    ggplot2::labs(x = person_label, y = "Logits") + .mfrm_gg_theme(base_size)
+  p <- p + ggplot2::theme(panel.grid.major.x = ggplot2::element_blank())
+  attr(p, "mfrm_fair_average") <- fair$ticks
+  attr(p, "mfrm_notes") <- c(notes, fair$note, sprintf("Distribution of finite %s person estimates (%d of %d).",
+      fit$score_method, length(pt), nrow(fit$person)))
   p
 }
 
@@ -139,6 +326,13 @@
     stop("`reference_bands` must be a length-2 numeric vector or a list of length-2 numeric vectors.", call. = FALSE)
   }
   lapply(reference_bands, .mfrm_validate_mnsq_range, label = "`reference_bands`")
+}
+
+.mfrm_empty_mnsq_plot <- function(data, levels, statistics) {
+  p <- ggplot2::ggplot(data) + ggplot2::theme_void()
+  attr(p, "mfrm_notes") <- paste("No elements have both a finite measure and a finite",
+    paste(statistics, collapse = " or "), "MnSq on the selected basis. Elements:", paste(unique(levels), collapse = ", "))
+  p
 }
 
 .mfrm_gg_pathway <- function(facets_df, mnsq_range = c(0.70, 1.30), palette = "okabe_ito", base_size = 11,
@@ -161,7 +355,8 @@
   statistics <- if (fit_statistic == "both") c("Infit", "Outfit") else tools::toTitleCase(fit_statistic)
 
   if (identical(fit_method, "both")) {
-    has_post <- ("PostInfitMnSq" %in% names(facets_df)) && any(is.finite(facets_df$PostInfitMnSq))
+    has_post <- "PostInfitMnSq" %in% names(facets_df) &&
+      (identical(method_label, "MML") || any(is.finite(facets_df$PostInfitMnSq)))
     if (!has_post) {
       stop("`fit_method = 'both'` requires an MML calibration with posterior-integrated fit indices.", call. = FALSE)
     }
@@ -170,15 +365,17 @@
       v_post <- facets_df[[paste0("Post", statistic, "MnSq")]]
       keep <- is.finite(facets_df$Estimate) & (is.finite(v_plug) | is.finite(v_post))
       sub_f <- facets_df[keep, , drop = FALSE]
+      sub_f$FitBasis <- NULL
       rbind(
         data.frame(sub_f, FitMnSq = v_post[keep], Statistic = rep(statistic, sum(keep)),
-                   FitBasis = "Posterior (TAM)", stringsAsFactors = FALSE),
+                   FitBasis = rep("Posterior (TAM)", sum(keep)), stringsAsFactors = FALSE),
         data.frame(sub_f, FitMnSq = v_plug[keep], Statistic = rep(statistic, sum(keep)),
-                   FitBasis = "Plug-in", stringsAsFactors = FALSE)
+                   FitBasis = rep("Plug-in", sum(keep)), stringsAsFactors = FALSE)
       )
     })
     df <- do.call(rbind, df_list)
     df <- df[is.finite(df$FitMnSq), , drop = FALSE]
+    if (!nrow(df)) return(.mfrm_empty_mnsq_plot(df, facets_df$Level, statistics))
     se_use <- if ("RealSE" %in% names(df)) df$RealSE else df$ModelSE
     df$Low <- df$Estimate - 1.96 * se_use
     df$High <- df$Estimate + 1.96 * se_use
@@ -213,16 +410,16 @@
         colour = "#888888", linewidth = 0.45, inherit.aes = FALSE
       )
     }
-    df_post_lbl <- df[df$FitBasis == "Posterior (TAM)", , drop = FALSE]
+    label_rows <- df[!duplicated(df[c("Facet", "Level", "Statistic")]), , drop = FALSE]
     p <- p +
       ggplot2::geom_errorbar(
-        data = df_post_lbl,
+        data = label_rows,
         ggplot2::aes(ymin = .data$Low, ymax = .data$High, colour = .data$FitBasis, linetype = .data$FitBasis),
         width = 0.0, linewidth = 0.5, alpha = 0.75, na.rm = TRUE
       ) +
       ggplot2::geom_point(ggplot2::aes(colour = .data$FitBasis, shape = .data$FitBasis), size = 2.9) +
       ggplot2::geom_text(
-        data = df_post_lbl,
+        data = label_rows,
         ggplot2::aes(label = .data$Level),
         nudge_y = 0.04 * if (nrow(df)) max(diff(range(df$Estimate)), 0.5) else 0.5,
         size = 2.9, colour = "#222222", check_overlap = TRUE
@@ -261,6 +458,8 @@
     data.frame(facets_df[keep, , drop = FALSE],
                FitMnSq = vals[keep], FitZSTD = zvals[keep], Statistic = rep(statistic, sum(keep)))
   }))
+  if (!nrow(df)) return(.mfrm_empty_mnsq_plot(df, facets_df$Level, statistics))
+  df$FitBasis <- fm
   se_use <- if ("RealSE" %in% names(df)) df$RealSE else df$ModelSE
   df$Low <- df$Estimate - 1.96 * se_use
   df$High <- df$Estimate + 1.96 * se_use
@@ -380,7 +579,7 @@
   half_widths <- sort(unique(as.double(half_widths)))
   stat_nm <- tools::toTitleCase(fit_statistic)
   has_post <- (paste0("Post", stat_nm, "MnSq") %in% names(facets_df)) &&
-    any(is.finite(facets_df[[paste0("Post", stat_nm, "MnSq")]]))
+    (identical(method_label, "MML") || any(is.finite(facets_df[[paste0("Post", stat_nm, "MnSq")]])))
 
   bases <- if (identical(fit_method, "both")) {
     if (!has_post) stop("`fit_method = 'both'` requires an MML calibration with posterior-integrated fit indices.", call. = FALSE)
@@ -404,6 +603,7 @@
     z_v <- z_vec[ok]
     z_cond <- ifelse(is.finite(z_v), abs(z_v) >= zstd_limit, NA)
     n_tot <- length(m_v)
+    n_missing <- sum(!ok)
     for (d in half_widths) {
       lo <- 1.0 - d
       hi <- 1.0 + d
@@ -418,7 +618,8 @@
         UpperBound = rep(hi, 3L),
         FitBasis = rep(b_lbl, 3L),
         RuleDirection = rule_lvls,
-        FlaggedCount = c(n_hi_z, n_lo_z, n_any),
+        FlaggedCount = if (n_tot) c(n_hi_z, n_lo_z, n_any) else rep(NA_integer_, 3L),
+        UnavailableMnSqCount = rep(n_missing, 3L),
         UnresolvedZSTDCount = c(n_hi_na, n_lo_na, 0L),
         TotalElements = rep(n_tot, 3L),
         stringsAsFactors = FALSE
@@ -426,6 +627,7 @@
     }
   }
   sens_df <- do.call(rbind, rows)
+  has_counts <- any(is.finite(sens_df$FlaggedCount))
   sens_df$FitBasis <- factor(sens_df$FitBasis, levels = bases)
   sens_df$RuleDirection <- factor(sens_df$RuleDirection, levels = rule_lvls)
 
@@ -456,7 +658,10 @@
     ggplot2::scale_colour_manual(values = cols, drop = FALSE, name = "Screening Rule") +
     ggplot2::scale_linetype_manual(values = ltypes, drop = FALSE, name = "Screening Rule") +
     ggplot2::scale_shape_manual(values = shapes, drop = FALSE, name = "Screening Rule") +
-    ggplot2::scale_y_continuous(breaks = function(lim) unique(floor(pretty(c(0, max(1, lim[2L])))))) +
+    ggplot2::scale_y_continuous(
+      limits = if (!has_counts) c(0, 1),
+      breaks = if (has_counts) function(lim) unique(floor(pretty(c(0, max(1, lim[2L])))))
+    ) +
     ggplot2::labs(
       x = sprintf("Symmetric %s MnSq Half-Width d around 1.00 (Bounds [1 - d, 1 + d])", stat_nm),
       y = "Flagged Element Count"
@@ -469,6 +674,8 @@
   attr(p, "mfrm_notes") <- c(
     sprintf("Evaluates symmetric %s MnSq intervals [1 - d, 1 + d] with |ZSTD| >= %.1f.", stat_nm, zstd_limit),
     "Reference half-widths mark d = 0.20 ([0.80, 1.20]), d = 0.30 ([0.70, 1.30]), and d = 0.50 ([0.50, 1.50]).",
+    if (any(sens_df$UnavailableMnSqCount > 0L))
+      "Counts cover elements with finite MnSq. UnavailableMnSqCount gives the number excluded.",
     if (any(sens_df$UnresolvedZSTDCount > 0L))
       "Joint MnSq + |ZSTD| counts are NA where an element outside [1 - d, 1 + d] has unavailable ZSTD (see `UnresolvedZSTDCount` in `sensitivity_table`).",
     "Select screening bounds from substantive stakes and rating design prior to inspection; do not tune thresholds post hoc to suppress flags."
@@ -802,26 +1009,47 @@
 #' @param palette Color palette: `"okabe_ito"` (default), `"viridis"`, or `"monochrome"`.
 #' @param facet Optional facet name to filter `"pathway"` or `"raters"`.
 #' @param base_size Base font size in pts (default `11`).
-#' @param ... Additional plot-specific options (e.g., `top_n` for bias/DFF).
+#' @param ... For Wright maps choose `person_display` ("histogram", "density", or "stars"),
+#'   `persons_per_star` (default 3 in star mode), `binwidth`, or `yardstick`
+#'   (rows per logit or a list with lines and range). Bars extend left from zero.
+#'   The right-hand Fair average ruler uses the pooled step-group mix. Supply
+#'   `reference_plan` as in [fair_average_table()] for a specified common panel
+#'   or `fair_average = FALSE` to hide it. See `attr(p, "mfrm_fair_average")` for tick values.
+#' @param interactive Return a Plotly widget for a Wright map, category curves, rater/pathway or fit-sensitivity plot.
 #' @param fit_statistic Mean-square statistic displayed on the pathway plot.
 #'   Use `"both"` to display Infit and Outfit in separate panels.
-#' @return A `ggplot` object with interpretation notes in `attr(p, "mfrm_notes")`.
+#' @return A ggplot or, with `interactive = TRUE`, a Plotly widget with interpretation notes in `attr(p, "mfrm_notes")`.
 #' @export
 plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_curves", "persons", "raters",
     "person_fit", "residual_qq", "slopes", "qc", "fit_sensitivity", "cut_sensitivity"),
     palette = c("okabe_ito", "viridis", "monochrome"), facet = NULL,
-    base_size = 11, ..., fit_statistic = c("infit", "outfit", "both")) {
+    base_size = 11, ..., fit_statistic = c("infit", "outfit", "both"), interactive = FALSE) {
     .mfrm_validate_fit(x)
     type <- match.arg(type)
     palette <- match.arg(palette)
+    if (isTRUE(interactive)) {
+        if (!type %in% .mfrm_interactive_types)
+            stop("Interactive plots support: ", paste(.mfrm_interactive_types, collapse = ", "), ".", call. = FALSE)
+        p <- plot.mfrm_fit(x, type, palette, facet, base_size, ..., fit_statistic = match.arg(fit_statistic))
+        return(.mfrm_plotly(p, type))
+    }
     dots <- list(...)
     interval_ready <- TRUE
-    interval_notes <- character()
+    plot_notes <- character()
+    if (type %in% c("wright", "qc", "steps", "category_curves")) {
+        x <- .mfrm_refresh_steps(x)
+        held <- x$steps$Supported & !x$steps$Identified
+        withheld_groups <- unique(x$steps$ScaleLevel[held])
+        if (length(withheld_groups)) {
+            plot_notes <- paste("Unidentified step thresholds withheld for",
+                                    paste(withheld_groups, collapse = ", "))
+        }
+    }
     if (type %in% c("pathway", "raters", "persons", "slopes")) {
         readiness <- .mfrm_readiness(x)
         interval_ready <- readiness$ready
         if (!interval_ready) {
-            interval_notes <- paste0("Intervals unavailable: ", paste(readiness$reason_codes, collapse = ", "),
+            plot_notes <- paste0("Intervals unavailable: ", paste(readiness$reason_codes, collapse = ", "),
                 ". Points are descriptive estimates requiring review.")
             for (component in c("person", "facets", "slopes")) {
                 if (is.data.frame(x[[component]]))
@@ -829,20 +1057,21 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
             }
         }
     }
-    with_interval_notes <- function(p) {
-        attr(p, "mfrm_notes") <- c(attr(p, "mfrm_notes"), interval_notes)
+    with_plot_notes <- function(p) {
+        attr(p, "mfrm_notes") <- c(attr(p, "mfrm_notes"), plot_notes)
         p
     }
     if (identical(type, "wright")) {
-        label <- .mfrm_model_label(x$model, unique(x$slopes$Facet))
-        return(.mfrm_gg_wright(x$person, x$facets, x$steps, label, palette = palette, base_size = base_size))
+        return(with_plot_notes(.mfrm_gg_wright(x, palette, base_size,
+            dots$person_display %||% "histogram", dots$binwidth, dots$newdata, dots$persons_per_star, dots$yardstick,
+            dots$fair_average %||% TRUE, dots$reference_plan)))
     }
     if (type %in% c("pathway", "raters")) {
         fc <- x$facets
         if ("MLEEstimate" %in% names(fc)) {
             fc$ModelSE <- fc$RealSE <- NA_real_
             if (interval_ready)
-                interval_notes <- c(interval_notes, "Intervals unavailable: empirical_bayes_facet_shrinkage.")
+                plot_notes <- c(plot_notes, "Intervals unavailable: empirical_bayes_facet_shrinkage.")
         }
         if (identical(type, "raters") && is.null(facet)) {
             hit <- grep("rater|judge|examiner|marker|grader", unique(fc$Facet), ignore.case = TRUE, value = TRUE)
@@ -852,7 +1081,7 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
         }
         if (!is.null(facet))
             fc <- fc[fc$Facet %in% facet, , drop = FALSE]
-        return(with_interval_notes(.mfrm_gg_pathway(
+        return(with_plot_notes(.mfrm_gg_pathway(
             fc,
             mnsq_range = dots$mnsq_range %||% c(0.70, 1.30),
             palette = palette,
@@ -891,9 +1120,16 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
         ))
     }
     if (type %in% c("steps", "category_curves")) {
-        return(.mfrm_gg_ccc(x$step_cumulative, x$steps, x$rating_min, x$encoding$step_cat_min, x$encoding$step_cat_max,
+        if (!is.null(dots$newdata)) return(.mfrm_plot_context_curves(x, dots$newdata, palette, base_size))
+        owners <- x$encoding$step_owners
+        keep <- !owners %in% withheld_groups
+        if (!any(keep)) return(with_plot_notes(ggplot2::ggplot() + ggplot2::theme_void()))
+        p <- .mfrm_gg_ccc(x$step_cumulative[keep, , drop = FALSE],
+            x$steps[x$steps$ScaleLevel %in% owners[keep], , drop = FALSE], x$rating_min,
+            x$encoding$step_cat_min[keep], x$encoding$step_cat_max[keep],
             slopes_df = x$slopes, step_facet = x$encoding$step_facet, slope_formula = x$encoding$slope_formula %||%
-                0L, palette = palette, base_size = base_size))
+                0L, palette = palette, base_size = base_size)
+        return(with_plot_notes(p))
     }
     if (identical(type, "person_fit")) {
         return(.mfrm_gg_person_fit(x, palette = palette, base_size = base_size))
@@ -905,10 +1141,10 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
         ci <- if (interval_ready)
             stats::confint(x, component = "slopes")
         else matrix(NA_real_, NROW(x$slopes), 2L)
-        return(with_interval_notes(.mfrm_gg_slopes(x$slopes, palette = palette, base_size = base_size, intervals = ci)))
+        return(with_plot_notes(.mfrm_gg_slopes(x$slopes, palette = palette, base_size = base_size, intervals = ci)))
     }
     if (identical(type, "qc")) {
-        return(.mfrm_gg_qc(x, palette = palette, base_size = base_size))
+        return(with_plot_notes(.mfrm_gg_qc(x, palette = palette, base_size = base_size)))
     }
     pt <- x$person[is.finite(x$person$Estimate) & is.finite(x$person$FairM), , drop = FALSE]
     pt$Low <- pt$Estimate - 1.96 * pt$RealSE
@@ -930,7 +1166,7 @@ plot.mfrm_fit <- function(x, type = c("wright", "pathway", "steps", "category_cu
         )
     }
     attr(p, "mfrm_notes") <- "Person fit status is encoded via colour, point shape, and interval linetype."
-    with_interval_notes(p)
+    with_plot_notes(p)
 }
 
 #' @rdname plot.mfrm_fit

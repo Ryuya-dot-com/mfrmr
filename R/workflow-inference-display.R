@@ -13,33 +13,13 @@
   pt <- fit$person
   enc <- fit$encoding
   sc <- fit$step_cumulative
-  # Fair(M) neutralizes facet locations, uses the geometric reference slope,
-  # and averages expected scores over each person's weighted step-group mix.
-  base <- sum(vapply(enc$facets, function(fc) {
-    tb <- if (fc %in% enc$base_facets) fit$facets[fit$facets$Facet == fc, ] else
-      fit$interactions[fit$interactions$Interaction == fc, ]
-    values <- tb$Estimate[is.finite(tb$Estimate)]
-    enc$facet_signs[match(fc, enc$facets)] * if (length(values)) mean(values) else 0
-  }, numeric(1)))
-  valid_alpha <- is.finite(fit$alpha_obs) & fit$alpha_obs > 0 & enc$weight > 0
-  alpha <- if (any(valid_alpha)) exp(stats::weighted.mean(log(fit$alpha_obs[valid_alpha]), enc$weight[valid_alpha])) else 1
   mixes <- lapply(seq_len(nrow(pt)), function(i) {
     rows <- which(enc$person0 == i - 1L & enc$weight > 0)
     w <- numeric(nrow(sc))
     for (g in seq_len(nrow(sc))) w[g] <- sum(enc$weight[rows][enc$step_group0[rows] == g - 1L])
     w / sum(w)
   })
-  expected <- function(theta, mix) {
-    active <- which(mix > 0)
-    sum(vapply(active, function(g) {
-      k <- seq.int(enc$step_cat_min[g], enc$step_cat_max[g])
-      cum <- sc[g, k + 1L]
-      lin <- if (enc$slope_formula == 1L) alpha * theta + base else alpha * (theta + base)
-      lp <- (k - min(k)) * lin - if (enc$slope_formula == 1L) cum else alpha * cum
-      p <- exp(lp - max(lp)); p <- p / sum(p)
-      mix[g] * (fit$rating_min + sum(k * p))
-    }, numeric(1)))
-  }
+  expected <- .mfrm_person_fair_curve(fit)
   tibble::as_tibble(do.call(rbind, lapply(sort(unique(cuts)), function(ct) {
     threshold <- vapply(mixes, function(mix) {
       if (any(!is.finite(mix))) return(NA_real_)
@@ -193,9 +173,13 @@
     wf$gtheory <- gt
   }
   if (!is.null(wf$fit)) {
-    wf$fit$steps <- .mfrm_screen_steps_table(wf$fit$steps, wf$fit$encoding, wf$fit$xi_layout, wf$fit$step_support_audit)
+    wf$fit <- .mfrm_refresh_steps(wf$fit)
   }
   if (is.null(wf$fit) || is.null(wf$diagnostics)) return(wf)
+  steps <- wf$fit$steps
+  adjacent <- unlist(lapply(split(steps[steps$Supported, ], steps$ScaleLevel[steps$Supported]),
+                            function(group) diff(group$Estimate)), use.names = FALSE)
+  wf$diagnostics$step_disordered <- any(adjacent < 0)
   rs <- wf$diagnostics$report_statistics
   if (!is.null(rs) && !identical(rs$agreement_basis, "equal_unit_gwet_workflow_retained_v2")) {
     ag <- .mfrm_workflow_report_agreement(wf)
@@ -262,7 +246,11 @@
   wf
 }
 
+.tidymfrm_screen_unavailable <- function(rt) {
+  is.na(rt$DiagnosticFlag) | rt$DiagnosticFlag %in% c("Review required", "Infit MnSq unavailable")
+}
+
 .tidymfrm_flag_count <- function(rt) {
-  ok <- !is.na(rt$DiagnosticFlag) & rt$DiagnosticFlag != "Review required"
+  ok <- !.tidymfrm_screen_unavailable(rt)
   if (any(ok)) sum(rt$DiagnosticFlag[ok] != "Acceptable") else NA_integer_
 }

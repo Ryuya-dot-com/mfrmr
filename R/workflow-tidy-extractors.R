@@ -191,7 +191,7 @@ tidy.mfrm_fit <- function(x, component = c("facets", "persons", "steps", "slopes
             post_infit_mnsq = p_in, post_infit_zstd = p_iz, post_outfit_mnsq = p_ou, post_outfit_zstd = p_oz,
             extreme_flag = pt$ExtremeFlag))
     }
-    st <- .mfrm_screen_steps_table(x$steps, x$encoding, x$xi_layout, x$step_support_audit)
+    st <- .mfrm_refresh_steps(x)$steps
     tibble::tibble(scale = st$ScaleLevel, step = st$Step, estimate = st$Estimate, std.error = st$ModelSE,
         conf.low = ci[, 1L], conf.high = ci[, 2L], inference_status = status, inference_reason = reason)
 }
@@ -245,7 +245,7 @@ glance.tidymfrm <- function(x, ...) {
     g_coef = if (!is.null(x$gtheory)) x$gtheory$g_study_summary$G else NA_real_,
     phi_coef = if (!is.null(x$gtheory)) x$gtheory$g_study_summary$Phi else NA_real_,
     flagged_raters = if (!is.null(x$diagnostics)) .tidymfrm_flag_count(x$diagnostics$raters) else NA_integer_,
-    unavailable_raters = if (!is.null(x$diagnostics)) sum(x$diagnostics$raters$DiagnosticFlag == "Review required") else NA_integer_,
+    unavailable_raters = if (!is.null(x$diagnostics)) sum(.tidymfrm_screen_unavailable(x$diagnostics$raters)) else NA_integer_,
     unexpected_ratings = if (!is.null(x$diagnostics)) nrow(x$diagnostics$unexpected) else NA_integer_,
     elapsed_sec = x$elapsed_sec,
     model_label = if (!is.null(fit_summary)) .tidymfrm_model_label(x$fit, fit_summary) else NA_character_

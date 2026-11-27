@@ -37,6 +37,7 @@
 \alias{print.mfrm_multivariate_d_comparison}
 \alias{print.mfrm_multivariate_d_study}
 \alias{print.mfrm_person_fit_indices}
+\alias{print.summary.mfrm_fit}
 \alias{print.summary.mfrm_bias}
 \alias{print.summary.mfrm_data_description}
 \alias{print.summary.mfrm_dff}
@@ -119,6 +120,8 @@ Standard R S3 methods (\code{predict}, \code{coef}, \code{vcov}, \code{confint},
   \item{...}{Additional fitted models for \code{anova()}; otherwise method-specific arguments.}
 }
 \details{
+Printing a measurement summary reports the model, estimator, persons, ratings, convergence and inference status. The named tables, including \code{$steps} and \code{$facets}, remain accessible from the summary. Use \code{\link{format_mfrm_table}} for a publication table.
+
 \strong{Prediction uncertainty.} Response/link SEs use the full covariance of
 free structural coordinates, including cross-facet covariances, estimated steps,
 interactions, explanatory coefficients, and GPCM log-slopes as applicable.

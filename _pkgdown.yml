@@ -22,6 +22,7 @@ articles:
       - mfrmr-workflow
       - mfrmr-gtheory
       - articles/mfrmr-assessment
+      - articles/probability-surfaces
       - articles/application-double-scoring
 
 redirects:

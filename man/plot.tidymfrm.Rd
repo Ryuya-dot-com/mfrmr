@@ -13,7 +13,7 @@
   base_size = 11,
   draw = TRUE,
   ...,
-  newdata = NULL
+  newdata = NULL, interactive = FALSE
 )
 }
 \arguments{
@@ -23,7 +23,10 @@
 \itemize{
 \item \code{"pathway"}: Facet measures against Infit or Outfit. Pass
 \code{fit_statistic = "both"} for two panels, \code{fit_method = "both"} on MML fits to connect plug-in and posterior (\code{TAM::msq.itemfit}) MnSq per element, \code{reference_bands = list(c(0.50, 1.50))} for secondary reference lines, and \code{facet = "Rater"} to select raters.
-\item \code{"wright"}: Multi-facet Wright map aligning person distribution, facet locations, and step thresholds.
+\item \code{"wright"}: Leftward person histogram, density or frequency stars, facet locations and steps.
+Pass \code{person_display = "stars", persons_per_star = 3, yardstick = 2} for
+two rows per logit. The right-hand Fair average ruler accepts a \code{reference_plan}.
+See \code{\link{plot.mfrm_fit}} for its reference conditions and bin boundaries.
 \item \code{"raters"}: Rater severity vs \verb{Infit MnSq} diagnostic map with 95\% \verb{Real SE} intervals.
 \item \code{"fit_sensitivity"}: Flagged-element counts across symmetric \code{[1 - d, 1 + d]} \code{MnSq} bounds (comparing \code{MnSq + |ZSTD|} vs \code{MnSq}-only rules, and posterior vs plug-in bases on MML fits).
 \item \code{"cut_sensitivity"}: Candidate pass rate (\code{Fair(M) >= Cut}) and 90\% borderline examinee counts (\code{ModelSE} vs \code{RealSE}) across candidate \code{Fair(M)} cutoffs.
@@ -50,12 +53,14 @@ if \code{FALSE}, returns the \code{ggplot} (or dashboard) without drawing.}
 
 \item{...}{Additional arguments passed to underlying \code{\link[graphics:plot]{graphics::plot()}} methods.}
 
-\item{newdata}{For \code{type = "category_curves"} or \code{"steps"}, a data frame with
+\item{interactive}{Return an optional Plotly widget for Wright maps, category curves, raters, pathways and fit sensitivity.}
+\item{newdata}{For Wright maps, one calibrated context for adjacent-category crossings. For \code{type = "category_curves"} or \code{"steps"}, a data frame with
 all model facet columns and one row per rating context. With GPCM, the
 default is the first retained context. Predictions span ability -4 to 4.}
 }
 \value{
-A \code{ggplot} object (with \code{attr(, "mfrm_notes")}), or for \code{type = "dashboard"},
+Interactive calls return a Plotly widget with plot notes. Static calls return
+a \code{ggplot} object (with \code{attr(, "mfrm_notes")}), or for \code{type = "dashboard"},
 a \code{tidymfrm_dashboard} named list of four \code{ggplot} panels.
 }
 \description{

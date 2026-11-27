@@ -31,7 +31,7 @@
                          RatersInRanking = if (length(severity_rank)) length(cmp) else NA_integer_)
   fit_basis <- wf$diagnostics$fit_method %||%
     (if ("FitBasis" %in% names(rx)) rx$FitBasis[1L] else "plugin")
-  has_post <- ("PostInfitMnSq" %in% names(rx)) && is.finite(rx$PostInfitMnSq[1L])
+  has_post <- ("PostInfitMnSq" %in% names(rx)) && (identical(fit_basis, "posterior") || is.finite(rx$PostInfitMnSq[1L]))
   audit <- data.frame(
     RatingRows = nrow(obs),
     Persons = length(unique(obs[[sp$person]])),
@@ -61,7 +61,8 @@
     if (identical(fit_basis, "posterior")) "posterior-integrated (TAM::msq.itemfit basis)" else "plug-in",
     mnsq_r[1L], mnsq_r[2L], z_lim, wf$fit$method, wf$fit$score_method
   )
-  active_z <- if (identical(fit_basis, "posterior") && "PostInfitZSTD" %in% names(rx)) rx$PostInfitZSTD[1L] else rx$InfitZSTD[1L]
+  z_col <- if (identical(fit_basis, "posterior")) "PostInfitZSTD" else "InfitZSTD"
+  active_z <- if (z_col %in% names(rx)) rx[[z_col]][1L] else NA_real_
   z_unavail_note <- if (!is.finite(active_z)) {
     "Active Infit ZSTD is unavailable (NA); joint MnSq + ZSTD screening cannot be confirmed from MnSq alone."
   }

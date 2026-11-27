@@ -1544,6 +1544,29 @@ test_that("Unobserved step-group categories block readiness and withhold unident
   expect_true(all(is.na(coef(f_pre, "steps")[grepl(paste0("^", target_crit, ":"), names(coef(f_pre, "steps")))])))
   expect_error(confint(f_pre, component = "steps"), "not ready")
 
+  status <- .mfrm_parameter_table(f_pre, "steps", "model", .95)
+  expect_true(all(status$Status[status$Level == target_crit] == "Unidentified"))
+  expect_true(all(is.na(status$Lower)))
+  if (requireNamespace("plotly", quietly = TRUE)) {
+    context <- d[match(target_crit, d$Criterion), c("Rater", "Criterion")]
+    widget <- plot(f_pre, "category_curves", newdata = context, interactive = TRUE)
+    expect_match(paste(attr(widget, "mfrm_notes"), collapse = " "), target_crit)
+    expect_false(any(vapply(widget$x$data, function(tr) length(tr$y) > 0L, logical(1))))
+  }
+  for (obj in list(f_pre, fm)) {
+    expect_true(all(is.na(as.data.frame(obj, component = "steps")$Estimate[obj$steps$ScaleLevel == target_crit])))
+    wright <- plot(obj, type = "wright")
+    points <- Filter(function(layer) inherits(layer$geom, "GeomPoint"), wright$layers)[[1]]$data
+    expect_false(any(startsWith(points$Element, paste0(target_crit, ":Step_"))))
+    for (type in c("steps", "category_curves")) {
+      curves <- plot(obj, type = type)
+      expect_setequal(unique(curves$data$ScaleGroup), setdiff(crits, target_crit))
+      expect_true(all(vapply(curves$layers, function(layer)
+        !is.data.frame(layer$data) || !target_crit %in% layer$data$ScaleGroup, logical(1))))
+      expect_match(paste(attr(curves, "mfrm_notes"), collapse = " "), target_crit)
+    }
+  }
+
   # Identifying constraints rescue readiness and intervals:
   # (a) Explicit category_support [2, 3] on target_crit
   cs_ok <- data.frame(
@@ -1567,6 +1590,84 @@ test_that("Unobserved step-group categories block readiness and withhold unident
                    rating_min = 1L, rating_max = 3L, step_constraints = sc_ok)
   expect_true(summary(f_sc)$readiness$ready)
   expect_true(all(is.finite(confint(f_sc, component = "steps"))))
+})
+
+test_that("fixed population and anchored items identify a finite RSM step with an empty endpoint", {
+  d <- expand.grid(Person = seq_len(32), Item = c("A", "B"), stringsAsFactors = FALSE)
+  d$Score <- c(rep(c(2, 2, 3, 3), 8), rep(c(2, 3, 2, 3), 8))
+  fit <- fit_mfrm(d, "Person", "Item", "Score", model = "RSM", method = "MML",
+                  rating_min = 1, rating_max = 3,
+                  anchors = data.frame(Facet = "Item", Level = c("A", "B"), Anchor = 0),
+                  control = list(quad_points = 61L, mml_integration = "fixed"))
+  # Each of the four ordered response pairs occurs eight times.
+  loglik <- function(step) {
+    p <- function(theta, category) {
+      w <- cbind(1, exp(theta - step), exp(2 * theta))
+      w[, category] / rowSums(w)
+    }
+    pair <- function(a, b) log(stats::integrate(function(theta)
+      stats::dnorm(theta) * p(theta, a) * p(theta, b), -10, 10, rel.tol = 1e-11)$value)
+    8 * (pair(2, 2) + 2 * pair(2, 3) + pair(3, 3))
+  }
+  t <- stats::optimize(loglik, c(-8, 8), maximum = TRUE, tol = 1e-9)$maximum
+  h <- 1e-4
+  se <- h / sqrt(2 * loglik(t) - loglik(t + h) - loglik(t - h))
+  expect_true(summary(fit)$readiness$ready)
+  expect_equal(fit$steps$Estimate, c(t, -t), tolerance = 1e-6)
+  expect_equal(fit$steps$ModelSE, rep(se, 2), tolerance = 1e-5)
+  expect_true(all(is.finite(confint(fit, component = "steps"))))
+
+  anchored <- .mfrm_parameter_table(fit, "facets", "model", .95)
+  expect_equal(anchored$Status, rep("Fixed by constraint", 2))
+  expect_true(all(anchored$Estimate == 0 & is.na(anchored$Lower)))
+
+  # Previous 0.3.3 candidates masked both the saved table and covariance.
+  legacy <- fit
+  legacy$step_support_audit$version <- NULL
+  legacy$step_support_audit$unidentified_step[] <- TRUE
+  legacy$steps[, c("Estimate", "ModelSE", "SandwichSE")] <- NA_real_
+  legacy$steps$Identified <- FALSE
+  legacy$step_covariance_model[] <- legacy$step_covariance_sandwich[] <- NA_real_
+  expect_equal(summary(legacy)$steps, fit$steps)
+  for (kind in c("model", "sandwich")) {
+    expect_equal(vcov(legacy, component = "steps", se_type = kind),
+                 vcov(fit, component = "steps", se_type = kind))
+  }
+  expect_equal(confint(legacy, component = "steps"), confint(fit, component = "steps"))
+  expect_equal(plot(legacy, type = "steps")$data, plot(fit, type = "steps")$data)
+
+  # With the middle category absent, sending its probability to zero is
+  # feasible even with all locations fixed.
+  d$Score[d$Score == 2] <- 1
+  boundary <- suppressWarnings(fit_mfrm(d, "Person", "Item", "Score", model = "RSM", method = "MML",
+      rating_min = 1, rating_max = 3, anchors = data.frame(Facet = "Item", Level = c("A", "B"), Anchor = 0)))
+  expect_false(summary(boundary)$readiness$ready)
+  blank <- plot(boundary, type = "category_curves")
+  expect_match(paste(attr(blank, "mfrm_notes"), collapse = " "), "Common")
+  expect_length(blank$layers, 0L)
+  expect_silent(ggplot2::ggplot_build(blank))
+})
+
+test_that("ordinary JML step Wald intervals use the constrained covariance on new and saved fits", {
+  d <- load_mfrmr_data("example_core")
+  d$Score <- pmin(3, d$Score)
+  fit <- fit_mfrm(d, "Person", c("Rater", "Criterion"), "Score", model = "PCM", method = "JML")
+  legacy <- fit
+  legacy$step_support_audit <- NULL
+  legacy$steps$ModelSE <- legacy$steps$TransitionSE
+  legacy$steps$TransitionSE <- NULL
+  for (obj in list(fit, legacy)) {
+    st <- as.data.frame(obj, component = "steps")
+    se <- unname(sqrt(diag(vcov(obj, component = "steps"))))
+    ci <- confint(obj, component = "steps")
+    expect_true(summary(obj)$readiness$ready)
+    expect_equal(st$ModelSE, se)
+    expect_equal(tidy(obj, component = "steps")$std.error, se)
+    expect_equal(unname(ci[, 2L]), st$Estimate + qnorm(.975) * se)
+    expect_equal(unname(ci[1L, ]), -rev(unname(ci[2L, ])))
+    expect_equal(st$TransitionSE, fit$steps$TransitionSE)
+    expect_gt(abs(st$TransitionSE[1] - se[1]), .01)
+  }
 })
 
 test_that("Rater plot honors custom thresholds on diagnosed workflows and handles unavailable ZSTD consistently", {
@@ -1617,4 +1718,45 @@ test_that("Rater plot honors custom thresholds on diagnosed workflows and handle
   expect_identical(sub45$FlaggedCount[sub45$RuleDirection == "Above Upper (MnSq + |ZSTD|)"], 0L)
 })
 
+test_that("missing active Infit is unavailable in rater cards, plots and workflow counts", {
+  d <- load_mfrmr_data("example_core")
+  wf <- mfrm_workflow(d, "Person", c("Rater", "Criterion"), "Score") |>
+    step_mfrm_measure(model = "RSM", method = "MML")
+  r <- wf$fit$facets$Facet == "Rater"
+  for (basis in c("posterior", "plugin")) {
+    w <- wf
+    col <- if (basis == "posterior") "PostInfitMnSq" else "InfitMnSq"
+    w$fit$facets[[col]][which(r)[1]] <- NA_real_
+    w <- step_mfrm_diagnose(w, fit_method = basis)
+    expect_identical(w$diagnostics$raters$DiagnosticFlag[1], "Infit MnSq unavailable")
+    expect_equal(glance(w)$unavailable_raters, 1L)
+    card <- render_mfrm_report(w, rater = "R01", format = "markdown")
+    expect_match(card, "Infit MnSq unavailable")
+    expect_false(grepl("Maintain current rubric calibration", card, fixed = TRUE))
+    p <- plot(w, type = "raters", draw = FALSE)
+    expect_false("R01" %in% p$data$Level)
+    expect_match(paste(attr(p, "mfrm_notes"), collapse = " "), "R01")
 
+    w$fit$facets[[col]][r] <- NA_real_
+    w <- step_mfrm_diagnose(w, fit_method = basis)
+    expect_true(is.na(glance(w)$flagged_raters))
+    expect_equal(glance(w)$unavailable_raters, sum(r))
+    p <- plot(w, type = "fit_sensitivity", fit_method = basis, draw = FALSE)
+    counts <- attr(p, "sensitivity_table")
+    expect_true(all(is.na(counts$FlaggedCount) & counts$TotalElements == 0L &
+                      counts$UnavailableMnSqCount == sum(r)))
+    expect_silent(ggplot2::ggplotGrob(p))
+    rp <- plot(w, type = "raters", fit_method = basis, draw = FALSE)
+    expect_equal(nrow(rp$data), 0L)
+    expect_match(paste(attr(rp, "mfrm_notes"), collapse = " "), "R01")
+    expect_silent(ggplot2::ggplotGrob(rp))
+    cmp <- plot(w, type = "raters", fit_method = "both", draw = FALSE)
+    expect_equal(as.character(unique(cmp$data$FitBasis)), if (basis == "posterior") "Plug-in" else "Posterior (TAM)")
+    expect_silent(ggplot2::ggplotGrob(cmp))
+  }
+  w$fit$facets$PostInfitMnSq[r] <- NA_real_
+  w <- step_mfrm_diagnose(w)
+  both <- plot(w, type = "raters", fit_method = "both", draw = FALSE)
+  expect_equal(nrow(both$data), 0L)
+  expect_silent(ggplot2::ggplotGrob(both))
+})

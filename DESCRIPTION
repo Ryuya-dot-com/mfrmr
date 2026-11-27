@@ -2,7 +2,7 @@ Package: mfrmr
 Type: Package
 Title: Fast Estimation, Diagnostics, and Generalizability for Many-Facet Models
 Version: 0.3.3
-Date: 2026-11-27
+Date: 2026-11-28
 Authors@R:
     person(given = "Ryuya", family = "Komuro", role = c("aut", "cre", "cph"),
            email = "ryuya.komuro.c4@tohoku.ac.jp",
@@ -57,6 +57,8 @@ LinkingTo:
 Suggests:
     callr,
     flextable,
+    htmltools,
+    htmlwidgets,
     jsonlite,
     kableExtra,
     knitr,
@@ -65,6 +67,7 @@ Suggests:
     nloptr,
     officer,
     pkgload,
+    plotly,
     rmarkdown,
     RSpectra,
     testthat (>= 3.0.0),

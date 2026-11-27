@@ -49,7 +49,12 @@ An object of class \code{"mfrm_fit"} containing:
 \itemize{
   \item \code{person}: \code{data.frame} of person ability estimates (\code{Estimate}, \code{ModelSE}, \code{RealSE}, \code{WLE}, \code{WLE_SE}, \code{FairM}, \code{FairZ}, \code{InfitMnSq}, \code{OutfitMnSq}, \code{ExtremeFlag}).
   \item \code{facets}: \code{data.frame} of non-person facet location estimates, \code{ModelSE}, \code{RealSE}, \code{SandwichSE}, \code{FairM}, and fit statistics.
-  \item \code{steps}: \code{data.frame} of Andrich step threshold estimates and \code{ModelSE}.
+  \item \code{steps}: Andrich step estimates and model-based standard errors.
+For ordinary JML, a free step's \code{ModelSE} is the square root of the
+corresponding diagonal of \code{vcov(fit, component = "steps")}. The default
+Wald interval uses this SE and respects the within-ladder constraints.
+Without a custom step map, \code{TransitionSE} retains the single-transition
+information approximation previously reported as \code{ModelSE}.
   \item \code{slopes}: \code{data.frame} of GPCM discrimination estimates (\code{Estimate}, \code{LogEstimate}, \code{ModelSE}, \code{SandwichSE}) when \code{model = "GPCM"}.
   \item \code{population}, \code{connectivity}, \code{summary}: latent distribution summary, connectivity audit, and model fit indices (\code{loglik}, \code{aic}, \code{bic}).
 }
@@ -133,7 +138,14 @@ to seek a structural direction that improves every observed category probability
 without changing person ability. A certified direction implies no finite structural
 MLE and makes inference unavailable. Failure to find this sufficient condition is
 not a general proof of existence; GPCM boundaries and all population-boundary
-directions are not covered by this particular test. An unsuccessful numerical boundary check keeps inference unavailable. These checks do not establish finite-sample coverage.
+directions are not covered by this particular test. An unsuccessful numerical boundary check keeps inference unavailable.
+
+When a declared category has no observations, the MML step check uses the
+actual facet constraints and free population location terms, holding slopes
+and population scale fixed. A supported step that can vary along a direction
+preserving or increasing all observed category probabilities is withheld.
+A fixed location or fixed population can anchor a finite step even when an
+endpoint category has no observations. These checks do not establish finite-sample coverage.
 
 Person and facet point-estimate fit statistics (\code{InfitMnSq}, \code{InfitZSTD},
 \code{OutfitMnSq}, \code{OutfitZSTD}), expected averages, \code{FairM}/\code{FairZ},

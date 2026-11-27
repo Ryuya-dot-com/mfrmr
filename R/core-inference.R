@@ -285,23 +285,24 @@
   if (isTRUE(boundary$detected)) reasons <- c(reasons, "structural_likelihood_boundary")
   if (boundary$status %in% c("not_checked_lpSolve_unavailable", "solver_unavailable", "information_unavailable"))
     reasons <- c(reasons, "structural_boundary_not_checked")
-  step_audit <- fit$step_support_audit %||% .mfrm_step_support_audit(fit$encoding, fit$xi_layout)
+  step_audit <- .mfrm_step_support_audit(fit)
   if (isTRUE(step_audit$step_rank_deficient))
     reasons <- c(reasons, "unobserved_step_category")
   list(ready = !length(reasons), status = if (length(reasons)) "review_required" else "ready", reason_codes = reasons)
 }
 
-.mfrm_step_support_audit <- function(enc, lay = NULL) {
+.mfrm_step_support_audit <- function(fit) {
+  if (identical(fit$step_support_audit$version, 2L)) return(fit$step_support_audit)
+  enc <- fit$encoding
   if (is.null(enc)) {
     return(list(all_categories_observed = TRUE, step_rank_deficient = FALSE,
                 unidentified_step = logical(0), unidentified_group = logical(0),
                 unobserved_by_group = list()))
   }
-  lay <- lay %||% .mfrm_compute_xi_layout(enc)
+  lay <- fit$xi_layout
   G <- enc$n_step_groups
   K <- enc$n_cat - 1L
   qs <- lay$step_len
-  SB <- .mfrm_step_basis(enc, lay)
   pos <- which(is.finite(enc$weight) & enc$weight > 0)
   sg_pos <- enc$step_group0[pos] + 1L
   y_pos <- enc$score0[pos]
@@ -328,6 +329,36 @@
       unidentified_group = rep(FALSE, G),
       unobserved_by_group = unobs_cats
     ))
+  }
+
+  SB <- .mfrm_step_basis(enc, lay)
+  if (identical(fit$method, "MML")) {
+    # A step can escape only along a feasible direction of the fitted location
+    # and step design. Fixed anchors and a fixed population supply no free shift.
+    design <- .mfrm_structural_contrasts(fit)
+    D <- design$contrasts
+    movable <- rep(FALSE, nrow(SB))
+    if (qs > 0L) {
+      q <- ncol(D)
+      constraints <- rbind(cbind(D, -D), diag(2L * q))
+      signs <- c(rep(">=", nrow(D)), rep("<=", 2L * q))
+      rhs <- c(numeric(nrow(D)), rep(1, 2L * q))
+      for (i in which(rowSums(abs(SB)) > 0)) {
+        objective <- numeric(q)
+        objective[design$step_cols] <- SB[i, ] / max(abs(SB[i, ]))
+        for (sense in c("max", "min")) {
+          sol <- lpSolve::lp(sense, c(objective, -objective), constraints, signs, rhs)
+          if (sol$status != 0L || abs(sol$objval) > 1e-8) {
+            movable[i] <- TRUE
+            break
+          }
+        }
+      }
+    }
+    return(list(all_categories_observed = FALSE, step_rank_deficient = any(movable),
+                unidentified_step = movable,
+                unidentified_group = rowSums(matrix(movable, G, K, byrow = TRUE)) > 0,
+                unobserved_by_group = unobs_cats))
   }
 
   # Cross-check observed within-group category contrasts against step_constraints / category_support
@@ -385,19 +416,56 @@
   )
 }
 
-.mfrm_screen_steps_table <- function(steps_df, enc, lay = NULL, step_audit = NULL) {
-  if (is.null(steps_df) || nrow(steps_df) == 0L || is.null(enc)) return(steps_df)
-  audit <- step_audit %||% .mfrm_step_support_audit(enc, lay)
-  unid <- audit$unidentified_step
-  if (length(unid) == nrow(steps_df)) {
-    steps_df$Identified <- steps_df$Supported & !unid
-    if (any(unid)) {
-      for (col in intersect(c("Estimate", "ModelSE", "SandwichSE"), names(steps_df))) {
-        steps_df[[col]][unid] <- NA_real_
+.mfrm_refresh_steps <- function(fit) {
+  previous <- fit$step_support_audit
+  if (identical(previous$version, 2L) || is.null(fit$encoding)) return(fit)
+  audit <- .mfrm_step_support_audit(fit)
+  steps <- fit$steps
+  held <- audit$unidentified_step
+  if (length(held) != nrow(steps)) return(fit)
+  restore <- which(previous$unidentified_step & !held)
+  if (length(restore)) {
+    # Earlier candidates masked some finite anchored MML steps in the saved
+    # tables. Their original cumulative thresholds and free covariance survive.
+    increments <- t(apply(fit$step_cumulative, 1L, diff))
+    steps$Estimate[restore] <- as.vector(t(increments))[restore]
+    basis <- .mfrm_step_basis(fit$encoding, fit$xi_layout)
+    cols <- fit$xi_layout$step_start + seq_len(ncol(basis))
+  }
+  ordinary_jml <- identical(fit$method, "JML") && !isTRUE(fit$encoding$has_custom_step_map)
+  if (ordinary_jml && is.null(steps$TransitionSE)) steps$TransitionSE <- steps$ModelSE
+  for (kind in c("model", "sandwich")) {
+    key <- paste0("step_covariance_", kind)
+    V <- fit[[key]]
+    se <- if (kind == "model") "ModelSE" else "SandwichSE"
+    if (length(restore) && length(cols) && is.matrix(V) && nrow(V) == nrow(steps)) {
+      free <- fit[[paste0("xi_covariance_", kind)]]
+      if (is.matrix(free) && nrow(free) >= max(cols)) {
+        rows <- basis[restore, , drop = FALSE] %*% free[cols, cols, drop = FALSE] %*% t(basis)
+        V[restore, ] <- rows
+        V[, restore] <- t(rows)
+        steps[[se]][restore] <- sqrt(pmax(0, diag(V)[restore]))
       }
     }
+    if (ordinary_jml && kind == "model") {
+      width <- fit$encoding$step_cat_max - fit$encoding$step_cat_min
+      free_steps <- steps$Supported & rep(width > 1L, each = fit$encoding$n_cat - 1L)
+      steps$ModelSE[free_steps] <- if (is.matrix(V) && nrow(V) == nrow(steps))
+        sqrt(pmax(0, diag(V)[free_steps])) else NA_real_
+    }
+    if (any(held) && is.matrix(V) && nrow(V) == nrow(steps)) {
+      V[held, ] <- NA_real_
+      V[, held] <- NA_real_
+    }
+    fit[[key]] <- V
   }
-  steps_df
+  steps$Identified <- steps$Supported & !held
+  for (col in intersect(c("Estimate", "ModelSE", "SandwichSE", "TransitionSE"), names(steps)))
+    steps[[col]][held] <- NA_real_
+  fit$steps <- steps
+  audit$version <- 2L
+  fit$step_support_audit <- audit
+  fit
 }
 
 .mfrm_step_basis <- function(enc, layout) {
@@ -418,22 +486,23 @@
   B
 }
 
+.mfrm_observation_basis <- function(e) {
+  facet_values <- lapply(seq_along(e$base_facets), function(f)
+    e$facet_levels[[f]][e$facet_mat0[, f] + 1L])
+  d <- c(list(e$person_levels[e$person0 + 1L]), facet_values,
+    list(e$score0, e$weight, e$step_cat_min[e$step_group0 + 1L],
+         e$step_cat_max[e$step_group0 + 1L]))
+  order_rows <- do.call(order, d)
+  lapply(d, function(column) unname(column[order_rows]))
+}
+
 .mfrm_same_likelihood_basis <- function(a, b) {
   if (!identical(a$method, b$method) || !a$method %in% c("MML", "CML")) return(FALSE)
   ea <- a$encoding; eb <- b$encoding
   if (!identical(ea$base_facets, eb$base_facets) ||
       !identical(ea$rating_min, eb$rating_min) || !identical(ea$rating_max, eb$rating_max)) return(FALSE)
-  rows <- function(e) {
-    facet_values <- lapply(seq_along(e$base_facets), function(f)
-      e$facet_levels[[f]][e$facet_mat0[, f] + 1L])
-    d <- c(list(e$person_levels[e$person0 + 1L]), facet_values,
-      list(e$score0, e$weight, e$step_cat_min[e$step_group0 + 1L],
-           e$step_cat_max[e$step_group0 + 1L]))
-    order_rows <- do.call(order, d)
-    lapply(d, function(column) unname(column[order_rows]))
-  }
   controls <- c("quad_points", "adaptive_quad", "xtreme")
-  identical(rows(ea), rows(eb)) && identical(a$control[controls], b$control[controls])
+  identical(.mfrm_observation_basis(ea), .mfrm_observation_basis(eb)) && identical(a$control[controls], b$control[controls])
 }
 
 .mfrm_same_observations <- function(a, b) {
@@ -504,11 +573,8 @@
   G
 }
 
-.mfrm_structural_boundary <- function(fit) {
-  if (identical(fit$method, "CML")) return(.mfrm_cml_boundary(fit))
+.mfrm_structural_contrasts <- function(fit) {
   enc <- fit$encoding; lay <- fit$xi_layout
-  result <- list(detected = FALSE, status = "not_applicable", audit_version = 2L)
-  if (!fit$method %in% c("MML", "JML") || !fit$model %in% c("RSM", "PCM", "GPCM")) return(result)
   use_facets <- !isTRUE(fit$control$facet_l2_pen > 0)
   f_cols <- if (use_facets) sum(lay$facet_len) else 0L
   s_cols <- lay$step_len
@@ -523,7 +589,8 @@
     pop_mat <- pop_mat * fit$alpha_obs
   }
   q <- f_cols + s_cols + ncol(pop_mat)
-  if (!q) return(result)
+  step_cols <- f_cols + seq_len(s_cols)
+  if (!q) return(list(contrasts = matrix(0, 0L, 0L), step_cols = step_cols))
   K <- enc$n_cat - 1L
   B <- matrix(0.0, enc$n_obs, q)
   if (use_facets) {
@@ -545,7 +612,15 @@
     }
     z
   })
-  D <- unique(do.call(rbind, D))
+  list(contrasts = unique(do.call(rbind, D)), step_cols = step_cols)
+}
+
+.mfrm_structural_boundary <- function(fit) {
+  if (identical(fit$method, "CML")) return(.mfrm_cml_boundary(fit))
+  result <- list(detected = FALSE, status = "not_applicable", audit_version = 2L)
+  if (!fit$method %in% c("MML", "JML") || !fit$model %in% c("RSM", "PCM", "GPCM")) return(result)
+  D <- .mfrm_structural_contrasts(fit)$contrasts
+  q <- ncol(D)
   if (!nrow(D)) return(result)
   fit_lp <- lpSolve::lp("max", c(colSums(D), -colSums(D)), rbind(cbind(D, -D), diag(2L * q)),
                         c(rep(">=", nrow(D)), rep("<=", 2L * q)), c(rep(0, nrow(D)), rep(1, 2L * q)))

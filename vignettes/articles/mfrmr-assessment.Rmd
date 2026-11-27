@@ -48,6 +48,28 @@ For choices beyond the default, see [Choose a method for your decision](#choose-
 | Table 4, unexpected responses | `augment(wf)` returns observed and expected scores, standardized residuals, and `.row_id` in the input. The report calls the row number `InputRow`. |
 | Table 14, pairwise bias | See **Top Pairwise Bias Contrasts** in the report for a screening comparison of a rater across criteria. |
 
+To read frequencies in the style of FACETS Table 6, put two rows per logit
+on the ruler and count three people per star. Read `** +2` as eight people.
+To compare maps on a common vertical scale, supply the same
+`yardstick = list(lines = 2, range = c(-3, 3))` to each call.
+
+```{r wright-ruler, eval=FALSE}
+plot(wf, type = "wright", person_display = "stars", persons_per_star = 3, yardstick = 2)
+```
+
+Read across a person ability to **Fair average** for an expected rubric score.
+On a PCM map, **pooled mix** uses the same step-group weights for every person.
+If the reporting question concerns an agreed panel, supply its cells and
+weights explicitly. The rubric value then matches the reference-score target
+in `fair_average_table()`. Category crossings answer a separate question about
+when two adjacent categories have equal probability.
+
+```{r wright-reference, eval=FALSE}
+panel <- data.frame(Rater = c("R01", "R04"), Criterion = "Content", Weight = c(1, 2))
+p <- plot(wf, type = "wright", reference_plan = panel, draw = FALSE)
+attr(p, "mfrm_fair_average")[c("Logit", "FairAverage")]
+```
+
 The [Table 7 manual](https://www.winsteps.com/facetman64/table7.htm),
 [Table 4 manual](https://www.winsteps.com/facetman64/table4.htm), and
 [Table 14 manual](https://www.winsteps.com/facetman64/table14.htm) describe the
@@ -441,6 +463,51 @@ review anchor displacement where applicable. This use of a saved fit
 retains its original data. The 0.3.1 compact calibration file and its
 new-person EAP scoring API are described in the
 [archived calibration guide](https://github.com/Ryuya-dot-com/mfrmr/blob/v0.3.2/website-archive/articles/mfrmr-portable-calibration.Rmd).
+
+## Explore the probability of reaching a rubric category
+
+[Compare GMFRM probability surfaces](probability-surfaces.html) to choose a
+rater, a criterion and a score event independently in two panels. For example,
+hold Content fixed to compare two raters, then hold the rater fixed and compare
+the probability of exactly 3 with the probability of at least 3.
+
+For the shared-step RSM, how does the probability of a score of 3 or 4 on
+Content change with both person ability and rater severity? The horizontal axes
+below are ability and severity in logits. The vertical axis is a conditional
+probability. The lines show the calibrated raters. Intermediate severity
+values describe hypothetical raters under this RSM. Holding the criterion
+fixed, increasing severity by one logit has the same effect as reducing
+ability by one logit. This construction assumes unit discrimination and shared
+steps. To inspect the fitted curves at calibrated conditions for other models, use
+`plot(wf, type = "category_curves", newdata = ...)`.
+
+```{r probability-surface, eval=FALSE}
+# Requires the optional plotly package. Reuse the JML calibration of example_core.
+fit <- readRDS(system.file("examples", "core-jml.rds", package = "mfrmr"))$fit
+raters <- subset(fit$facets, Facet == "Rater")
+ability <- seq(-3, 3, length.out = 61)
+severity <- sort(unique(c(seq(min(raters$Estimate), max(raters$Estimate),
+                              length.out = 31), raters$Estimate)))
+grid <- expand.grid(ability = ability, severity = severity)
+context <- data.frame(Rater = raters$Level[1], Criterion = "Content")
+prob <- predict(fit, newdata = context[rep(1, nrow(grid)), ],
+                theta = grid$ability - grid$severity + raters$Estimate[1], type = "probs")
+z <- t(matrix(rowSums(prob[, c("3", "4")]), nrow = length(ability)))
+hover <- paste0("Content · Score ≥ 3<br>Person ability: %{x:.2f} logits",
+                "<br>Rater severity: %{y:.2f} logits<br>Probability: %{z:.1%}")
+surface <- plotly::plot_ly(x = ability, y = severity, z = z, type = "surface",
+  hovertemplate = paste0(hover, "<extra>RSM scenario</extra>"),
+  showscale = FALSE, opacity = 0.8)
+for (i in seq_len(nrow(raters))) {
+  surface <- plotly::add_trace(surface, inherit = FALSE, type = "scatter3d",
+    mode = "lines", x = ability, y = rep(raters$Estimate[i], length(ability)),
+    z = z[match(raters$Estimate[i], severity), ], name = raters$Level[i],
+    hovertemplate = paste0(hover, "<extra>%{fullData.name}</extra>"))
+}
+plotly::layout(surface, scene = list(xaxis = list(title = "Person ability (logits)"),
+  yaxis = list(title = "Rater severity (logits)"),
+  zaxis = list(title = "P(score >= 3)", range = c(0, 1))))
+```
 
 ## Read GMFRM discrimination and predicted responses
 

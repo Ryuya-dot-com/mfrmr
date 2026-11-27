@@ -57,6 +57,8 @@ and cut-score classification sensitivity.
 \details{
 Rater screens and intervals are withheld when calibration is not
 numerically ready; \verb{Review required} is distinct from \code{Acceptable}.
+A missing Infit MnSq on the selected basis gives \code{Infit MnSq unavailable}
+and excludes that rater from the evaluated and flagged counts.
 Cutoff sensitivity uses a normal approximation conditional on the fitted
 calibration, not a confidence statement about true pass status. It does not
 include calibration uncertainty or guarantee coverage under misspecification.

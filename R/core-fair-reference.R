@@ -32,23 +32,7 @@ mfrm_fair_reference_plan <- function(fit, plan) {
 mfrm_fair_reference_scores <- function(fit, plan, level = NULL) {
     .mfrm_validate_fit(fit)
     ready <- .mfrm_readiness(fit)$ready
-    nd <- plan[fit$encoding$base_facets]
-    eval_plan <- function(theta) {
-        out <- rep(NA_real_, length(theta))
-        ok <- which(is.finite(theta))
-        batch <- max(1L, as.integer(50000/nrow(plan)))
-        starts <- if (length(ok))
-            seq.int(1L, length(ok), by = batch)
-        else integer()
-        for (start in starts) {
-            ids <- ok[seq.int(start, min(length(ok), start + batch - 1L))]
-            block <- nd[rep(seq_len(nrow(plan)), length(ids)), , drop = FALSE]
-            attr(block, ".mfrm_theta") <- rep(theta[ids], each = nrow(plan))
-            score <- matrix(predict(fit, block, type = "response"), nrow = nrow(plan))
-            out[ids] <- drop(crossprod(plan$NormalizedWeight, score))
-        }
-        out
-    }
+    eval_plan <- function(theta) .mfrm_reference_expected(fit, plan, theta)
     score <- if (ready)
         eval_plan(fit$person$Estimate)
     else rep(NA_real_, nrow(fit$person))
@@ -69,4 +53,48 @@ mfrm_fair_reference_scores <- function(fit, plan, level = NULL) {
         out$Uncertainty <- ifelse(is.finite(out$Lower) & is.finite(out$Upper), basis, "unavailable")
     }
     return(out)
+}
+
+.mfrm_reference_expected <- function(fit, plan, theta) {
+    nd <- plan[fit$encoding$base_facets]
+    out <- rep(NA_real_, length(theta))
+    ok <- which(is.finite(theta))
+    batch <- max(1L, as.integer(50000/nrow(plan)))
+    starts <- if (length(ok))
+        seq.int(1L, length(ok), by = batch)
+    else integer()
+    for (start in starts) {
+        ids <- ok[seq.int(start, min(length(ok), start + batch - 1L))]
+        block <- nd[rep(seq_len(nrow(plan)), length(ids)), , drop = FALSE]
+        attr(block, ".mfrm_theta") <- rep(theta[ids], each = nrow(plan))
+        score <- matrix(predict(fit, block, type = "response"), nrow = nrow(plan))
+        out[ids] <- drop(crossprod(plan$NormalizedWeight, score))
+    }
+    out
+}
+
+.mfrm_person_fair_curve <- function(fit, facet_estimates = fit$facets$Estimate) {
+  enc <- fit$encoding
+  sc <- fit$step_cumulative
+  # Fair(M) neutralizes facet locations, uses the geometric reference slope,
+  # and averages expected scores over each person's weighted step-group mix.
+  base <- sum(vapply(enc$facets, function(fc) {
+    values <- if (fc %in% enc$base_facets) facet_estimates[fit$facets$Facet == fc] else
+      fit$interactions$Estimate[fit$interactions$Interaction == fc]
+    values <- values[is.finite(values)]
+    enc$facet_signs[match(fc, enc$facets)] * if (length(values)) mean(values) else 0
+  }, numeric(1)))
+  valid_alpha <- is.finite(fit$alpha_obs) & fit$alpha_obs > 0 & enc$weight > 0
+  alpha <- if (any(valid_alpha)) exp(stats::weighted.mean(log(fit$alpha_obs[valid_alpha]), enc$weight[valid_alpha])) else 1
+  function(theta, mix) {
+    active <- which(mix > 0)
+    sum(vapply(active, function(g) {
+      k <- seq.int(enc$step_cat_min[g], enc$step_cat_max[g])
+      cum <- sc[g, k + 1L]
+      lin <- if (enc$slope_formula == 1L) alpha * theta + base else alpha * (theta + base)
+      lp <- (k - min(k)) * lin - if (enc$slope_formula == 1L) cum else alpha * cum
+      p <- exp(lp - max(lp)); p <- p / sum(p)
+      mix[g] * (fit$rating_min + sum(k * p))
+    }, numeric(1)))
+  }
 }

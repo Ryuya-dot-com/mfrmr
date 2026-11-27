@@ -541,8 +541,7 @@ step_mfrm_gtheory <- function(wf,
     rf$RecommendedAction <- character(0)
     return(rf)
   }
-  use_post <- identical(fit_method_resolved, "posterior") &&
-    ("PostInfitMnSq" %in% names(rf)) && any(is.finite(rf$PostInfitMnSq))
+  use_post <- identical(fit_method_resolved, "posterior")
   fm_eff <- if (use_post) "posterior" else "plugin"
   rf$FitBasis <- rep(fm_eff, n)
   if (!isTRUE(ready)) {
@@ -553,10 +552,12 @@ step_mfrm_gtheory <- function(wf,
   sev_sd <- if (n >= 2L) stats::sd(rf$Estimate, na.rm = TRUE) else 0.0
   flag <- rep("Acceptable", n)
   action <- rep("Maintain current rubric calibration.", n)
+  prefix <- if (use_post) "Post" else ""
+  mnsq <- rf[[paste0(prefix, "InfitMnSq")]] %||% rep(NA_real_, n)
+  zstd <- rf[[paste0(prefix, "InfitZSTD")]] %||% rep(NA_real_, n)
   for (i in seq_len(n)) {
-    inf_m <- if (use_post) rf$PostInfitMnSq[i] else rf$InfitMnSq[i]
-    inf_z <- if (use_post && "PostInfitZSTD" %in% names(rf)) rf$PostInfitZSTD[i] else
-      if (!use_post && "InfitZSTD" %in% names(rf)) rf$InfitZSTD[i] else NA_real_
+    inf_m <- mnsq[i]
+    inf_z <- zstd[i]
     est <- rf$Estimate[i]
     r_sign <- if ("Sign" %in% names(rf) && is.finite(rf$Sign[i])) rf$Sign[i] else -1.0
     sev_oriented <- if (r_sign > 0) -est else est
@@ -564,7 +565,10 @@ step_mfrm_gtheory <- function(wf,
     outside_lo <- is.finite(inf_m) && inf_m < mnsq_range[1L]
     z_fin <- is.finite(inf_z)
     z_met <- z_fin && (abs(inf_z) >= zstd_limit)
-    if (outside_hi && z_met) {
+    if (!is.finite(inf_m)) {
+      flag[i] <- "Infit MnSq unavailable"
+      action[i] <- "Rater fit cannot be evaluated because the selected Infit MnSq is unavailable."
+    } else if (outside_hi && z_met) {
       flag[i] <- "Misfit (Unpredictable)"
       action[i] <- "Inspect unexpected rating rows for rubric drift or idiosyncratic criteria."
     } else if (outside_lo && z_met) {
@@ -579,7 +583,7 @@ step_mfrm_gtheory <- function(wf,
     }
   }
   if ("ScorePattern" %in% names(rf)) {
-    endpoint <- !is.na(rf$ScorePattern) & nzchar(rf$ScorePattern)
+    endpoint <- flag != "Infit MnSq unavailable" & !is.na(rf$ScorePattern) & nzchar(rf$ScorePattern)
     action[endpoint] <- "Check the raw score records and rubric use for the observed endpoint concentration."
   }
   rf$DiagnosticFlag <- flag
@@ -614,6 +618,8 @@ step_mfrm_gtheory <- function(wf,
 #'   mixtures imply different thresholds; `CutLogitMin`/`CutLogitMax` give their range.
 #' @details Rater screens and intervals are withheld when calibration is not
 #'   numerically ready; `Review required` is distinct from `Acceptable`.
+#'   A missing Infit MnSq on the selected basis gives `Infit MnSq unavailable`
+#'   and excludes that rater from the evaluated and flagged counts.
 #'   Lower-tail flags (`Below Lower Fit Bound`) prompt inspecting category-usage
 #'   frequencies and paired-criterion residuals rather than asserting central tendency.
 #'   Cutoff sensitivity uses a normal approximation conditional on the fitted
@@ -656,7 +662,8 @@ step_mfrm_diagnose <- function(wf,
   dff_method <- match.arg(dff_method)
   fit_method <- match.arg(fit_method)
   sp <- wf$spec
-  fit <- wf$fit
+  fit <- .mfrm_refresh_steps(wf$fit)
+  wf$fit <- fit
 
   rf <- fit$facets[fit$facets$Facet == sp$rater_facet, , drop = FALSE]
   resolved_fit_method <- .mfrm_resolve_fit_method(rf, fit$method, fit_method)
@@ -713,15 +720,6 @@ step_mfrm_diagnose <- function(wf,
 
   decisions_tbl <- if (length(cut_scores)) .tidymfrm_cut_decisions(fit, cut_scores) else NULL
 
-  st <- fit$steps
-  disordered <- FALSE
-  if (nrow(st) >= 2L) {
-    for (lvl in unique(st$ScaleLevel)) {
-      sub_s <- st$Estimate[st$ScaleLevel == lvl & is.finite(st$Estimate)]
-      if (length(sub_s) >= 2L && any(diff(sub_s) < 0, na.rm = TRUE)) disordered <- TRUE
-    }
-  }
-
   wf$diagnostics <- list(
     fit_basis = .tidymfrm_diagnostic_fit_basis(fit),
     fit_method = resolved_fit_method,
@@ -734,7 +732,7 @@ step_mfrm_diagnose <- function(wf,
     dff = dff_tbl,
     split_dff_audited = !is.null(dff_tbl) && dff_method %in% c("mml_lrt", "cml_lrt"),
     decisions = decisions_tbl,
-    step_disordered = disordered,
+
     mnsq_range = mnsq_range,
     zstd_limit = zstd_limit
   )
@@ -986,11 +984,12 @@ print.tidymfrm <- function(x, ...) {
   if (!is.null(x$diagnostics)) {
     rt <- x$diagnostics$raters
     n_flg <- .tidymfrm_flag_count(rt)
-    cat("  Rater screens unavailable:", sum(rt$DiagnosticFlag == "Review required"), "\n")
+    unavailable <- sum(.tidymfrm_screen_unavailable(rt))
+    cat("  Rater screens unavailable:", unavailable, "\n")
     cat(sprintf(
       "* Pillar 3 [Rater Audit]: %d/%d raters flagged | %d unexpected ratings (|z| >= 2) | Steps %s\n",
-      n_flg, nrow(rt), nrow(x$diagnostics$unexpected),
-      if (x$diagnostics$step_disordered) "DISORDERED" else "ordered"
+      n_flg, nrow(rt) - unavailable, nrow(x$diagnostics$unexpected),
+      if (is.na(x$diagnostics$step_disordered)) "unavailable" else if (x$diagnostics$step_disordered) "DISORDERED" else "ordered"
     ))
   }
   cat(sprintf("* Total Runtime         : %.4f sec\n", x$elapsed_sec))

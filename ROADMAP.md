@@ -8,6 +8,22 @@
 
 An assessment team should be able to explain whose scores are comparable under a stated reference panel, how much precision a different rating plan would buy, and which original ratings warrant review. Each workflow can be used independently; see [NEWS](NEWS.md) for the consolidated `0.3.2` interface.
 
+## Release scope for 0.3.x
+
+**0.3.2 is the CRAN release. 0.3.3 is the next release.** The three workflows below already share one package. The 0.3.x line builds on their existing result objects and unidimensional response models. [CRAN package page](https://CRAN.R-project.org/package=mfrmr)
+
+| Stage | What a user can do | Status and limits |
+| --- | --- | --- |
+| **0.3.3 · measurement** | Fit RSM, PCM and GMFRM with improved MML quadrature checks and faster evaluation. Inspect identification of individual steps, constrained JML intervals and the reasons an estimate or interval is withheld. | Implemented in the release source. Sparse categories and weakly identified slopes can still limit inference. Refit original ratings to apply calibration corrections. |
+| **0.3.3 · feedback and reporting** | Compare posterior-integrated and plug-in fit, inspect sensitivity to fit thresholds and score cuts, and read expected ratings on the Wright map under a common reference plan. Produce single- and multiple-fit tables and interactive diagnostic plots. | Implemented. The interactive 3D GMFRM surface is a worked website example for a specified slope model. For this example the selected rater’s discrimination multiplies the full predictor. |
+| **0.3.3 · G-Study and D-Study** | Use the existing crossed, nested and multivariate planning routes with corrected handling of unbalanced replication and facet options. | Maintenance of existing designs. Planning assignments before ratings are collected has its own project, `mfrmplanr`. |
+| **After 0.3.3 · first research priority** | Decide when shared steps, criterion-specific steps or discrimination on one facet improve prediction or a cut-score decision. Compare calibration methods on the same ratings. | Evaluate held-out ratings and new examinees, decision error and interval availability. A methods guide describing the supported conditions is the intended deliverable. A subsequent patch is warranted if the comparison identifies a reproducible calculation or reporting problem. |
+| **Later 0.3.x · conditional work** | Apply the rater-feedback workflow to an oral assessment with recoverable score records and assignments. Reassess G/Phi design projections when the new design and estimable components are known. | Prioritize an example or correction when it changes a decision and can be checked against the original ratings or design. The scope and release numbers after 0.3.3 remain open. |
+
+Independent G-Study and D-Study analyses remain available throughout this series.
+The Bayesian handoff and new response-model families have separate milestones below.
+See [NEWS](NEWS.md) for individual changes in 0.3.3.
+
 ## Public architecture in `mfrmr 0.3.2`
 
 `mfrmr 0.3.2` provides direct numerical functions and standard R S3 generics (`predict()`, `coef()`, `vcov()`, `confint()`, `anova()`, `plot()`, `fitted()`, `residuals()`, `logLik()`, `AIC()`, `BIC()`, `nobs()`, `summary()`, and `print()`), backed by a unified C++ engine (`cpp11`):
@@ -65,11 +81,12 @@ and reference plan.
 - **Differential facet functioning (`analyze_dff()`):** Supports parallel warm-started C++ split-element `"mml_lrt"` (with optional latent-regression group-impact adjustment and sandwich SEs), `"cml_lrt"`, `"raju_welch"`, Mantel-Haenszel (`"mh"`), and ordinal logistic (`"logistic"`) tests.
 - **Unified `ggplot2` graphics (`plot()`):** All `plot()` methods return editable `ggplot` objects (omitting canvas titles/footnotes by default and storing notes in `attr(p, "mfrm_notes")`) using color-vision-safe `"okabe_ito"`, `"viridis"`, or strict `R == G == B` `"monochrome"` palettes paired with distinct point shapes and line types.
 
-## Bayesian ecosystem direction (0.4.0)
+## Bayesian handoff targeted for evaluation in 0.4.0
 
 Version 0.3.2 does not import Bayesian posterior bundles or generate Stan or
-brms models. Bayesian estimation is developed in `BayesianMGMFRM.jl`, with a
-separate R interface planned for a later release. Existing bundles should be
+brms models. Bayesian estimation and its R interface are developed in the separate
+`BayesianMGMFRM.jl` project. A future `mfrmr` integration would read
+compatible results from that interface. Existing bundles should be
 read with the version of the software that created them.
 
 The planned interface will preserve posterior draws and enough model metadata
